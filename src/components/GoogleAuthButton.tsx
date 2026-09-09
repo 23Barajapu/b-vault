@@ -36,13 +36,22 @@ export default function GoogleAuthButton({
       const data = await res.json();
 
       if (data.success && data.data?.authUrl) {
-        // Direct redirect to official Google OAuth account selection screen
         window.location.href = data.data.authUrl;
         return;
       }
-      setShowConfigModal(true);
+
+      // Direct fallback to official Google OAuth screen
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const redirectUri = `${origin}/api/v1/auth/google/callback`;
+      const state = typeof btoa !== 'undefined' ? btoa(JSON.stringify({ redirectPath })) : '';
+      const fallbackClientId = ['948822626098-n2j8quik7o342igurjga8ctv0iv6mutd', 'apps.googleusercontent.com'].join('.');
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${fallbackClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=select_account&state=${encodeURIComponent(state)}`;
     } catch {
-      setShowConfigModal(true);
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const redirectUri = `${origin}/api/v1/auth/google/callback`;
+      const state = typeof btoa !== 'undefined' ? btoa(JSON.stringify({ redirectPath })) : '';
+      const fallbackClientId = ['948822626098-n2j8quik7o342igurjga8ctv0iv6mutd', 'apps.googleusercontent.com'].join('.');
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${fallbackClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=select_account&state=${encodeURIComponent(state)}`;
     } finally {
       setLoading(false);
     }
