@@ -28,6 +28,7 @@ export async function GET(request: Request) {
         payment_method,
         paid_at,
         fulfilled_at,
+        expired_at,
         created_at,
         order_items (
           id,
@@ -48,8 +49,7 @@ export async function GET(request: Request) {
         )
       `)
       .eq('customer_email', cleanEmail)
-      .eq('payment_status', 'FULFILLED')
-      .order('fulfilled_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (ordersErr) throw ordersErr;
 
@@ -60,7 +60,13 @@ export async function GET(request: Request) {
         order_number: order.order_number,
         secure_token: order.secure_token,
         target_account: order.target_account_input,
+        payment_status: order.payment_status,
+        total_amount: Number(order.total_amount) || 0,
+        payment_method: order.payment_method || 'QRIS',
+        created_at: order.created_at,
+        paid_at: order.paid_at,
         fulfilled_at: order.fulfilled_at,
+        expired_at: order.expired_at,
         items: items.map((item: any) => {
           const variant = item.product_variants;
           const product = variant?.products;
