@@ -100,6 +100,14 @@ function OpsConsoleInner() {
     is_active: 1,
   });
 
+  // Category CRUD State
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    slug: '',
+  });
+
   // Settings State
   const [storeStatus, setStoreStatus] = useState('ONLINE');
   const [operatingNotice, setOperatingNotice] = useState('');
@@ -420,6 +428,83 @@ function OpsConsoleInner() {
         fetchAdminProducts();
       } else {
         setProductMessage({ text: json.error?.message || 'Gagal menghapus varian.', isError: true });
+      }
+    } catch {
+      setProductMessage({ text: 'Gagal menghubungi server.', isError: true });
+    }
+  }
+
+  // Category Modal Handlers
+  function handleOpenCreateCategory() {
+    setEditingCategoryId(null);
+    setCategoryForm({ name: '', slug: '' });
+    setCategoryModalOpen(true);
+  }
+
+  function handleOpenEditCategory(cat: any) {
+    setEditingCategoryId(cat.id);
+    setCategoryForm({ name: cat.name, slug: cat.slug });
+    setCategoryModalOpen(true);
+  }
+
+  async function handleSaveCategory(e: React.FormEvent) {
+    e.preventDefault();
+    setProductMessage(null);
+    try {
+      if (editingCategoryId) {
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target: 'category',
+            id: editingCategoryId,
+            ...categoryForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Kategori berhasil diperbarui!', isError: false });
+          setCategoryModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal mengubah kategori.', isError: true });
+        }
+      } else {
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_category',
+            ...categoryForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Kategori baru berhasil ditambahkan!', isError: false });
+          if (json.data?.id) {
+            setProductForm((prev) => ({ ...prev, category_id: json.data.id }));
+          }
+          setCategoryModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal membuat kategori.', isError: true });
+        }
+      }
+    } catch {
+      setProductMessage({ text: 'Terjadi kesalahan jaringan.', isError: true });
+    }
+  }
+
+  async function handleDeleteCategory(id: number, name: string) {
+    if (!confirm(`Hapus kategori "${name}"?`)) return;
+    try {
+      const res = await fetch(`/api/v1/ops/products?type=category&id=${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        setProductMessage({ text: `Kategori "${name}" berhasil dihapus.`, isError: false });
+        fetchAdminProducts();
+      } else {
+        setProductMessage({ text: json.error?.message || 'Gagal menghapus kategori.', isError: true });
       }
     } catch {
       setProductMessage({ text: 'Gagal menghubungi server.', isError: true });
@@ -1056,7 +1141,7 @@ function OpsConsoleInner() {
                 Tambah produk baru, atur varian paket durasi, ubah harga jual secara fleksibel, dan tentukan panduan aktivasi.
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -1064,6 +1149,14 @@ function OpsConsoleInner() {
                 style={{ padding: '8px 14px', fontSize: '0.84rem' }}
               >
                 Refresh
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleOpenCreateCategory}
+                style={{ padding: '8px 14px', fontSize: '0.84rem', borderColor: 'var(--accent-gold)', color: 'var(--gold-light)' }}
+              >
+                📁 Kelola Kategori ({adminCategories.length})
               </button>
               <button
                 type="button"
@@ -1277,14 +1370,37 @@ function OpsConsoleInner() {
                   />
                 </div>
                 <div>
-                  <label>Kategori</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ margin: 0 }}>Kategori *</label>
+                    <button
+                      type="button"
+                      onClick={handleOpenCreateCategory}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-gold)',
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        padding: 0,
+                        fontWeight: 700,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      + Kategori Baru
+                    </button>
+                  </div>
                   <select
-                    value={productForm.category_id}
+                    required
+                    value={productForm.category_id || (adminCategories[0]?.id || '')}
                     onChange={(e) => setProductForm({ ...productForm, category_id: Number(e.target.value) })}
                   >
-                    {adminCategories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    {adminCategories.length === 0 ? (
+                      <option value="">(Klik + Kategori Baru di atas)</option>
+                    ) : (
+                      adminCategories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
@@ -1475,6 +1591,130 @@ function OpsConsoleInner() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: KELOLA KATEGORI (CRUD) */}
+      {categoryModalOpen && (
+        <div className="modal-overlay" onClick={() => setCategoryModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+                <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                  {editingCategoryId ? 'Edit Kategori' : 'Kelola Kategori Produk'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCategoryModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Form Tambah / Edit Kategori */}
+            <form onSubmit={handleSaveCategory} style={{ backgroundColor: 'var(--surface-elevated)', padding: '16px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)', marginBottom: '20px' }}>
+              <strong style={{ fontSize: '0.88rem', color: 'var(--gold-light)', display: 'block', marginBottom: '10px' }}>
+                {editingCategoryId ? 'Form Perbarui Kategori' : '+ Tambah Kategori Baru'}
+              </strong>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label>Nama Kategori (Contoh: AI & Machine Learning)</label>
+                <input
+                  type="text"
+                  required
+                  value={categoryForm.name}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                  placeholder="Contoh: AI & Machine Learning"
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label>Slug URL (Opsional, otomatis dibuat)</label>
+                <input
+                  type="text"
+                  value={categoryForm.slug}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                  placeholder="contoh: ai-machine-learning"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                {editingCategoryId && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => { setEditingCategoryId(null); setCategoryForm({ name: '', slug: '' }); }}
+                    style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                  >
+                    Batal Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ padding: '6px 16px', fontSize: '0.84rem', fontWeight: 700 }}
+                >
+                  {editingCategoryId ? 'Simpan Perubahan' : '+ Simpan Kategori'}
+                </button>
+              </div>
+            </form>
+
+            {/* Daftar Kategori Terdaftar */}
+            <div>
+              <span className="font-label-uppercase" style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>
+                Daftar Kategori Terdaftar ({adminCategories.length}):
+              </span>
+
+              {adminCategories.length === 0 ? (
+                <p style={{ fontSize: '0.85rem', color: 'var(--muted)', textAlign: 'center', padding: '16px' }}>
+                  Belum ada kategori di database. Gunakan form di atas untuk membuat kategori pertama.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto' }}>
+                  {adminCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '10px 12px',
+                        backgroundColor: 'var(--surface-card)',
+                        border: '1px solid var(--hairline)',
+                        borderRadius: 'var(--radius-xs)'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: '0.9rem', color: 'var(--ink)' }}>{cat.name}</strong>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block' }}>/{cat.slug}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => handleOpenEditCategory(cat)}
+                          style={{ padding: '4px 10px', fontSize: '0.76rem', minHeight: 'auto' }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          style={{ padding: '4px 10px', fontSize: '0.76rem', minHeight: 'auto' }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

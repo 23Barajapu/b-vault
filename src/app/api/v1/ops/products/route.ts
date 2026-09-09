@@ -5,7 +5,23 @@ import db from '@/lib/db';
 // Mengambil semua kategori, produk, dan varian
 export async function GET() {
   try {
-    const categories = db.prepare('SELECT * FROM categories ORDER BY id ASC').all();
+    let categories = db.prepare('SELECT * FROM categories ORDER BY id ASC').all() as any[];
+
+    // Auto-seed default categories if empty so dropdown is never empty
+    if (categories.length === 0) {
+      const defaultCategories = [
+        { name: 'AI & Machine Learning', slug: 'ai-machine-learning' },
+        { name: 'Desain & Video', slug: 'desain-video' },
+        { name: 'Produktivitas & Cloud', slug: 'produktivitas-cloud' },
+        { name: 'Developer & Utility', slug: 'developer-utility' },
+      ];
+      const insertCat = db.prepare('INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)');
+      for (const cat of defaultCategories) {
+        insertCat.run(cat.name, cat.slug);
+      }
+      categories = db.prepare('SELECT * FROM categories ORDER BY id ASC').all() as any[];
+    }
+
     const products = db.prepare(`
       SELECT p.*, c.name as category_name, c.slug as category_slug
       FROM products p
@@ -200,6 +216,17 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: true, message: 'Varian berhasil diperbarui' });
     }
 
+    if (target === 'category') {
+      const { id, name, slug } = body;
+      if (!id || !name) return NextResponse.json({ success: false, error: { message: 'ID dan nama kategori wajib disertakan' } }, { status: 400 });
+
+      const safeSlug = slug ? slug.trim().toLowerCase() : name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const stmt = db.prepare('UPDATE categories SET name = ?, slug = ? WHERE id = ?');
+      stmt.run(name.trim(), safeSlug, Number(id));
+
+      return NextResponse.json({ success: true, message: 'Kategori berhasil diperbarui' });
+    }
+
     return NextResponse.json({ success: false, error: { message: 'Target update tidak valid' } }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json(
@@ -210,7 +237,7 @@ export async function PUT(req: Request) {
 }
 
 // DELETE /api/v1/ops/products
-// Menghapus produk atau varian
+// Menghapus produk, varian, atau kategori
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -229,6 +256,11 @@ export async function DELETE(req: Request) {
     if (type === 'variant') {
       db.prepare('DELETE FROM product_variants WHERE id = ?').run(Number(id));
       return NextResponse.json({ success: true, message: 'Varian berhasil dihapus' });
+    }
+
+    if (type === 'category') {
+      db.prepare('DELETE FROM categories WHERE id = ?').run(Number(id));
+      return NextResponse.json({ success: true, message: 'Kategori berhasil dihapus' });
     }
 
     return NextResponse.json({ success: false, error: { message: 'Tipe hapus tidak valid' } }, { status: 400 });
