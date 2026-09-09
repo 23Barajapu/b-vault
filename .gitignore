@@ -30,6 +30,8 @@ dist/
 # Sensitive Product Requirements & Internal Design Specs
 PRD*.md
 *PRD*.md
+DESIGN*.md
+*DESIGN*.md
 internal-specs/
 docs/private/
 
