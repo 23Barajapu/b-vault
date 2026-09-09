@@ -252,7 +252,10 @@ function OpsConsoleInner() {
       const res = await fetch('/api/v1/ops/products');
       const json = await res.json();
       if (json.success) {
-        setAdminProducts(json.data.products || []);
+        const sorted = (json.data.products || []).sort((a: any, b: any) =>
+          (a.title || '').localeCompare(b.title || '')
+        );
+        setAdminProducts(sorted);
         setAdminCategories(json.data.categories || []);
       }
     } catch (err) {

@@ -161,7 +161,7 @@ export default function HomePage() {
       );
     }
 
-    // 3. Sorting
+    // 3. Sorting (Default: A - Z)
     list.sort((a, b) => {
       const aPrice = a.variants[0]?.retail_price || 0;
       const bPrice = b.variants[0]?.retail_price || 0;
@@ -171,7 +171,7 @@ export default function HomePage() {
       if (sortBy === 'price-asc') return aPrice - bPrice;
       if (sortBy === 'price-desc') return bPrice - aPrice;
       if (sortBy === 'warranty') return bWarranty - aWarranty;
-      return 0; // featured
+      return (a.title || '').localeCompare(b.title || ''); // Default Rekomendasi: A - Z
     });
 
     return list;

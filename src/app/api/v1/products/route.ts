@@ -11,7 +11,7 @@ export async function GET() {
       { data: recentOrdersData },
     ] = await Promise.all([
       supabase.from('categories').select('*').order('id', { ascending: true }),
-      supabase.from('products').select('*, categories:category_id(name, slug)').eq('is_active', 1).order('id', { ascending: true }),
+      supabase.from('products').select('*, categories:category_id(name, slug)').eq('is_active', 1).order('title', { ascending: true }),
       supabase.from('product_variants').select('*').eq('is_active', 1).order('retail_price', { ascending: true }),
       supabase.from('store_settings').select('*'),
       supabase

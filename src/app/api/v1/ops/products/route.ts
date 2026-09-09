@@ -27,7 +27,7 @@ export async function GET() {
     const { data: rawProducts } = await supabase
       .from('products')
       .select('*, categories:category_id(name, slug)')
-      .order('id', { ascending: false });
+      .order('title', { ascending: true });
 
     const { data: rawVariants } = await supabase
       .from('product_variants')
