@@ -1,10 +1,9 @@
 {
   "scripts": {
     "dev": "next dev",
-    "build": "next build && opennextjs-cloudflare build",
-    "start": "next start",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
+    "build": "opennextjs-cloudflare build",
+    "deploy": "opennextjs-cloudflare deploy",
+    "preview": "opennextjs-cloudflare preview"
   },
   "devDependencies": {
     "@types/node": "^26.5.0",
