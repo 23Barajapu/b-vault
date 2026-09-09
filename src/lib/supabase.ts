@@ -1,18 +1,21 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getEnvVar } from './auth';
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_U ||
-  process.env.SUPABASE_URL ||
-  '';
+export function getSupabaseConfig() {
+  const url = getEnvVar('NEXT_PUBLIC_SUPABASE_URL', [
+    'NEXT_PUBLIC_SUPABASE_U',
+    'SUPABASE_URL',
+  ]);
+  const key = getEnvVar('SUPABASE_SERVICE_ROLE_KEY', [
+    'SUPABASE_SERVICE_ROLE_',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'NEXT_PUBLIC_SUPABASE_A',
+    'SUPABASE_ANON_KEY',
+  ]);
+  return { url, key };
+}
 
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_ ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_A ||
-  process.env.SUPABASE_ANON_KEY ||
-  '';
+const { url: supabaseUrl, key: supabaseKey } = getSupabaseConfig();
 
 // Create Supabase client (Edge & Node.js compatible)
 export const supabase: SupabaseClient = createClient(
@@ -27,7 +30,8 @@ export const supabase: SupabaseClient = createClient(
 );
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseKey && supabaseUrl !== 'https://placeholder.supabase.co');
+  const { url, key } = getSupabaseConfig();
+  return Boolean(url && key && url !== 'https://placeholder.supabase.co');
 }
 
 export default supabase;

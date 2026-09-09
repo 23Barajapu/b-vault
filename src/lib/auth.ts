@@ -32,13 +32,33 @@ export function getAppBaseUrl(req?: Request): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
+export function getEnvVar(key: string, aliases: string[] = []): string {
+  const allKeys = [key, ...aliases];
+
+  // 1. Check Cloudflare Worker context env
+  try {
+    const cfContext = (globalThis as any)[Symbol.for('__cloudflare-context__')];
+    if (cfContext?.env) {
+      for (const k of allKeys) {
+        if (cfContext.env[k]) return String(cfContext.env[k]).trim();
+      }
+    }
+  } catch {}
+
+  // 2. Check process.env
+  for (const k of allKeys) {
+    if (process.env[k]) return String(process.env[k]).trim();
+  }
+
+  return '';
+}
+
 export function getGoogleConfig() {
-  const clientId =
-    process.env.GOOGLE_CLIENT_ID ||
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-    process.env.NEXT_PUBLIC_GOOGLE_CLII ||
-    '';
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  const clientId = getEnvVar('GOOGLE_CLIENT_ID', [
+    'NEXT_PUBLIC_GOOGLE_CLIENT_ID',
+    'NEXT_PUBLIC_GOOGLE_CLII',
+  ]);
+  const clientSecret = getEnvVar('GOOGLE_CLIENT_SECRET');
   const isConfigured = Boolean(clientId && clientSecret);
   return { clientId, clientSecret, isConfigured };
 }
