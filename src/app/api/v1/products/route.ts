@@ -9,6 +9,7 @@ export async function GET() {
       { data: variantsData },
       { data: settingsData },
       { data: recentOrdersData },
+      { count: fulfilledCountData },
     ] = await Promise.all([
       supabase.from('categories').select('*').order('id', { ascending: true }),
       supabase.from('products').select('*, categories:category_id(name, slug)').eq('is_active', 1).order('title', { ascending: true }),
@@ -33,12 +34,22 @@ export async function GET() {
         .in('payment_status', ['PAID', 'FULFILLED'])
         .order('id', { ascending: false })
         .limit(8),
+      supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .in('payment_status', ['PAID', 'FULFILLED']),
     ]);
 
     const categories = categoriesData || [];
     const rawProducts = productsData || [];
     const variants = variantsData || [];
     const settings = settingsData || [];
+
+    // Delivered licenses calculation: baseline (default 50) + fulfilled/paid orders count
+    const rawBaseline = settings.find((s: any) => s.key === 'baseline_delivered_licenses')?.value;
+    const baseline = rawBaseline ? parseInt(rawBaseline, 10) || 50 : 50;
+    const fulfilledCount = fulfilledCountData || 0;
+    const deliveredLicenses = baseline + fulfilledCount;
 
     // Map products with category names and variants
     const productsWithVariants = rawProducts.map((p: any) => {
@@ -82,6 +93,7 @@ export async function GET() {
           status: storeStatus,
           notice: storeNotice,
         },
+        delivered_licenses: deliveredLicenses,
         categories,
         products: productsWithVariants,
         activities,

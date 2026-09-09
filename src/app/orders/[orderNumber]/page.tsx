@@ -174,6 +174,30 @@ function OrderStatusContent() {
     }
   }
 
+  async function handleSimulateFulfill() {
+    if (!order) return;
+    try {
+      setSimulatingPayment(true);
+      const mockKey = `BV-${order.order_number}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const res = await fetch(`/api/v1/ops/orders/${order.id}/fulfill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activation_payload: `https://vault.b-vault.id/redeem/${mockKey}`,
+          admin_delivery_notes: 'Lisensi otomatis disimulasikan dari simulator admin.',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchStatus();
+      }
+    } catch (err) {
+      console.error('Simulate fulfill error', err);
+    } finally {
+      setSimulatingPayment(false);
+    }
+  }
+
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
     setCopiedText(true);
@@ -445,6 +469,26 @@ function OrderStatusContent() {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                 Halaman ini akan otomatis menampilkan tautan / lisensi begitu admin menempelkan data aktivasi. Tidak perlu memuat ulang halaman secara manual.
               </p>
+
+              {/* Admin Simulator: Selesaikan Pesanan Langsung */}
+              {isAdmin && (
+                <div style={{ marginTop: '20px', padding: '12px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: '#ffffff' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      [SIMULATOR ADMIN] Ingin menyelesaikan pesanan & serahkan lisensi instan?
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleSimulateFulfill}
+                      disabled={simulatingPayment}
+                      style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                    >
+                      {simulatingPayment ? 'Menyerahkan Lisensi...' : 'Selesaikan Pesanan & Kirim Lisensi'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

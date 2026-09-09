@@ -40,6 +40,7 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [store, setStore] = useState<StoreInfo>({ status: 'ONLINE', notice: '' });
+  const [deliveredLicenses, setDeliveredLicenses] = useState<number>(50);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -126,6 +127,25 @@ export default function HomePage() {
   useEffect(() => {
     fetchProducts();
     checkAuthSession();
+
+    // Auto-sync data berkala tanpa animasi loading mengganggu
+    const interval = setInterval(() => {
+      fetchProducts(true);
+    }, 25000);
+
+    function handleFocusOrVisible() {
+      if (document.visibilityState === 'visible') {
+        fetchProducts(true);
+      }
+    }
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+    };
   }, []);
 
   async function checkAuthSession() {
@@ -160,9 +180,9 @@ export default function HomePage() {
     } catch {}
   }
 
-  async function fetchProducts() {
+  async function fetchProducts(isBackground = false) {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const res = await fetch('/api/v1/store/products');
       const data = await res.json();
       if (data.success) {
@@ -170,11 +190,14 @@ export default function HomePage() {
         setCategories(data.data.categories || []);
         setStore(data.data.store || { status: 'ONLINE', notice: '' });
         setActivities(data.data.activities || []);
+        if (typeof data.data.delivered_licenses === 'number') {
+          setDeliveredLicenses(data.data.delivered_licenses);
+        }
       }
     } catch (err) {
       console.error('Failed to load products', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }
 
@@ -389,7 +412,7 @@ export default function HomePage() {
         }}>
           <div>
             <strong className="font-display" style={{ fontSize: 'clamp(1.1rem, 3.8vw, 1.4rem)', color: 'var(--gold-light)', display: 'block' }}>
-              1.200+
+              {(deliveredLicenses || 50).toLocaleString('id-ID')}+
             </strong>
             <span style={{ fontSize: 'clamp(0.64rem, 2vw, 0.76rem)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Lisensi Terkirim

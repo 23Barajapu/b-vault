@@ -133,6 +133,7 @@ function OpsConsoleInner() {
   const [adminPhone, setAdminPhone] = useState('085183410190');
   const [tgToken, setTgToken] = useState('');
   const [tgChatId, setTgChatId] = useState('');
+  const [baselineLicenses, setBaselineLicenses] = useState<number | string>(50);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState('');
 
@@ -240,6 +241,7 @@ function OpsConsoleInner() {
         setAdminPhone(json.data.admin_whatsapp || '085183410190');
         setTgToken(json.data.telegram_bot_token || '');
         setTgChatId(json.data.telegram_chat_id || '');
+        setBaselineLicenses(json.data.baseline_delivered_licenses || 50);
       }
     } catch (err) {
       console.error('Fetch settings error', err);
@@ -642,6 +644,7 @@ function OpsConsoleInner() {
           admin_whatsapp: adminPhone,
           telegram_bot_token: tgToken,
           telegram_chat_id: tgChatId,
+          baseline_delivered_licenses: String(baselineLicenses || 50),
         }),
       });
       const json = await res.json();
@@ -1214,6 +1217,20 @@ function OpsConsoleInner() {
                 onChange={(e) => setAdminPhone(e.target.value)}
                 placeholder="085183410190"
               />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="ops-baseline-licenses">Baseline Lisensi Terkirim (Counter Awal Beranda)</label>
+              <input
+                id="ops-baseline-licenses"
+                type="text"
+                value={typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses}
+                onChange={(e) => setBaselineLicenses(e.target.value.replace(/\D/g, ''))}
+                placeholder="50"
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                Total di halaman depan: Baseline ({typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses || 50}) + Pesanan Selesai ({Number(analytics?.orders?.fulfilled || 0).toLocaleString('id-ID')}) = {(Number(baselineLicenses || 50) + Number(analytics?.orders?.fulfilled || 0)).toLocaleString('id-ID')}+
+              </span>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
