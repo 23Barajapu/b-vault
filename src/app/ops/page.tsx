@@ -788,11 +788,11 @@ function OpsConsoleInner() {
       </header>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', overflowX: 'auto' }}>
+      <div className="scrollable-tabs-nav" style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
         <button
           type="button"
           className={activeTab === 'FULFILLMENT' ? 'btn btn-primary' : 'btn btn-secondary'}
-          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap' }}
+          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => setActiveTab('FULFILLMENT')}
         >
           Quick Fulfillment ({orders.filter(o => o.payment_status === 'PAID_PROCESSING').length})
@@ -800,15 +800,15 @@ function OpsConsoleInner() {
         <button
           type="button"
           className={activeTab === 'PRODUCTS' ? 'btn btn-primary' : 'btn btn-secondary'}
-          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap' }}
+          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => { setActiveTab('PRODUCTS'); fetchAdminProducts(); }}
         >
-          Katalog Produk & Harga ({adminProducts.length})
+          Katalog Produk & Paket ({adminProducts.length})
         </button>
         <button
           type="button"
           className={activeTab === 'ANALYTICS' ? 'btn btn-primary' : 'btn btn-secondary'}
-          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap' }}
+          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => { setActiveTab('ANALYTICS'); fetchAnalytics(); }}
         >
           Analitik Keuangan & SLA
@@ -816,7 +816,7 @@ function OpsConsoleInner() {
         <button
           type="button"
           className={activeTab === 'SETTINGS' ? 'btn btn-primary' : 'btn btn-secondary'}
-          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap' }}
+          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => setActiveTab('SETTINGS')}
         >
           Saklar Toko & Kontak
@@ -827,12 +827,12 @@ function OpsConsoleInner() {
       {activeTab === 'FULFILLMENT' && (
         <div>
           {/* Subfilter */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className={filter === 'PENDING' ? 'btn btn-primary' : 'btn btn-secondary'}
-                style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+                style={{ padding: '6px 12px', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                 onClick={() => setFilter('PENDING')}
               >
                 Perlu Diproses
@@ -840,7 +840,7 @@ function OpsConsoleInner() {
               <button
                 type="button"
                 className={filter === 'FULFILLED' ? 'btn btn-primary' : 'btn btn-secondary'}
-                style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+                style={{ padding: '6px 12px', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                 onClick={() => setFilter('FULFILLED')}
               >
                 Riwayat Selesai
@@ -1292,12 +1292,12 @@ function OpsConsoleInner() {
                       <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: '2px' }}>{prod.description}</p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       <button
                         type="button"
                         className="btn btn-secondary"
                         onClick={() => handleOpenCreateVariant(prod.id)}
-                        style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-gold)', color: 'var(--gold-light)' }}
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-gold)', color: 'var(--gold-light)', flexShrink: 0, whiteSpace: 'nowrap' }}
                       >
                         + Varian Paket
                       </button>
@@ -1305,7 +1305,7 @@ function OpsConsoleInner() {
                         type="button"
                         className="btn btn-secondary"
                         onClick={() => handleOpenEditProduct(prod)}
-                        style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                        style={{ padding: '6px 10px', fontSize: '0.8rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                       >
                         Edit
                       </button>
@@ -1313,7 +1313,7 @@ function OpsConsoleInner() {
                         type="button"
                         className="btn btn-danger"
                         onClick={() => handleDeleteProduct(prod.id, prod.title)}
-                        style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                        style={{ padding: '6px 10px', fontSize: '0.8rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                       >
                         Hapus
                       </button>
@@ -1322,8 +1322,8 @@ function OpsConsoleInner() {
 
                   {/* Variants List Table */}
                   {prod.variants && prod.variants.length > 0 ? (
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                      <table style={{ width: '100%', minWidth: '540px', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--hairline)', textAlign: 'left', color: 'var(--muted)' }}>
                             <th style={{ padding: '8px' }}>Nama Varian Paket</th>

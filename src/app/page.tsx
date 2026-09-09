@@ -377,7 +377,7 @@ export default function HomePage() {
       <div className="card" style={{ marginBottom: '24px', padding: '16px' }}>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           {/* Live Search Bar */}
-          <div style={{ position: 'relative', flex: '1 1 280px', minWidth: '240px' }}>
+          <div style={{ position: 'relative', flex: '1 1 260px', minWidth: 'min(100%, 220px)' }}>
             <input
               ref={searchInputRef}
               type="text"
@@ -411,7 +411,7 @@ export default function HomePage() {
           </div>
 
           {/* Interactive Sorting */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '200px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 1 auto', minWidth: 'min(100%, 180px)' }}>
             <label htmlFor="sort-select" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               Urutkan:
             </label>
@@ -430,11 +430,11 @@ export default function HomePage() {
         </div>
 
         {/* Category Tabs */}
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div className="scrollable-chips-nav">
           <button
             type="button"
             className={selectedCategory === 'all' ? 'btn btn-primary' : 'btn btn-secondary'}
-            style={{ padding: '6px 14px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+            style={{ padding: '8px 16px', fontSize: '0.85rem', flexShrink: 0, whiteSpace: 'nowrap' }}
             onClick={() => setSelectedCategory('all')}
           >
             Semua ({effectiveProducts.length})
@@ -446,7 +446,7 @@ export default function HomePage() {
                 key={c.id}
                 type="button"
                 className={selectedCategory === c.slug ? 'btn btn-primary' : 'btn btn-secondary'}
-                style={{ padding: '6px 14px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                style={{ padding: '8px 16px', fontSize: '0.85rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                 onClick={() => setSelectedCategory(c.slug)}
               >
                 {c.name} ({count})

@@ -148,6 +148,41 @@ html, body {
   display: none;
 }
 
+/* Responsive Scrollable Container for Navigation Tabs & Filter Chips */
+.scrollable-tabs-nav,
+.scrollable-chips-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 100%;
+  width: 100%;
+  padding-bottom: 6px;
+  padding-top: 2px;
+  align-items: center;
+}
+
+.scrollable-tabs-nav::-webkit-scrollbar,
+.scrollable-chips-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure children NEVER collapse/shrink into squished boxes */
+.scrollable-tabs-nav > *,
+.scrollable-chips-nav > *,
+.scrollable-tabs-nav button,
+.scrollable-chips-nav button,
+.scrollable-tabs-nav .btn,
+.scrollable-chips-nav .btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  min-width: max-content !important;
+}
+
 @media (max-width: 767px) {
   .desktop-nav-item {
     display: none !important;
@@ -214,7 +249,7 @@ button, .btn {
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  min-width: 44px;
+  min-width: max(44px, max-content);
   padding: 12px 20px;
   font-size: 0.92rem;
   font-weight: 600;
@@ -223,6 +258,7 @@ button, .btn {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
+  white-space: nowrap;
 }
 
 /* Primary Button: Velvet Red #640509 with Hairline Gold border */
