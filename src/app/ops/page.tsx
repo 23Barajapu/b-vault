@@ -50,8 +50,8 @@ function OpsConsoleInner() {
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Tabs: FULFILLMENT | ANALYTICS | SETTINGS
-  const [activeTab, setActiveTab] = useState<'FULFILLMENT' | 'ANALYTICS' | 'SETTINGS'>('FULFILLMENT');
+  // Tabs: FULFILLMENT | PRODUCTS | ANALYTICS | SETTINGS
+  const [activeTab, setActiveTab] = useState<'FULFILLMENT' | 'PRODUCTS' | 'ANALYTICS' | 'SETTINGS'>('FULFILLMENT');
 
   // Fulfillment State
   const [filter, setFilter] = useState<'PENDING' | 'FULFILLED'>('PENDING');
@@ -66,6 +66,39 @@ function OpsConsoleInner() {
   // Analytics State
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  // Products Management State
+  const [adminProducts, setAdminProducts] = useState<any[]>([]);
+  const [adminCategories, setAdminCategories] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productMessage, setProductMessage] = useState<{ text: string; isError: boolean } | null>(null);
+
+  // Modals for Products & Variants
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [productForm, setProductForm] = useState({
+    title: '',
+    platform_name: '',
+    category_id: 1,
+    slug: '',
+    description: '',
+    is_active: 1,
+  });
+
+  const [variantModalOpen, setVariantModalOpen] = useState(false);
+  const [selectedProductIdForVariant, setSelectedProductIdForVariant] = useState<number | null>(null);
+  const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
+  const [variantForm, setVariantForm] = useState({
+    name: '',
+    duration_days: 30,
+    cost_price: 0,
+    retail_price: 50000,
+    input_requirement_label: 'Email Akun Anda',
+    estimated_delivery_text: '5 - 20 Menit',
+    warranty_duration_days: 30,
+    activation_guide: '',
+    is_active: 1,
+  });
 
   // Settings State
   const [storeStatus, setStoreStatus] = useState('ONLINE');
@@ -169,7 +202,24 @@ function OpsConsoleInner() {
     }
   }, []);
 
-  // Poll orders every 6s when authenticated
+  // Fetch Admin Products
+  const fetchAdminProducts = useCallback(async () => {
+    try {
+      setLoadingProducts(true);
+      const res = await fetch('/api/v1/ops/products');
+      const json = await res.json();
+      if (json.success) {
+        setAdminProducts(json.data.products || []);
+        setAdminCategories(json.data.categories || []);
+      }
+    } catch (err) {
+      console.error('Fetch admin products error', err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+
+  // Poll orders & products
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchOrders();
@@ -177,12 +227,204 @@ function OpsConsoleInner() {
     if (activeTab === 'ANALYTICS') {
       fetchAnalytics();
     }
+    if (activeTab === 'PRODUCTS') {
+      fetchAdminProducts();
+    }
     const interval = setInterval(() => {
       fetchOrders();
       if (activeTab === 'ANALYTICS') fetchAnalytics();
     }, 6000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, fetchOrders, fetchSettings, fetchAnalytics, activeTab]);
+  }, [isAuthenticated, fetchOrders, fetchSettings, fetchAnalytics, fetchAdminProducts, activeTab]);
+
+  // Product Modal Openers
+  function handleOpenCreateProduct() {
+    setEditingProductId(null);
+    setProductForm({
+      title: '',
+      platform_name: '',
+      category_id: adminCategories[0]?.id || 1,
+      slug: '',
+      description: '',
+      is_active: 1,
+    });
+    setProductModalOpen(true);
+  }
+
+  function handleOpenEditProduct(prod: any) {
+    setEditingProductId(prod.id);
+    setProductForm({
+      title: prod.title,
+      platform_name: prod.platform_name,
+      category_id: prod.category_id,
+      slug: prod.slug,
+      description: prod.description,
+      is_active: prod.is_active,
+    });
+    setProductModalOpen(true);
+  }
+
+  async function handleSaveProduct(e: React.FormEvent) {
+    e.preventDefault();
+    setProductMessage(null);
+    try {
+      if (editingProductId) {
+        // Edit product
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target: 'product',
+            id: editingProductId,
+            ...productForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Produk berhasil diperbarui!', isError: false });
+          setProductModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal mengubah produk.', isError: true });
+        }
+      } else {
+        // Create product
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_product',
+            ...productForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Produk baru berhasil ditambahkan!', isError: false });
+          setProductModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal menambah produk.', isError: true });
+        }
+      }
+    } catch {
+      setProductMessage({ text: 'Terjadi kesalahan jaringan.', isError: true });
+    }
+  }
+
+  async function handleDeleteProduct(id: number, title: string) {
+    if (!confirm(`Hapus produk "${title}" beserta seluruh variannya?`)) return;
+    try {
+      const res = await fetch(`/api/v1/ops/products?type=product&id=${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        setProductMessage({ text: `Produk "${title}" berhasil dihapus.`, isError: false });
+        fetchAdminProducts();
+      } else {
+        setProductMessage({ text: json.error?.message || 'Gagal menghapus produk.', isError: true });
+      }
+    } catch {
+      setProductMessage({ text: 'Gagal menghubungi server.', isError: true });
+    }
+  }
+
+  // Variant Modal Openers
+  function handleOpenCreateVariant(productId: number) {
+    setSelectedProductIdForVariant(productId);
+    setEditingVariantId(null);
+    setVariantForm({
+      name: '',
+      duration_days: 30,
+      cost_price: 0,
+      retail_price: 50000,
+      input_requirement_label: 'Email Akun Anda',
+      estimated_delivery_text: '5 - 20 Menit',
+      warranty_duration_days: 30,
+      activation_guide: '1. Pastikan email Anda aktif.\n2. Buka link aktivasi di invoice Anda.',
+      is_active: 1,
+    });
+    setVariantModalOpen(true);
+  }
+
+  function handleOpenEditVariant(variant: any) {
+    setSelectedProductIdForVariant(variant.product_id);
+    setEditingVariantId(variant.id);
+    setVariantForm({
+      name: variant.name,
+      duration_days: variant.duration_days,
+      cost_price: variant.cost_price || 0,
+      retail_price: variant.retail_price,
+      input_requirement_label: variant.input_requirement_label || 'Email Akun Anda',
+      estimated_delivery_text: variant.estimated_delivery_text || '5 - 20 Menit',
+      warranty_duration_days: variant.warranty_duration_days || variant.duration_days,
+      activation_guide: variant.activation_guide || '',
+      is_active: variant.is_active,
+    });
+    setVariantModalOpen(true);
+  }
+
+  async function handleSaveVariant(e: React.FormEvent) {
+    e.preventDefault();
+    setProductMessage(null);
+    try {
+      if (editingVariantId) {
+        // Edit variant
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target: 'variant',
+            id: editingVariantId,
+            ...variantForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Varian harga berhasil diperbarui!', isError: false });
+          setVariantModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal mengubah varian.', isError: true });
+        }
+      } else {
+        // Create variant
+        const res = await fetch('/api/v1/ops/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_variant',
+            product_id: selectedProductIdForVariant,
+            ...variantForm,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setProductMessage({ text: 'Varian paket baru berhasil ditambahkan!', isError: false });
+          setVariantModalOpen(false);
+          fetchAdminProducts();
+        } else {
+          setProductMessage({ text: json.error?.message || 'Gagal menambah varian.', isError: true });
+        }
+      }
+    } catch {
+      setProductMessage({ text: 'Terjadi kesalahan jaringan.', isError: true });
+    }
+  }
+
+  async function handleDeleteVariant(id: number, name: string) {
+    if (!confirm(`Hapus varian paket "${name}"?`)) return;
+    try {
+      const res = await fetch(`/api/v1/ops/products?type=variant&id=${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        setProductMessage({ text: `Varian "${name}" berhasil dihapus.`, isError: false });
+        fetchAdminProducts();
+      } else {
+        setProductMessage({ text: json.error?.message || 'Gagal menghapus varian.', isError: true });
+      }
+    } catch {
+      setProductMessage({ text: 'Gagal menghubungi server.', isError: true });
+    }
+  }
 
   // Handle Quick Fulfillment
   async function handleQuickFulfill(orderId: number) {
@@ -404,6 +646,14 @@ function OpsConsoleInner() {
           onClick={() => setActiveTab('FULFILLMENT')}
         >
           Quick Fulfillment ({orders.filter(o => o.payment_status === 'PAID_PROCESSING').length})
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'PRODUCTS' ? 'btn btn-primary' : 'btn btn-secondary'}
+          style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap' }}
+          onClick={() => { setActiveTab('PRODUCTS'); fetchAdminProducts(); }}
+        >
+          Katalog Produk & Harga ({adminProducts.length})
         </button>
         <button
           type="button"
@@ -792,6 +1042,440 @@ function OpsConsoleInner() {
               {savingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* TAB 4: PRODUCTS & PRICING MANAGEMENT */}
+      {activeTab === 'PRODUCTS' && (
+        <div>
+          {/* Header Action Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2 className="font-title-lg" style={{ color: 'var(--ink)' }}>Manajemen Produk & Harga</h2>
+              <p style={{ fontSize: '0.84rem', color: 'var(--muted)' }}>
+                Tambah produk baru, atur varian paket durasi, ubah harga jual secara fleksibel, dan tentukan panduan aktivasi.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={fetchAdminProducts}
+                style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+              >
+                Refresh
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOpenCreateProduct}
+                style={{ padding: '8px 16px', fontSize: '0.84rem', fontWeight: 700 }}
+              >
+                + Tambah Produk Baru
+              </button>
+            </div>
+          </div>
+
+          {/* Feedback Message */}
+          {productMessage && (
+            <div style={{
+              backgroundColor: productMessage.isError ? 'var(--danger-bg)' : 'var(--success-bg)',
+              border: `1px solid ${productMessage.isError ? 'var(--danger-border)' : 'var(--success-border)'}`,
+              color: productMessage.isError ? 'var(--danger)' : 'var(--success)',
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '16px',
+              fontSize: '0.88rem'
+            }}>
+              {productMessage.text}
+            </div>
+          )}
+
+          {/* Product List */}
+          {loadingProducts ? (
+            <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--muted)' }}>
+              <span className="live-pulse-dot" style={{ marginRight: '8px' }} />
+              <span>Memuat data produk dari database...</span>
+            </div>
+          ) : adminProducts.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 20px' }}>
+              <h3 className="font-title-lg" style={{ color: 'var(--gold-light)', marginBottom: '8px' }}>
+                Katalog Produk Masih Kosong
+              </h3>
+              <p style={{ fontSize: '0.88rem', color: 'var(--body)', maxWidth: '480px', margin: '0 auto 16px' }}>
+                Belum ada produk terdaftar di database. Anda dapat menambahkan produk pertama secara fleksibel menggunakan tombol di bawah.
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOpenCreateProduct}
+                style={{ padding: '10px 20px', fontWeight: 700 }}
+              >
+                + Tambah Produk Pertama Sekarang
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {adminProducts.map((prod) => (
+                <div key={prod.id} className="card" style={{ padding: '20px' }}>
+                  {/* Product Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px', marginBottom: '14px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span className="badge badge-online" style={{ fontSize: '0.7rem' }}>{prod.platform_name}</span>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>{prod.category_name || 'Umum'}</span>
+                        {prod.is_active === 1 ? (
+                          <span className="badge badge-online" style={{ fontSize: '0.7rem' }}>Aktif</span>
+                        ) : (
+                          <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>Non-Aktif</span>
+                        )}
+                      </div>
+                      <h3 className="font-title-lg" style={{ color: 'var(--ink)', fontSize: '1.15rem' }}>{prod.title}</h3>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: '2px' }}>{prod.description}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => handleOpenCreateVariant(prod.id)}
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-gold)', color: 'var(--gold-light)' }}
+                      >
+                        + Varian Paket
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => handleOpenEditProduct(prod)}
+                        style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => handleDeleteProduct(prod.id, prod.title)}
+                        style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Variants List Table */}
+                  {prod.variants && prod.variants.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid var(--hairline)', textAlign: 'left', color: 'var(--muted)' }}>
+                            <th style={{ padding: '8px' }}>Nama Varian Paket</th>
+                            <th style={{ padding: '8px' }}>Durasi</th>
+                            <th style={{ padding: '8px' }}>Modal</th>
+                            <th style={{ padding: '8px' }}>Harga Jual</th>
+                            <th style={{ padding: '8px' }}>Garansi</th>
+                            <th style={{ padding: '8px', textAlign: 'right' }}>Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {prod.variants.map((v: any) => (
+                            <tr key={v.id} style={{ borderBottom: '1px solid rgba(219, 177, 99, 0.1)' }}>
+                              <td style={{ padding: '10px 8px', fontWeight: 600, color: 'var(--ink)' }}>
+                                {v.name}
+                              </td>
+                              <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
+                                {v.duration_days} Hari
+                              </td>
+                              <td style={{ padding: '10px 8px', color: 'var(--muted)' }}>
+                                Rp {(v.cost_price || 0).toLocaleString('id-ID')}
+                              </td>
+                              <td style={{ padding: '10px 8px', fontWeight: 700, color: 'var(--gold-light)' }}>
+                                Rp {v.retail_price.toLocaleString('id-ID')}
+                              </td>
+                              <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
+                                {v.warranty_duration_days} Hari
+                              </td>
+                              <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  onClick={() => handleOpenEditVariant(v)}
+                                  style={{ padding: '4px 8px', fontSize: '0.78rem', minHeight: 'auto', marginRight: '6px' }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-danger"
+                                  onClick={() => handleDeleteVariant(v.id, v.name)}
+                                  style={{ padding: '4px 8px', fontSize: '0.78rem', minHeight: 'auto' }}
+                                >
+                                  Hapus
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '14px', backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', textAlign: 'center', fontSize: '0.82rem', color: 'var(--muted)' }}>
+                      Belum ada paket/varian harga untuk produk ini.{' '}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCreateVariant(prod.id)}
+                        style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', fontWeight: 700, padding: 0 }}
+                      >
+                        + Tambah Varian Pertama
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: TAMBAH / EDIT PRODUK INDUK */}
+      {productModalOpen && (
+        <div className="modal-overlay" onClick={() => setProductModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
+              <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                {editingProductId ? 'Edit Produk' : 'Tambah Produk Baru'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setProductModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct}>
+              <div style={{ marginBottom: '14px' }}>
+                <label>Nama Produk (Contoh: Google AI Pro)</label>
+                <input
+                  type="text"
+                  required
+                  value={productForm.title}
+                  onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                  placeholder="Contoh: Google AI Pro"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label>Platform / Vendor</label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.platform_name}
+                    onChange={(e) => setProductForm({ ...productForm, platform_name: e.target.value })}
+                    placeholder="Contoh: Google, Canva"
+                  />
+                </div>
+                <div>
+                  <label>Kategori</label>
+                  <select
+                    value={productForm.category_id}
+                    onChange={(e) => setProductForm({ ...productForm, category_id: Number(e.target.value) })}
+                  >
+                    {adminCategories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label>Slug URL (Opsional, otomatis digenerate)</label>
+                <input
+                  type="text"
+                  value={productForm.slug}
+                  onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
+                  placeholder="contoh: google-ai-pro"
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label>Deskripsi Singkat</label>
+                <textarea
+                  rows={3}
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                  placeholder="Deskripsikan keuntungan, kapasitas cloud, atau fitur utama..."
+                />
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <label>Status Publikasi</label>
+                <select
+                  value={productForm.is_active}
+                  onChange={(e) => setProductForm({ ...productForm, is_active: Number(e.target.value) })}
+                >
+                  <option value={1}>Aktif (Tampil di Katalog Toko)</option>
+                  <option value={0}>Non-Aktif (Disembunyikan)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setProductModalOpen(false)}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ fontWeight: 700 }}
+                >
+                  {editingProductId ? 'Simpan Perubahan' : 'Buat Produk'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TAMBAH / EDIT VARIAN PAKET & HARGA */}
+      {variantModalOpen && (
+        <div className="modal-overlay" onClick={() => setVariantModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
+              <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                {editingVariantId ? 'Edit Varian Paket' : 'Tambah Varian Paket Baru'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setVariantModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveVariant}>
+              <div style={{ marginBottom: '14px' }}>
+                <label>Nama Paket Varian</label>
+                <input
+                  type="text"
+                  required
+                  value={variantForm.name}
+                  onChange={(e) => setVariantForm({ ...variantForm, name: e.target.value })}
+                  placeholder="Contoh: 1 Bulan Private Access / 18 Bulan Access"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label>Durasi Aktif (Hari)</label>
+                  <input
+                    type="number"
+                    required
+                    value={variantForm.duration_days}
+                    onChange={(e) => setVariantForm({ ...variantForm, duration_days: Number(e.target.value) })}
+                    placeholder="30"
+                  />
+                </div>
+                <div>
+                  <label>Garansi (Hari)</label>
+                  <input
+                    type="number"
+                    required
+                    value={variantForm.warranty_duration_days}
+                    onChange={(e) => setVariantForm({ ...variantForm, warranty_duration_days: Number(e.target.value) })}
+                    placeholder="30"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label>Harga Modal / Supplier (Rp)</label>
+                  <input
+                    type="number"
+                    value={variantForm.cost_price}
+                    onChange={(e) => setVariantForm({ ...variantForm, cost_price: Number(e.target.value) })}
+                    placeholder="25000"
+                  />
+                </div>
+                <div>
+                  <label style={{ color: 'var(--gold-light)' }}>Harga Jual / Retail (Rp) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={variantForm.retail_price}
+                    onChange={(e) => setVariantForm({ ...variantForm, retail_price: Number(e.target.value) })}
+                    placeholder="45000"
+                    style={{ borderColor: 'var(--accent-gold)' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label>Label Akun Pembeli</label>
+                  <input
+                    type="text"
+                    value={variantForm.input_requirement_label}
+                    onChange={(e) => setVariantForm({ ...variantForm, input_requirement_label: e.target.value })}
+                    placeholder="Contoh: Email Akun Anda"
+                  />
+                </div>
+                <div>
+                  <label>Estimasi Pengiriman</label>
+                  <input
+                    type="text"
+                    value={variantForm.estimated_delivery_text}
+                    onChange={(e) => setVariantForm({ ...variantForm, estimated_delivery_text: e.target.value })}
+                    placeholder="5 - 20 Menit"
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label>Panduan Aktivasi untuk Pembeli</label>
+                <textarea
+                  rows={3}
+                  value={variantForm.activation_guide}
+                  onChange={(e) => setVariantForm({ ...variantForm, activation_guide: e.target.value })}
+                  placeholder="Langkah 1. Cek email masuk dari team invite...&#10;Langkah 2. Klik terima..."
+                />
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <label>Status Varian</label>
+                <select
+                  value={variantForm.is_active}
+                  onChange={(e) => setVariantForm({ ...variantForm, is_active: Number(e.target.value) })}
+                >
+                  <option value={1}>Aktif (Bisa dibeli pembeli)</option>
+                  <option value={0}>Non-Aktif (Stok Kosong)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setVariantModalOpen(false)}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ fontWeight: 700 }}
+                >
+                  {editingVariantId ? 'Simpan Varian' : 'Tambahkan Varian'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

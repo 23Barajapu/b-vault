@@ -18,6 +18,7 @@ dist/
 *.sqlite-wal
 *.sqlite-shm
 *.db
+*.sql
 
 # Environment Variables & Secrets
 .env
