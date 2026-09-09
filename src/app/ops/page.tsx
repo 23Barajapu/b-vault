@@ -1632,7 +1632,7 @@ function OpsConsoleInner() {
       {/* MODAL: TAMBAH / EDIT VARIAN PAKET & HARGA */}
       {variantModalOpen && (
         <div className="modal-overlay" onClick={() => setVariantModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ color: 'var(--accent-gold)', fontSize: '0.95rem' }}>✦</span>
@@ -1678,7 +1678,8 @@ function OpsConsoleInner() {
                       className="modal-inline-action"
                       style={{
                         color: Number(variantForm.duration_days) === 0 ? 'var(--gold-light)' : 'var(--muted)',
-                        fontWeight: Number(variantForm.duration_days) === 0 ? 700 : 500
+                        fontWeight: Number(variantForm.duration_days) === 0 ? 700 : 500,
+                        whiteSpace: 'nowrap'
                       }}
                       onClick={() => {
                         setVariantForm({
@@ -1687,7 +1688,7 @@ function OpsConsoleInner() {
                         });
                       }}
                     >
-                      {Number(variantForm.duration_days) === 0 ? '✓ Mode Lifetime' : '+ Set Lifetime'}
+                      {Number(variantForm.duration_days) === 0 ? '✓ Lifetime' : '+ Lifetime'}
                     </button>
                   </div>
                   <input
@@ -1706,11 +1707,11 @@ function OpsConsoleInner() {
                       fontWeight: Number(variantForm.duration_days) === 0 ? 700 : undefined,
                     }}
                   />
-                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, duration_days: 30 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px' }}
                     >
                       30 Hari
                     </button>
@@ -1718,7 +1719,7 @@ function OpsConsoleInner() {
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, duration_days: 365 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px' }}
                     >
                       1 Tahun (365)
                     </button>
@@ -1726,9 +1727,9 @@ function OpsConsoleInner() {
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, duration_days: 0 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px', fontWeight: 600 }}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px', fontWeight: 600 }}
                     >
-                      ✦ Lifetime / Unlimited
+                      ✦ Lifetime
                     </button>
                   </div>
                 </div>
@@ -1743,7 +1744,8 @@ function OpsConsoleInner() {
                       className="modal-inline-action"
                       style={{
                         color: Number(variantForm.warranty_duration_days) === 0 ? 'var(--gold-light)' : 'var(--muted)',
-                        fontWeight: Number(variantForm.warranty_duration_days) === 0 ? 700 : 500
+                        fontWeight: Number(variantForm.warranty_duration_days) === 0 ? 700 : 500,
+                        whiteSpace: 'nowrap'
                       }}
                       onClick={() => {
                         setVariantForm({
@@ -1752,7 +1754,7 @@ function OpsConsoleInner() {
                         });
                       }}
                     >
-                      {Number(variantForm.warranty_duration_days) === 0 ? '✓ Garansi Lifetime' : '+ Set Lifetime'}
+                      {Number(variantForm.warranty_duration_days) === 0 ? '✓ Lifetime' : '+ Lifetime'}
                     </button>
                   </div>
                   <input
@@ -1771,11 +1773,11 @@ function OpsConsoleInner() {
                       fontWeight: Number(variantForm.warranty_duration_days) === 0 ? 700 : undefined,
                     }}
                   />
-                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 30 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px' }}
                     >
                       30 Hari
                     </button>
@@ -1783,7 +1785,7 @@ function OpsConsoleInner() {
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 365 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px' }}
                     >
                       1 Tahun (365)
                     </button>
@@ -1791,9 +1793,9 @@ function OpsConsoleInner() {
                     <button
                       type="button"
                       onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 0 })}
-                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px', fontWeight: 600 }}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.74rem', cursor: 'pointer', padding: '2px 4px', fontWeight: 600 }}
                     >
-                      ✦ Garansi Lifetime
+                      ✦ Lifetime
                     </button>
                   </div>
                 </div>

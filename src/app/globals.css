@@ -427,13 +427,13 @@ label {
 
 .modal-form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
   margin-bottom: 14px;
   align-items: flex-start;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 600px) {
   .modal-form-row {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -444,6 +444,8 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
   min-height: 20px;
   margin-bottom: 6px;
 }
