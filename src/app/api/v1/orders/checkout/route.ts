@@ -120,7 +120,9 @@ export async function POST(request: Request) {
 
     if (payment_method === 'QRIS') {
       paymentChannelData.qr_content = `00020101021226670016ID.CO.B-VAULT.WWW01189360091100000000005204581253033605405${variant.retail_price}5802ID5910B-VAULT6007JAKARTA61051234062070703A016304${orderNumber.slice(-4)}`;
-      paymentChannelData.qr_image_url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(paymentChannelData.qr_content)}`;
+      paymentChannelData.qr_image_url = '/qris-all-pay.jpeg';
+      paymentChannelData.merchant_name = 'BARAJA PUTRA, DIGITAL & KREATIF';
+      paymentChannelData.nmid = 'ID1026505289292';
     } else {
       const bankCode = payment_method.replace('_VA', '');
       const prefixMap: Record<string, string> = {

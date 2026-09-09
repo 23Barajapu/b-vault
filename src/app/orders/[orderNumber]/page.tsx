@@ -258,45 +258,70 @@ function OrderStatusContent() {
               </div>
 
               {order.payment_method === 'QRIS' ? (
-                <div style={{ textAlign: 'center', padding: '16px', backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                    Pindai QRIS berikut menggunakan aplikasi m-Banking atau E-Wallet:
+                <div style={{ textAlign: 'center', padding: '20px 16px', backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <span className="badge badge-online" style={{ fontSize: '0.74rem', marginBottom: '6px' }}>
+                      QRIS STANDAR PEMBAYARAN NASIONAL
+                    </span>
+                    <h3 className="font-title-md" style={{ color: 'var(--ink)', marginTop: '4px', fontSize: '1.1rem' }}>
+                      BARAJA PUTRA, DIGITAL &amp; KREATIF
+                    </h3>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                      NMID: <strong style={{ color: 'var(--gold-light)' }}>ID1026505289292</strong>
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+                    Pindai QRIS berikut menggunakan aplikasi m-Banking atau E-Wallet (BCA, Mandiri, BRI, BNI, GoPay, OVO, DANA, ShopeePay):
                   </p>
+
                   <div style={{
                     display: 'inline-block',
-                    padding: '16px',
+                    padding: '12px',
                     backgroundColor: '#ffffff',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                    marginBottom: '12px'
+                    border: '1.5px solid var(--hairline)',
+                    marginBottom: '14px',
+                    maxWidth: '320px',
+                    width: '100%',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.7)'
                   }}>
-                    {/* SVG Mock QR Code */}
-                    <svg width="200" height="200" viewBox="0 0 200 200" style={{ display: 'block', margin: '0 auto' }}>
-                      <rect width="200" height="200" fill="#ffffff" />
-                      {/* Top-left marker */}
-                      <rect x="20" y="20" width="50" height="50" fill="#0f172a" />
-                      <rect x="30" y="30" width="30" height="30" fill="#ffffff" />
-                      <rect x="37" y="37" width="16" height="16" fill="#0f172a" />
-                      {/* Top-right marker */}
-                      <rect x="130" y="20" width="50" height="50" fill="#0f172a" />
-                      <rect x="140" y="30" width="30" height="30" fill="#ffffff" />
-                      <rect x="147" y="37" width="16" height="16" fill="#0f172a" />
-                      {/* Bottom-left marker */}
-                      <rect x="20" y="130" width="50" height="50" fill="#0f172a" />
-                      <rect x="30" y="140" width="30" height="30" fill="#ffffff" />
-                      <rect x="37" y="147" width="16" height="16" fill="#0f172a" />
-                      {/* Data dots */}
-                      <rect x="85" y="25" width="25" height="12" fill="#0f172a" />
-                      <rect x="80" y="50" width="35" height="15" fill="#0f172a" />
-                      <rect x="85" y="80" width="30" height="30" fill="#0f766e" />
-                      <rect x="25" y="85" width="40" height="12" fill="#0f172a" />
-                      <rect x="130" y="85" width="45" height="15" fill="#0f172a" />
-                      <rect x="85" y="125" width="30" height="20" fill="#0f172a" />
-                      <rect x="130" y="125" width="50" height="45" fill="#0f172a" />
-                    </svg>
+                    <img
+                      src="/qris-all-pay.jpeg"
+                      alt="QRIS Baraja Putra, Digital & Kreatif"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: 'var(--radius-xs)'
+                      }}
+                    />
                   </div>
-                  <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                    QRIS Dinamis resmi terhubung otomatis ke rekening penampung.
+
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <a
+                      href="/qris-all-pay.jpeg"
+                      download="qris-baraja-putra.jpeg"
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <span>📥</span>
+                      <span>Unduh Gambar QRIS</span>
+                    </a>
+                    <a
+                      href="/qris-all-pay.jpeg"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <span>🔍</span>
+                      <span>Perbesar QRIS</span>
+                    </a>
+                  </div>
+
+                  <p style={{ fontSize: '0.82rem', color: 'var(--gold-light)' }}>
+                    Setelah transfer berhasil, konfirmasi pembayaran Anda agar pesanan segera diproses.
                   </p>
                 </div>
               ) : (

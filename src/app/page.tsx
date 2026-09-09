@@ -868,7 +868,7 @@ export default function HomePage() {
                 <label style={{ display: 'block', marginBottom: '6px' }}>Metode Pembayaran</label>
                 <div style={{ display: 'grid', gap: '8px' }}>
                   {[
-                    { id: 'QRIS', title: 'QRIS Dinamis', desc: 'GoPay, OVO, Dana, ShopeePay, Mobile Banking' },
+                    { id: 'QRIS', title: 'QRIS All Payment (BCA, Mandiri, GoPay, OVO, Dana)', desc: 'Baraja Putra Digital & Kreatif (NMID: ID1026505289292)' },
                     { id: 'BCA_VA', title: 'BCA Virtual Account', desc: 'Verifikasi instan otomatis 24 jam' },
                     { id: 'MANDIRI_VA', title: 'Mandiri Virtual Account', desc: 'Livin by Mandiri & ATM' },
                     { id: 'BNI_VA', title: 'BNI Virtual Account', desc: 'BNI Mobile Banking' },
@@ -887,6 +887,36 @@ export default function HomePage() {
                     </div>
                   ))}
                 </div>
+
+                {/* QRIS Merchant Badge when selected */}
+                {paymentMethod === 'QRIS' && (
+                  <div style={{
+                    marginTop: '10px',
+                    padding: '10px 14px',
+                    backgroundColor: 'var(--surface-elevated)',
+                    borderRadius: 'var(--radius-xs)',
+                    border: '1px solid var(--hairline)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#fff', padding: '2px', flexShrink: 0 }}>
+                      <img
+                        src="/qris-all-pay.jpeg"
+                        alt="Preview QRIS Baraja Putra"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: '0.84rem', color: 'var(--ink)', display: 'block' }}>
+                        BARAJA PUTRA, DIGITAL &amp; KREATIF
+                      </strong>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--gold-light)' }}>
+                        NMID: ID1026505289292 &bull; QRIS Standar Nasional (GPN)
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Resting Confirmation */}
