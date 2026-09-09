@@ -202,10 +202,7 @@ a:hover {
 
 /* Accessibility: Clear focus indicators */
 a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+button:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
@@ -295,29 +292,138 @@ button, .btn {
   text-decoration: none;
 }
 
+/* Form Controls: Inset Charcoal with Sleek Gold Hairline Border */
 input, select, textarea {
-  min-height: 44px;
-  padding: 10px 14px;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  font-family: inherit;
+  min-height: 42px;
+  height: 42px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background-color: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
   width: 100%;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px var(--gold-glow);
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  border-color: var(--accent-gold) !important;
+  box-shadow: 0 0 0 3px rgba(219, 177, 99, 0.22) !important;
+  background-color: #1c1b16;
+}
+
+textarea {
+  min-height: 84px;
+  height: auto;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23dbb163' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select option {
+  background-color: #22201b;
+  color: #fcfcfc;
+  padding: 10px 14px;
 }
 
 label {
   display: block;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--body-strong);
   margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+/* Clean Modal Form Layout Utilities */
+.modal-form-group {
+  margin-bottom: 14px;
+}
+
+.modal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+}
+
+@media (max-width: 540px) {
+  .modal-form-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.modal-label-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 20px;
+  margin-bottom: 6px;
+}
+
+.modal-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--body-strong);
+  letter-spacing: 0.01em;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modal-label-hint {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.modal-inline-action {
+  background: none !important;
+  border: none !important;
+  color: var(--accent-gold) !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  padding: 0 !important;
+  min-height: auto !important;
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1 !important;
+  text-decoration: underline;
+  box-shadow: none !important;
+  transition: color 0.15s ease;
+}
+
+.modal-inline-action:hover {
+  color: var(--gold-light) !important;
+  text-decoration: none;
 }
 
 /* Layout containers */

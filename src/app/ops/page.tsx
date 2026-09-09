@@ -1373,22 +1373,31 @@ function OpsConsoleInner() {
       {productModalOpen && (
         <div className="modal-overlay" onClick={() => setProductModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
-              <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
-                {editingProductId ? 'Edit Produk' : 'Tambah Produk Baru'}
-              </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: 'var(--accent-gold)', fontSize: '0.95rem' }}>✦</span>
+                <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                  {editingProductId ? 'Edit Produk' : 'Tambah Produk Baru'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setProductModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+                aria-label="Tutup modal"
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.35rem', cursor: 'pointer', padding: '4px', minHeight: 'auto', minWidth: 'auto', lineHeight: 1 }}
               >
                 &times;
               </button>
             </div>
 
             <form onSubmit={handleSaveProduct}>
-              <div style={{ marginBottom: '14px' }}>
-                <label>Nama Produk (Contoh: Google AI Pro)</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">
+                    Nama Produk <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                  </label>
+                  <span className="modal-label-hint">Contoh: Google AI Pro</span>
+                </div>
                 <input
                   type="text"
                   required
@@ -1398,33 +1407,30 @@ function OpsConsoleInner() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="modal-form-row">
                 <div>
-                  <label>Platform / Vendor</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">
+                      Platform / Vendor <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                  </div>
                   <input
                     type="text"
                     required
                     value={productForm.platform_name}
                     onChange={(e) => setProductForm({ ...productForm, platform_name: e.target.value })}
-                    placeholder="Contoh: Google, Canva"
+                    placeholder="Contoh: Google, Canva, Adobe"
                   />
                 </div>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ margin: 0 }}>Kategori *</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">
+                      Kategori <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
                     <button
                       type="button"
                       onClick={handleOpenCreateCategory}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--accent-gold)',
-                        fontSize: '0.78rem',
-                        cursor: 'pointer',
-                        padding: 0,
-                        fontWeight: 700,
-                        textDecoration: 'underline'
-                      }}
+                      className="modal-inline-action"
                     >
                       + Kategori Baru
                     </button>
@@ -1445,8 +1451,11 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label>Slug URL (Opsional, otomatis digenerate)</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">Slug URL</label>
+                  <span className="modal-label-hint">Opsional, otomatis dibuat jika kosong</span>
+                </div>
                 <input
                   type="text"
                   value={productForm.slug}
@@ -1455,8 +1464,11 @@ function OpsConsoleInner() {
                 />
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label>Deskripsi Singkat</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">Deskripsi Singkat</label>
+                  <span className="modal-label-hint">Ringkasan keuntungan & fitur utama</span>
+                </div>
                 <textarea
                   rows={3}
                   value={productForm.description}
@@ -1465,8 +1477,10 @@ function OpsConsoleInner() {
                 />
               </div>
 
-              <div style={{ marginBottom: '18px' }}>
-                <label>Status Publikasi</label>
+              <div className="modal-form-group" style={{ marginBottom: '22px' }}>
+                <div className="modal-label-header">
+                  <label className="modal-label">Status Publikasi</label>
+                </div>
                 <select
                   value={productForm.is_active}
                   onChange={(e) => setProductForm({ ...productForm, is_active: Number(e.target.value) })}
@@ -1476,18 +1490,19 @@ function OpsConsoleInner() {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid var(--hairline)', paddingTop: '16px' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setProductModalOpen(false)}
+                  style={{ minHeight: '40px', height: '40px', padding: '0 18px', fontSize: '0.88rem' }}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
+                  style={{ minHeight: '40px', height: '40px', padding: '0 20px', fontSize: '0.88rem', fontWeight: 700 }}
                 >
                   {editingProductId ? 'Simpan Perubahan' : 'Buat Produk'}
                 </button>
@@ -1501,34 +1516,47 @@ function OpsConsoleInner() {
       {variantModalOpen && (
         <div className="modal-overlay" onClick={() => setVariantModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
-              <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
-                {editingVariantId ? 'Edit Varian Paket' : 'Tambah Varian Paket Baru'}
-              </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: 'var(--accent-gold)', fontSize: '0.95rem' }}>✦</span>
+                <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                  {editingVariantId ? 'Edit Varian Paket' : 'Tambah Varian Paket Baru'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setVariantModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+                aria-label="Tutup modal"
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.35rem', cursor: 'pointer', padding: '4px', minHeight: 'auto', minWidth: 'auto', lineHeight: 1 }}
               >
                 &times;
               </button>
             </div>
 
             <form onSubmit={handleSaveVariant}>
-              <div style={{ marginBottom: '14px' }}>
-                <label>Nama Paket Varian</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">
+                    Nama Paket Varian <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                  </label>
+                  <span className="modal-label-hint">Contoh: 1 Bulan Private / 1 Tahun Sharing</span>
+                </div>
                 <input
                   type="text"
                   required
                   value={variantForm.name}
                   onChange={(e) => setVariantForm({ ...variantForm, name: e.target.value })}
-                  placeholder="Contoh: 1 Bulan Private Access / 18 Bulan Access"
+                  placeholder="Contoh: 1 Bulan Private Access"
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="modal-form-row">
                 <div>
-                  <label>Durasi Aktif (Hari)</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">
+                      Durasi Aktif (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                  </div>
                   <input
                     type="number"
                     required
@@ -1538,7 +1566,11 @@ function OpsConsoleInner() {
                   />
                 </div>
                 <div>
-                  <label>Garansi (Hari)</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">
+                      Garansi (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                  </div>
                   <input
                     type="number"
                     required
@@ -1549,9 +1581,11 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="modal-form-row">
                 <div>
-                  <label>Harga Modal / Supplier (Rp)</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">Harga Modal / Supplier (Rp)</label>
+                  </div>
                   <input
                     type="number"
                     value={variantForm.cost_price}
@@ -1560,21 +1594,26 @@ function OpsConsoleInner() {
                   />
                 </div>
                 <div>
-                  <label style={{ color: 'var(--gold-light)' }}>Harga Jual / Retail (Rp) *</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label" style={{ color: 'var(--gold-light)' }}>
+                      Harga Jual Retail (Rp) <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                  </div>
                   <input
                     type="number"
                     required
                     value={variantForm.retail_price}
                     onChange={(e) => setVariantForm({ ...variantForm, retail_price: Number(e.target.value) })}
                     placeholder="45000"
-                    style={{ borderColor: 'var(--accent-gold)' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="modal-form-row">
                 <div>
-                  <label>Label Akun Pembeli</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">Label Input Pembeli</label>
+                  </div>
                   <input
                     type="text"
                     value={variantForm.input_requirement_label}
@@ -1583,7 +1622,9 @@ function OpsConsoleInner() {
                   />
                 </div>
                 <div>
-                  <label>Estimasi Pengiriman</label>
+                  <div className="modal-label-header">
+                    <label className="modal-label">Estimasi Pengiriman</label>
+                  </div>
                   <input
                     type="text"
                     value={variantForm.estimated_delivery_text}
@@ -1593,39 +1634,45 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label>Panduan Aktivasi untuk Pembeli</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">Panduan Aktivasi untuk Pembeli</label>
+                  <span className="modal-label-hint">Langkah yang diterima pembeli di invoice</span>
+                </div>
                 <textarea
                   rows={3}
                   value={variantForm.activation_guide}
                   onChange={(e) => setVariantForm({ ...variantForm, activation_guide: e.target.value })}
-                  placeholder="Langkah 1. Cek email masuk dari team invite...&#10;Langkah 2. Klik terima..."
+                  placeholder="Langkah 1. Cek email masuk dari team invite...&#10;Langkah 2. Klik terima undangan..."
                 />
               </div>
 
-              <div style={{ marginBottom: '18px' }}>
-                <label>Status Varian</label>
+              <div className="modal-form-group" style={{ marginBottom: '22px' }}>
+                <div className="modal-label-header">
+                  <label className="modal-label">Status Varian</label>
+                </div>
                 <select
                   value={variantForm.is_active}
                   onChange={(e) => setVariantForm({ ...variantForm, is_active: Number(e.target.value) })}
                 >
                   <option value={1}>Aktif (Bisa dibeli pembeli)</option>
-                  <option value={0}>Non-Aktif (Stok Kosong)</option>
+                  <option value={0}>Non-Aktif (Stok Kosong / Disembunyikan)</option>
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid var(--hairline)', paddingTop: '16px' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setVariantModalOpen(false)}
+                  style={{ minHeight: '40px', height: '40px', padding: '0 18px', fontSize: '0.88rem' }}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
+                  style={{ minHeight: '40px', height: '40px', padding: '0 20px', fontSize: '0.88rem', fontWeight: 700 }}
                 >
                   {editingVariantId ? 'Simpan Varian' : 'Tambahkan Varian'}
                 </button>
@@ -1639,9 +1686,9 @@ function OpsConsoleInner() {
       {categoryModalOpen && (
         <div className="modal-overlay" onClick={() => setCategoryModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+                <span style={{ color: 'var(--accent-gold)', fontSize: '0.95rem' }}>✦</span>
                 <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
                   {editingCategoryId ? 'Edit Kategori' : 'Kelola Kategori Produk'}
                 </h3>
@@ -1649,31 +1696,41 @@ function OpsConsoleInner() {
               <button
                 type="button"
                 onClick={() => setCategoryModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.3rem', cursor: 'pointer' }}
+                aria-label="Tutup modal"
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.35rem', cursor: 'pointer', padding: '4px', minHeight: 'auto', minWidth: 'auto', lineHeight: 1 }}
               >
                 &times;
               </button>
             </div>
 
             {/* Form Tambah / Edit Kategori */}
-            <form onSubmit={handleSaveCategory} style={{ backgroundColor: 'var(--surface-elevated)', padding: '16px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)', marginBottom: '20px' }}>
-              <strong style={{ fontSize: '0.88rem', color: 'var(--gold-light)', display: 'block', marginBottom: '10px' }}>
-                {editingCategoryId ? 'Form Perbarui Kategori' : '+ Tambah Kategori Baru'}
-              </strong>
+            <form onSubmit={handleSaveCategory} style={{ backgroundColor: 'var(--surface-elevated)', padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--hairline)', marginBottom: '20px' }}>
+              <div className="modal-label-header" style={{ marginBottom: '12px' }}>
+                <strong style={{ fontSize: '0.88rem', color: 'var(--gold-light)' }}>
+                  {editingCategoryId ? 'Form Perbarui Kategori' : '+ Tambah Kategori Baru'}
+                </strong>
+              </div>
 
-              <div style={{ marginBottom: '12px' }}>
-                <label>Nama Kategori (Masukan nama kategori)</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">
+                    Nama Kategori <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                  </label>
+                </div>
                 <input
                   type="text"
                   required
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  placeholder="Masukan nama kategori"
+                  placeholder="Contoh: AI & Machine Learning"
                 />
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label>Slug URL (Opsional, otomatis dibuat)</label>
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">Slug URL</label>
+                  <span className="modal-label-hint">Opsional, otomatis dibuat</span>
+                </div>
                 <input
                   type="text"
                   value={categoryForm.slug}
@@ -1682,13 +1739,13 @@ function OpsConsoleInner() {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '14px' }}>
                 {editingCategoryId && (
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => { setEditingCategoryId(null); setCategoryForm({ name: '', slug: '' }); }}
-                    style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                    style={{ minHeight: '34px', height: '34px', padding: '0 14px', fontSize: '0.82rem' }}
                   >
                     Batal Edit
                   </button>
@@ -1696,7 +1753,7 @@ function OpsConsoleInner() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ padding: '6px 16px', fontSize: '0.84rem', fontWeight: 700 }}
+                  style={{ minHeight: '34px', height: '34px', padding: '0 16px', fontSize: '0.84rem', fontWeight: 700 }}
                 >
                   {editingCategoryId ? 'Simpan Perubahan' : '+ Simpan Kategori'}
                 </button>
