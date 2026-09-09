@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface GoogleAuthButtonProps {
   redirectPath?: string;
@@ -22,6 +23,11 @@ export default function GoogleAuthButton({
   const [simEmail, setSimEmail] = useState('');
   const [simName, setSimName] = useState('');
   const [simError, setSimError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleGoogleClick() {
     try {
@@ -111,7 +117,7 @@ export default function GoogleAuthButton({
       </button>
 
       {/* Modal Setup Google OAuth / Quick Sim */}
-      {showConfigModal && (
+      {showConfigModal && mounted && createPortal(
         <div
           className="modal-overlay"
           onClick={() => setShowConfigModal(false)}
@@ -248,7 +254,8 @@ export default function GoogleAuthButton({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
