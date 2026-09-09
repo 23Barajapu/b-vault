@@ -196,6 +196,31 @@ html, body {
   .header-brand-tagline {
     display: none !important;
   }
+  .recent-activity-toast {
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px) + 10px) !important;
+    left: 14px !important;
+    right: 14px !important;
+    max-width: calc(100vw - 28px) !important;
+    padding: 8px 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9) !important;
+  }
+}
+
+.recent-activity-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--accent-gold);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 90;
+  max-width: 380px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .font-title-md {

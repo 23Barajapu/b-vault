@@ -916,23 +916,7 @@ export default function HomePage() {
 
       {/* Real-time Live Activity Notification Toast */}
       {activities.length > 0 && showToast && activities[activityIndex] && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            left: '24px',
-            backgroundColor: 'var(--surface-elevated)',
-            border: '1px solid var(--accent-gold)',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.8)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            zIndex: 90,
-            maxWidth: '380px',
-          }}
-        >
+        <div className="recent-activity-toast">
           <span className="live-pulse-dot" />
           <div style={{ flex: 1, fontSize: '0.82rem', color: 'var(--ink)' }}>
             <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
