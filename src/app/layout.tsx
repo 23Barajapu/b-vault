@@ -114,7 +114,23 @@ export default function RootLayout({
                 <strong className="font-display" style={{ color: 'var(--gold-light)', fontSize: '1.05rem', letterSpacing: '0.04em' }}>B-VAULT</strong> &bull; Official Pro License & Digital Suite Provider.
               </p>
               <p style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
-                CS WhatsApp: <strong style={{ color: 'var(--ink)' }}>0858-6170-8659</strong> &bull; Verifikasi instan QRIS 24 Jam.
+                Verifikasi instan QRIS 24 Jam &bull;{' '}
+                <a
+                  href="https://wa.me/6285861708659?text=Halo%20CS%20B-Vault,%20saya%20butuh%20bantuan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'var(--gold-light)',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <span>Hubungi CS</span>
+                  <span style={{ fontSize: '0.75rem' }}>↗</span>
+                </a>
               </p>
             </div>
             <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>

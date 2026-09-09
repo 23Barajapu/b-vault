@@ -374,7 +374,22 @@ export default function HomePage() {
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             <span>Estimasi aktivasi: <strong style={{ color: 'var(--gold-light)', backgroundColor: 'rgba(219, 177, 99, 0.14)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap' }}>5 - 20 Menit</strong></span>
             <span className="desktop-nav-item">&bull;</span>
-            <span>WhatsApp CS: <strong style={{ color: 'var(--ink)' }}>0858-6170-8659</strong></span>
+            <a
+              href="https://wa.me/6285861708659?text=Halo%20CS%20B-Vault,%20saya%20butuh%20bantuan"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'var(--gold-light)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600
+              }}
+            >
+              <span>Hubungi CS</span>
+              <span style={{ fontSize: '0.75rem' }}>↗</span>
+            </a>
           </div>
         </div>
       )}
