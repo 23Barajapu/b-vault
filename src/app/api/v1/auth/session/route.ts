@@ -29,6 +29,17 @@ export async function GET(request: Request) {
       });
     }
 
+    const adminEmails = [
+      'ops@b-vault.id',
+      'admin@b-vault.id',
+      'barajapu23@gmail.com',
+      'agilezone9@gmail.com',
+    ];
+    const uEmail = (user.email || '').toLowerCase().trim();
+    if (adminEmails.includes(uEmail)) {
+      user.role = 'admin';
+    }
+
     return NextResponse.json({
       success: true,
       data: {

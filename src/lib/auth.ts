@@ -10,28 +10,6 @@ export interface AuthUser {
   google_id?: string | null;
 }
 
-export function getAdminEmails(): string[] {
-  const envAdmins = (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return ['ops@b-vault.id', 'admin@b-vault.id', 'barajapu23@gmail.com', 'agilezone9@gmail.com', ...envAdmins];
-}
-
-export function getAppBaseUrl(req?: Request): string {
-  if (req) {
-    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    if (host) {
-      const proto = req.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
-      return `${proto}://${host}`;
-    }
-  }
-  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
-  }
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-}
-
 export function getEnvVar(key: string, aliases: string[] = []): string {
   const allKeys = [key, ...aliases];
 
@@ -51,6 +29,28 @@ export function getEnvVar(key: string, aliases: string[] = []): string {
   }
 
   return '';
+}
+
+export function getAdminEmails(): string[] {
+  const envAdmins = getEnvVar('ADMIN_EMAILS')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return ['ops@b-vault.id', 'admin@b-vault.id', 'barajapu23@gmail.com', 'agilezone9@gmail.com', ...envAdmins];
+}
+
+export function getAppBaseUrl(req?: Request): string {
+  if (req) {
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    if (host) {
+      const proto = req.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+      return `${proto}://${host}`;
+    }
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
 export function getGoogleConfig() {
@@ -143,11 +143,13 @@ export async function upsertGoogleUser(profile: {
     if (!error && inserted) user = inserted;
   }
 
+  const finalRole = (adminEmails.includes(email) || user?.role === 'admin') ? 'admin' : (user?.role || 'customer');
+
   return {
     id: user?.id || 1,
     name: user?.name || name,
     email: user?.email || email,
-    role: user?.role || 'customer',
+    role: finalRole,
     avatar_url: user?.avatar_url || avatarUrl,
     google_id: user?.google_id || googleId,
   };
@@ -181,11 +183,15 @@ export async function getSessionUser(token: string): Promise<AuthUser | null> {
   if (error || !data || !data.users) return null;
 
   const u = Array.isArray(data.users) ? data.users[0] : (data.users as any);
+  const uEmail = (u.email || '').toLowerCase().trim();
+  const adminEmails = getAdminEmails();
+  const isAdmin = adminEmails.includes(uEmail) || u.role === 'admin';
+
   return {
     id: u.id,
     name: u.name,
     email: u.email,
-    role: u.role,
+    role: isAdmin ? 'admin' : (u.role || 'customer'),
     avatar_url: u.avatar_url,
     google_id: u.google_id,
   };

@@ -129,9 +129,14 @@ function OpsConsoleInner() {
       try {
         const res = await fetch('/api/v1/auth/session');
         const json = await res.json();
-        if (json.success && json.data?.authenticated && json.data.user?.role === 'admin') {
-          sessionStorage.setItem('bv_ops_token', 'google_session');
-          setIsAuthenticated(true);
+        if (json.success && json.data?.authenticated && json.data.user) {
+          const u = json.data.user;
+          const uEmail = (u.email || '').toLowerCase().trim();
+          const adminList = ['barajapu23@gmail.com', 'agilezone9@gmail.com', 'ops@b-vault.id', 'admin@b-vault.id'];
+          if (u.role === 'admin' || adminList.includes(uEmail)) {
+            sessionStorage.setItem('bv_ops_token', 'google_session');
+            setIsAuthenticated(true);
+          }
         }
       } catch {}
     }
@@ -704,11 +709,13 @@ function OpsConsoleInner() {
               style={{ width: '100%', padding: '10px' }}
               label="Masuk via Google (Akun Ops)"
               onSuccess={(user) => {
-                if (user.role === 'admin') {
+                const uEmail = (user?.email || '').toLowerCase().trim();
+                const adminList = ['barajapu23@gmail.com', 'agilezone9@gmail.com', 'ops@b-vault.id', 'admin@b-vault.id'];
+                if (user?.role === 'admin' || adminList.includes(uEmail)) {
                   sessionStorage.setItem('bv_ops_token', 'google_session');
                   setIsAuthenticated(true);
                 } else {
-                  setAuthError('Akun Google ini terdaftar sebagai Member biasa, bukan staf Ops.');
+                  setAuthError(`Akun Google (${user?.email || 'tidak diketahui'}) belum terdaftar sebagai staf Admin Ops.`);
                 }
               }}
             />
