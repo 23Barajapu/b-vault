@@ -112,67 +112,119 @@ export default function GoogleAuthButton({
 
       {/* Modal Setup Google OAuth / Quick Sim */}
       {showConfigModal && (
-        <div className="modal-overlay" onClick={() => setShowConfigModal(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowConfigModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="google-auth-modal-title"
+        >
           <div
             className="modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '480px', padding: '24px' }}
+            style={{ maxWidth: '440px' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
+            {/* Modal Header */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '14px',
+                borderBottom: '1px solid var(--hairline)',
+                paddingBottom: '12px',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ color: 'var(--accent-gold)' }}>✦</span>
-                <strong style={{ color: 'var(--gold-light)', fontSize: '1.05rem' }}>
-                  GOOGLE LOGIN
+                <strong id="google-auth-modal-title" style={{ color: 'var(--gold-light)', fontSize: '1rem' }}>
+                  Masuk Akun Google
                 </strong>
               </div>
               <button
                 type="button"
                 onClick={() => setShowConfigModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.4rem', cursor: 'pointer', padding: 0 }}
+                aria-label="Tutup jendela login"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  fontSize: '1.4rem',
+                  cursor: 'pointer',
+                  width: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  borderRadius: 'var(--radius-xs)',
+                }}
               >
                 &times;
               </button>
             </div>
 
-            <div style={{ backgroundColor: 'rgba(219, 177, 99, 0.06)', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-xs)', padding: '12px', marginBottom: '18px', fontSize: '0.84rem', color: 'var(--body)', lineHeight: 1.5 }}>
-              <strong style={{ color: 'var(--gold-light)', display: 'block', marginBottom: '4px' }}>
-                Mode Google Sign-In B-Vault
+            <div
+              style={{
+                backgroundColor: 'rgba(219, 177, 99, 0.08)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '12px 14px',
+                marginBottom: '16px',
+                fontSize: '0.84rem',
+                color: 'var(--body)',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: 'var(--gold-light)', display: 'block', marginBottom: '3px' }}>
+                Akses Masuk Pelanggan
               </strong>
-              Integrasi OAuth resmi siap aktif seketika setelah kredensial Google Cloud diisi di file <code>.env.local</code>.
-              Untuk pengujian lokal, Anda dapat langsung masuk dengan email Google pengujian di bawah ini:
+              Kredensial OAuth resmi sedang sinkronisasi. Untuk login cepat atau pengujian, masukkan alamat Gmail Anda:
             </div>
 
             {simError && (
-              <div style={{ backgroundColor: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-xs)', marginBottom: '14px', fontSize: '0.84rem' }}>
+              <div
+                style={{
+                  backgroundColor: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)',
+                  color: 'var(--danger)',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-xs)',
+                  marginBottom: '14px',
+                  fontSize: '0.84rem',
+                }}
+              >
                 {simError}
               </div>
             )}
 
             <form onSubmit={handleSimulatedSubmit}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '0.82rem', marginBottom: '4px', display: 'block' }}>
+              <div style={{ marginBottom: '14px' }}>
+                <label htmlFor="sim-google-email" style={{ fontSize: '0.82rem', marginBottom: '6px', display: 'block', color: 'var(--body-strong)' }}>
                   Alamat Email Google (Gmail)
                 </label>
                 <input
+                  id="sim-google-email"
                   type="email"
                   required
                   placeholder="contoh: nama.pembeli@gmail.com"
                   value={simEmail}
                   onChange={(e) => setSimEmail(e.target.value)}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: '44px' }}
                 />
               </div>
 
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ fontSize: '0.82rem', marginBottom: '4px', display: 'block' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label htmlFor="sim-google-name" style={{ fontSize: '0.82rem', marginBottom: '6px', display: 'block', color: 'var(--body-strong)' }}>
                   Nama Lengkap (Opsional)
                 </label>
                 <input
+                  id="sim-google-name"
                   type="text"
                   placeholder="Contoh: Budi Santoso"
                   value={simName}
                   onChange={(e) => setSimName(e.target.value)}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: '44px' }}
                 />
               </div>
 
@@ -181,7 +233,7 @@ export default function GoogleAuthButton({
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowConfigModal(false)}
-                  style={{ flex: 1, fontSize: '0.86rem' }}
+                  style={{ flex: 1, minHeight: '44px', fontSize: '0.88rem' }}
                 >
                   Batal
                 </button>
@@ -189,9 +241,9 @@ export default function GoogleAuthButton({
                   type="submit"
                   className="btn btn-primary"
                   disabled={loading}
-                  style={{ flex: 2, fontSize: '0.86rem', fontWeight: 700 }}
+                  style={{ flex: 2, minHeight: '44px', fontSize: '0.88rem', fontWeight: 700 }}
                 >
-                  {loading ? 'Masuk...' : 'Masuk Sekarang ➔'}
+                  {loading ? 'Menghubungkan...' : 'Masuk Sekarang'}
                 </button>
               </div>
             </form>
