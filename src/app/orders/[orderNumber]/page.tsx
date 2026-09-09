@@ -187,12 +187,12 @@ function OrderStatusContent() {
       {/* Header Info */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
-          <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>Nomor Pesanan</span>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{order.order_number}</h1>
+          <span style={{ fontSize: '0.8rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nomor Faktur Pesanan</span>
+          <h1 className="font-display" style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink)' }}>{order.order_number}</h1>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>Total Pembayaran</span>
-          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Pembayaran</span>
+          <div className="font-display" style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--gold-light)' }}>
             Rp {order.total_amount.toLocaleString('id-ID')}
           </div>
         </div>
@@ -396,7 +396,7 @@ function OrderStatusContent() {
                     Silakan ikuti instruksi aktivasi di bawah ini.
                   </span>
                 </div>
-              </div>
+              </div>z
 
               {/* License Payload Box */}
               <div style={{
@@ -421,12 +421,13 @@ function OrderStatusContent() {
                 </div>
 
                 <div style={{
-                  backgroundColor: '#ffffff',
-                  padding: '12px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--canvas)',
+                  padding: '14px 16px',
+                  borderRadius: 'var(--radius-xs)',
+                  border: '1px solid var(--hairline)',
                   fontFamily: 'monospace',
                   fontSize: '0.95rem',
+                  color: 'var(--gold-light)',
                   wordBreak: 'break-all',
                   marginBottom: '12px'
                 }}>

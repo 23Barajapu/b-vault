@@ -55,18 +55,24 @@ export default function VaultPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '820px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '6px' }}>
-          B-Vault: Customer License Vault
+    <div className="container" style={{ maxWidth: '840px', padding: '16px 16px 48px' }}>
+      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '4px 12px', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(219, 177, 99, 0.08)', border: '1px solid var(--hairline)' }}>
+          <span style={{ color: 'var(--accent-gold)', fontSize: '0.78rem' }}>✦</span>
+          <span className="font-label-uppercase" style={{ color: 'var(--gold-light)', fontSize: '0.72rem' }}>
+            CUSTOMER LICENSE VAULT
+          </span>
+        </div>
+        <h1 className="font-display-md" style={{ color: 'var(--ink)', marginBottom: '8px' }}>
+          ARSIP LISENSI & KREDENSIAL
         </h1>
-        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
-          Akses arsip seluruh lisensi dan akun pro yang pernah Anda beli dengan memasukkan email transaksi Anda.
+        <p style={{ fontSize: '0.92rem', color: 'var(--body)', maxWidth: '560px', margin: '0 auto' }}>
+          Akses riwayat seluruh lisensi aktif, kode aktivasi privat, serta sisa durasi garansi Anda dengan memasukkan email transaksi.
         </p>
       </div>
 
       {/* Search Input Box */}
-      <div className="card" style={{ marginBottom: '28px' }}>
+      <div className="card" style={{ marginBottom: '28px', padding: '20px' }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '240px' }}>
             <label htmlFor="vault-email" style={{ display: 'none' }}>Email Transaksi</label>
@@ -74,101 +80,104 @@ export default function VaultPage() {
               id="vault-email"
               type="email"
               required
-              placeholder="Masukkan email transaksi Anda..."
+              placeholder="Masukkan email transaksi Anda (contoh: nama@email.com)..."
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              style={{ backgroundColor: 'var(--surface-elevated)', borderColor: 'var(--hairline)' }}
             />
           </div>
           <button
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{ padding: '0 24px' }}
+            style={{ padding: '0 24px', fontWeight: 700 }}
           >
-            {loading ? 'Mencari...' : 'Cari Lisensi'}
+            {loading ? 'Memeriksa Vault...' : 'CARI LISENSI ➔'}
           </button>
         </form>
       </div>
 
       {/* Result list */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-          <p>Memuat data lisensi Anda...</p>
+        <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--muted)' }}>
+          <span className="live-pulse-dot" style={{ marginRight: '8px' }} />
+          <span>Membuka arsip lisensi aman Anda...</span>
         </div>
       ) : searched && vaultItems.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>
-            Belum Ada Lisensi Ditemukan
+        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <h2 className="font-title-lg" style={{ color: 'var(--gold-light)', marginBottom: '8px' }}>
+            Belum Ada Lisensi Terdaftar
           </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-            Tidak ditemukan lisensi lunas untuk email: <strong>{email}</strong>. Pastikan email sama dengan saat checkout.
+          <p style={{ fontSize: '0.9rem', color: 'var(--body)', maxWidth: '480px', margin: '0 auto' }}>
+            Tidak ditemukan lisensi lunas untuk email: <strong style={{ color: 'var(--ink)' }}>{email}</strong>. Pastikan email persis sama dengan saat melakukan pemesanan.
           </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {vaultItems.map((order) => (
             <div key={order.order_number} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Faktur Transaksi</span>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>{order.order_number}</div>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faktur Transaksi</span>
+                  <div className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-light)' }}>{order.order_number}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tanggal Diserahkan</span>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tanggal Terbit</span>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--body)' }}>
                     {new Date(order.fulfilled_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </div>
                 </div>
               </div>
 
               {order.target_account && (
-                <div style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                  Target Akun: <strong>{order.target_account}</strong>
+                <div style={{ fontSize: '0.86rem', color: 'var(--body)', marginBottom: '16px', padding: '8px 12px', backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                  Target Akun Pemesan: <strong style={{ color: 'var(--gold-light)' }}>{order.target_account}</strong>
                 </div>
               )}
 
               {order.items.map((it, idx) => {
                 const itemKey = `${order.order_number}-${idx}`;
                 return (
-                  <div key={idx} style={{ backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)', padding: '16px', border: '1px solid var(--border-color)', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div key={idx} style={{ backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', padding: '16px', border: '1px solid var(--hairline)', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                       <div>
-                        <span className="badge badge-neutral" style={{ marginRight: '8px' }}>{it.platform_name}</span>
-                        <strong style={{ fontSize: '1rem' }}>{it.product_title}</strong>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>{it.variant_name}</div>
+                        <span className="badge badge-online" style={{ marginRight: '8px', fontSize: '0.72rem' }}>{it.platform_name}</span>
+                        <strong className="font-title-lg" style={{ fontSize: '1.05rem', color: 'var(--ink)' }}>{it.product_title}</strong>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--gold-light)', marginTop: '2px' }}>{it.variant_name}</div>
                       </div>
 
                       {it.warranty_days_left > 0 ? (
-                        <span className="badge badge-online">
-                          Garansi Aktif ({it.warranty_days_left} Hari Lagi)
+                        <span className="badge badge-online" style={{ fontSize: '0.75rem' }}>
+                          ✦ Garansi Aktif ({it.warranty_days_left} Hari Lagi)
                         </span>
                       ) : (
-                        <span className="badge badge-neutral">Garansi Berakhir</span>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>Garansi Berakhir</span>
                       )}
                     </div>
 
-                    {/* Activation Payload */}
+                    {/* Activation Payload with Luxury Dark Box */}
                     <div style={{ marginBottom: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                          Kredensial / Tautan Lisensi:
+                        <span style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Kredensial / Tautan Lisensi Privat:
                         </span>
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          style={{ padding: '4px 10px', fontSize: '0.8rem', minHeight: '32px' }}
+                          style={{ padding: '4px 12px', fontSize: '0.78rem', minHeight: '32px' }}
                           onClick={() => copyText(itemKey, it.activation_payload)}
                         >
-                          {copiedIndex === itemKey ? 'Tersalin' : 'Salin'}
+                          {copiedIndex === itemKey ? '✓ Tersalin' : 'Salin Kredensial'}
                         </button>
                       </div>
                       <div style={{
-                        backgroundColor: '#ffffff',
-                        padding: '10px 14px',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--canvas)',
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-xs)',
+                        border: '1px solid var(--hairline)',
                         fontFamily: 'monospace',
-                        fontSize: '0.9rem',
+                        fontSize: '0.88rem',
+                        color: 'var(--gold-light)',
                         wordBreak: 'break-all'
                       }}>
                         {it.activation_payload}
@@ -176,16 +185,16 @@ export default function VaultPage() {
                     </div>
 
                     {it.admin_delivery_notes && (
-                      <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                        <strong>Catatan Admin:</strong> {it.admin_delivery_notes}
+                      <div style={{ fontSize: '0.84rem', color: 'var(--body)', marginBottom: '8px' }}>
+                        <strong style={{ color: 'var(--gold-light)' }}>Catatan Tim B-Vault:</strong> {it.admin_delivery_notes}
                       </div>
                     )}
 
-                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    <div style={{ borderTop: '1px solid var(--hairline)', paddingTop: '10px', marginTop: '10px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--muted)', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         Petunjuk Aktivasi:
                       </span>
-                      <p style={{ fontSize: '0.85rem', whiteSpace: 'pre-line', margin: 0, color: 'var(--text-secondary)' }}>
+                      <p style={{ fontSize: '0.84rem', whiteSpace: 'pre-line', margin: 0, color: 'var(--body)', lineHeight: 1.5 }}>
                         {it.activation_guide}
                       </p>
                     </div>

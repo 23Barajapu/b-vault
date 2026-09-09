@@ -470,28 +470,67 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Hero Intro with Luxury Aesthetics */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-          <span className="badge badge-online">AMAN</span>
-          <span className="badge badge-online">RESMI</span>
-          <span className="badge badge-neutral">PRIVAT</span>
-          <span className="badge badge-neutral">TERPERCAYA</span>
+      {/* Hero Intro with Luxury Private Vault Aesthetics */}
+      <div style={{ marginBottom: '36px', textAlign: 'center', maxWidth: '840px', margin: '0 auto 36px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '14px', padding: '6px 14px', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(219, 177, 99, 0.08)', border: '1px solid var(--hairline)' }}>
+          <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>✦</span>
+          <span className="font-label-uppercase" style={{ color: 'var(--gold-light)', fontSize: '0.74rem', letterSpacing: '0.14em' }}>
+            GARANSI ANTI-REVOKE 100% RESMI
+          </span>
+          <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>✦</span>
         </div>
-        <h1 className="font-display" style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '0.02em', marginBottom: '8px', color: '#ffffff' }}>
-          B-Vault: Google AI & Aplikasi Pro
+
+        <h1 className="font-display-lg" style={{ color: '#ffffff', marginBottom: '12px' }}>
+          THE ULTIMATE PRO LICENSE VAULT
         </h1>
-        <p style={{ fontSize: '1.08rem', fontWeight: 600, color: 'var(--gold-light)', marginBottom: '8px' }}>
+        <p style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--gold-light)', marginBottom: '10px' }}>
           Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda.
         </p>
-        <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', maxWidth: '660px' }}>
-          Pemesanan instan dengan sistem verifikasi QRIS dan Virtual Account otomatis. Garansi penggantian penuh selama masa aktif.
+        <p style={{ fontSize: '0.94rem', color: 'var(--body)', maxWidth: '640px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+          Penyedia resmi Google AI Pro (18 Bulan), CapCut Pro, Canva Pro Bisnis, dan Claude Pro. Transaksi instan verifikasi QRIS otomatis & Virtual Account 24 jam dengan proteksi penggantian penuh.
         </p>
+
+        {/* 3 Metrik Kepercayaan (Trust Stats) from DESIGN.md */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '12px',
+          padding: '16px 20px',
+          backgroundColor: 'var(--surface-card)',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--hairline)',
+          marginTop: '16px'
+        }}>
+          <div>
+            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+              1.200+
+            </strong>
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Lisensi Terkirim
+            </span>
+          </div>
+          <div style={{ borderLeft: '1px solid var(--hairline)', borderRight: '1px solid var(--hairline)' }}>
+            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+              99.8%
+            </strong>
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Uptime Garansi
+            </span>
+          </div>
+          <div>
+            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+              7/24
+            </strong>
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Operator Siaga
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Signature Metallic Gold Cross Divider (Matching Palette Reference) */}
+      {/* Signature Metallic Gold Cross Divider with ✦ Symbol from DESIGN.md */}
       <div className="gold-cross-divider">
-        <div className="gold-cross-badge">+</div>
+        <div className="gold-cross-badge">✦</div>
       </div>
 
       {/* Interactive Controls Bar: Search, Category, Sorting */}
@@ -622,25 +661,32 @@ export default function HomePage() {
               >
                 <div>
                   {/* Card Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <span className="badge badge-neutral">{product.platform_name}</span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="badge badge-online" style={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.72rem' }}>
+                        {product.platform_name}
+                      </span>
+                      <span className="badge badge-neutral" style={{ fontSize: '0.72rem' }}>
+                        RESMI
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--gold-light)', fontWeight: 600 }}>
                       Garansi {activeVar?.warranty_duration_days} Hari
                     </span>
                   </div>
 
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px' }}>
+                  <h2 className="font-title-lg" style={{ color: 'var(--ink)', marginBottom: '10px' }}>
                     {product.title}
                   </h2>
-                  <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '16px', minHeight: '42px' }}>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--body)', marginBottom: '16px', minHeight: '44px', lineHeight: 1.5 }}>
                     {product.description}
                   </p>
 
                   {/* Interactive Variant Switcher Pills */}
                   {product.variants.length > 1 && (
-                    <div style={{ marginBottom: '14px' }}>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                        Pilih Durasi & Paket:
+                    <div style={{ marginBottom: '16px' }}>
+                      <span className="font-label-uppercase" style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>
+                        Pilih Durasi & Tipe Akses:
                       </span>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         {product.variants.map((v) => (
@@ -657,19 +703,27 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Price & Delivery Badge Block */}
-                  <div style={{ backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)', padding: '12px', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
+                  {/* Price & Value Block matching DESIGN.md */}
+                  <div style={{
+                    backgroundColor: 'var(--surface-elevated)',
+                    borderRadius: 'var(--radius-xs)',
+                    padding: '14px 16px',
+                    marginBottom: '16px',
+                    border: '1px solid var(--hairline)'
+                  }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           Harga Lisensi Resmi
                         </span>
-                        <strong style={{ fontSize: '1.35rem', color: 'var(--gold-light)' }}>
-                          Rp {activeVar?.retail_price.toLocaleString('id-ID')}
-                        </strong>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '2px' }}>
+                          <strong className="font-price-display">
+                            Rp {activeVar?.retail_price.toLocaleString('id-ID')}
+                          </strong>
+                        </div>
                       </div>
-                      <span className="badge badge-online">
-                        {activeVar?.estimated_delivery_text}
+                      <span className="badge badge-online" style={{ fontSize: '0.75rem' }}>
+                        ⚡ {activeVar?.estimated_delivery_text}
                       </span>
                     </div>
                   </div>
@@ -681,46 +735,48 @@ export default function HomePage() {
                     style={{
                       background: 'none',
                       border: 'none',
-                      fontSize: '0.8rem',
-                      color: 'var(--gold)',
+                      fontSize: '0.82rem',
+                      color: 'var(--accent-gold)',
                       cursor: 'pointer',
                       padding: 0,
-                      marginBottom: '14px',
+                      marginBottom: '16px',
                       minHeight: 'auto',
                       minWidth: 'auto',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      gap: '6px',
+                      fontWeight: 600,
                     }}
                   >
                     <span>{isGuideOpen ? 'Sembunyikan Panduan Aktivasi' : 'Lihat Panduan Aktivasi'}</span>
-                    <span>{isGuideOpen ? '▲' : '▼'}</span>
+                    <span style={{ fontSize: '0.75rem' }}>{isGuideOpen ? '▲' : '▼'}</span>
                   </button>
 
                   {isGuideOpen && (
                     <div style={{
-                      backgroundColor: 'var(--bg-subtle)',
-                      padding: '10px 12px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.8rem',
-                      color: 'var(--text-secondary)',
+                      backgroundColor: 'var(--surface-elevated)',
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-xs)',
+                      fontSize: '0.82rem',
+                      color: 'var(--body)',
                       whiteSpace: 'pre-line',
-                      marginBottom: '14px',
-                      borderLeft: '3px solid var(--primary)',
+                      marginBottom: '16px',
+                      borderLeft: '3px solid var(--accent-gold)',
+                      lineHeight: 1.5,
                     }}>
                       {activeVar?.activation_guide}
                     </div>
                   )}
                 </div>
 
-                {/* Buy Button */}
+                {/* Buy Button: Velvet Red #640509 with Hairline Gold border */}
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={() => openCheckout(product, activeVar)}
-                  style={{ width: '100%', padding: '12px', fontWeight: 700 }}
+                  style={{ width: '100%', padding: '14px', fontWeight: 700, letterSpacing: '0.04em' }}
                 >
-                  Pesan Sekarang &rarr;
+                  AMANKAN SEKARANG &rarr;
                 </button>
               </div>
             );
@@ -775,23 +831,30 @@ export default function HomePage() {
         <div className="modal-overlay" onClick={closeCheckout}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--hairline)', paddingBottom: '14px' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Checkout Pesanan</h3>
-                <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>{activeProduct.title} &bull; {activeVariant.name}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+                  <h3 className="font-title-lg" style={{ color: 'var(--ink)' }}>
+                    CHECKOUT LISENSI B-VAULT
+                  </h3>
+                </div>
+                <p style={{ fontSize: '0.84rem', color: 'var(--muted)' }}>
+                  {activeProduct.title} &bull; <strong style={{ color: 'var(--gold-light)' }}>{activeVariant.name}</strong>
+                </p>
               </div>
               <button
                 type="button"
                 onClick={closeCheckout}
                 aria-label="Tutup modal"
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)', minHeight: 'auto', minWidth: 'auto', padding: '4px 8px' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--muted)', minHeight: 'auto', minWidth: 'auto', padding: '4px 8px' }}
               >
                 &times;
               </button>
             </div>
 
             {/* Price & Summary Box */}
-            <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '14px', borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+            <div style={{ backgroundColor: 'var(--surface-elevated)', padding: '16px', borderRadius: 'var(--radius-xs)', marginBottom: '16px', border: '1px solid var(--hairline)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.88rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Varian:</span>
                 <strong>{activeVariant.name}</strong>
