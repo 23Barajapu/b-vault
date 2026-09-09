@@ -57,6 +57,7 @@ function OrderStatusContent() {
   const [simulatingPayment, setSimulatingPayment] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchStatus = useCallback(async (isSilent = false) => {
     if (!token) {
@@ -126,6 +127,29 @@ function OrderStatusContent() {
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeftSeconds, fetchStatus]);
+
+  // Check if current user is admin (via session storage or auth session)
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('bv_ops_token')) {
+        setIsAdmin(true);
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/auth/session');
+        const json = await res.json();
+        if (json.success && json.data?.authenticated && json.data.user) {
+          const u = json.data.user;
+          const uEmail = (u.email || '').toLowerCase().trim();
+          const adminList = ['barajapu23@gmail.com', 'agilezone9@gmail.com', 'ops@b-vault.id', 'admin@b-vault.id'];
+          if (u.role === 'admin' || adminList.includes(uEmail)) {
+            setIsAdmin(true);
+          }
+        }
+      } catch {}
+    }
+    checkAdminStatus();
+  }, []);
 
   async function handleSimulatePayment() {
     if (!order) return;
@@ -363,23 +387,25 @@ function OrderStatusContent() {
                 </div>
               )}
 
-              {/* Developer / Testing Simulator Button */}
-              <div style={{ marginTop: '20px', padding: '12px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: '#ffffff' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    [SIMULATOR TESTING] Ingin menguji webhook pelunasan otomatis?
-                  </span>
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleSimulatePayment}
-                    disabled={simulatingPayment}
-                    style={{ padding: '6px 14px', fontSize: '0.85rem' }}
-                  >
-                    {simulatingPayment ? 'Mengirim Webhook...' : 'Simulasikan Bayar Lunas'}
-                  </button>
+              {/* Developer / Testing Simulator Button (Hanya Akun Admin) */}
+              {isAdmin && (
+                <div style={{ marginTop: '20px', padding: '12px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: '#ffffff' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      [SIMULATOR ADMIN] Ingin menguji webhook pelunasan otomatis?
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={handleSimulatePayment}
+                      disabled={simulatingPayment}
+                      style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                    >
+                      {simulatingPayment ? 'Mengirim Webhook...' : 'Simulasikan Bayar Lunas'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
