@@ -39,6 +39,13 @@ interface AnalyticsData {
   sla_performance: { target_sla_minutes: number; avg_fulfillment_seconds: number; avg_fulfillment_minutes: number; compliance_rate_percentage: number; breached_count: number };
 }
 
+function formatRupiahDisplay(val: number | string | undefined | null): string {
+  if (val === undefined || val === null || val === '') return '';
+  const clean = val.toString().replace(/\D/g, '');
+  if (!clean) return '';
+  return Number(clean).toLocaleString('id-ID');
+}
+
 function OpsConsoleInner() {
   const searchParams = useSearchParams();
   const focusOrder = searchParams.get('focus') || '';
@@ -100,7 +107,17 @@ function OpsConsoleInner() {
   const [variantModalOpen, setVariantModalOpen] = useState(false);
   const [selectedProductIdForVariant, setSelectedProductIdForVariant] = useState<number | null>(null);
   const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
-  const [variantForm, setVariantForm] = useState({
+  const [variantForm, setVariantForm] = useState<{
+    name: string;
+    duration_days: number;
+    cost_price: number | string;
+    retail_price: number | string;
+    input_requirement_label: string;
+    estimated_delivery_text: string;
+    warranty_duration_days: number;
+    activation_guide: string;
+    is_active: number;
+  }>({
     name: '',
     duration_days: 30,
     cost_price: 0,
@@ -309,6 +326,8 @@ function OpsConsoleInner() {
   async function handleSaveProduct(e: React.FormEvent) {
     e.preventDefault();
     setProductMessage(null);
+    const cleanRetail = productForm.retail_price ? Number(productForm.retail_price.toString().replace(/\D/g, '')) : 0;
+    const cleanCost = productForm.cost_price ? Number(productForm.cost_price.toString().replace(/\D/g, '')) : 0;
     try {
       if (editingProductId) {
         // Edit product
@@ -319,6 +338,8 @@ function OpsConsoleInner() {
             target: 'product',
             id: editingProductId,
             ...productForm,
+            retail_price: cleanRetail,
+            cost_price: cleanCost,
           }),
         });
         const json = await res.json();
@@ -337,6 +358,8 @@ function OpsConsoleInner() {
           body: JSON.stringify({
             action: 'create_product',
             ...productForm,
+            retail_price: cleanRetail,
+            cost_price: cleanCost,
           }),
         });
         const json = await res.json();
@@ -407,6 +430,8 @@ function OpsConsoleInner() {
   async function handleSaveVariant(e: React.FormEvent) {
     e.preventDefault();
     setProductMessage(null);
+    const cleanRetail = variantForm.retail_price ? Number(variantForm.retail_price.toString().replace(/\D/g, '')) : 0;
+    const cleanCost = variantForm.cost_price ? Number(variantForm.cost_price.toString().replace(/\D/g, '')) : 0;
     try {
       if (editingVariantId) {
         // Edit variant
@@ -417,6 +442,8 @@ function OpsConsoleInner() {
             target: 'variant',
             id: editingVariantId,
             ...variantForm,
+            retail_price: cleanRetail,
+            cost_price: cleanCost,
           }),
         });
         const json = await res.json();
@@ -436,6 +463,8 @@ function OpsConsoleInner() {
             action: 'create_variant',
             product_id: selectedProductIdForVariant,
             ...variantForm,
+            retail_price: cleanRetail,
+            cost_price: cleanCost,
           }),
         });
         const json = await res.json();
@@ -1475,11 +1504,15 @@ function OpsConsoleInner() {
                     </label>
                   </div>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    value={productForm.retail_price}
-                    onChange={(e) => setProductForm({ ...productForm, retail_price: e.target.value })}
-                    placeholder="Contoh: 45000"
+                    value={formatRupiahDisplay(productForm.retail_price)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setProductForm({ ...productForm, retail_price: clean ? Number(clean) : '' });
+                    }}
+                    placeholder="Contoh: 45.000"
                   />
                 </div>
                 <div>
@@ -1488,10 +1521,14 @@ function OpsConsoleInner() {
                     <span className="modal-label-hint">Opsional</span>
                   </div>
                   <input
-                    type="number"
-                    value={productForm.cost_price}
-                    onChange={(e) => setProductForm({ ...productForm, cost_price: e.target.value })}
-                    placeholder="Contoh: 25000"
+                    type="text"
+                    inputMode="numeric"
+                    value={formatRupiahDisplay(productForm.cost_price)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setProductForm({ ...productForm, cost_price: clean ? Number(clean) : '' });
+                    }}
+                    placeholder="Contoh: 25.000"
                   />
                 </div>
               </div>
@@ -1632,10 +1669,14 @@ function OpsConsoleInner() {
                     <label className="modal-label">Harga Modal / Supplier (Rp)</label>
                   </div>
                   <input
-                    type="number"
-                    value={variantForm.cost_price}
-                    onChange={(e) => setVariantForm({ ...variantForm, cost_price: Number(e.target.value) })}
-                    placeholder="25000"
+                    type="text"
+                    inputMode="numeric"
+                    value={formatRupiahDisplay(variantForm.cost_price)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setVariantForm({ ...variantForm, cost_price: clean ? Number(clean) : '' });
+                    }}
+                    placeholder="Contoh: 25.000"
                   />
                 </div>
                 <div>
@@ -1645,11 +1686,15 @@ function OpsConsoleInner() {
                     </label>
                   </div>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    value={variantForm.retail_price}
-                    onChange={(e) => setVariantForm({ ...variantForm, retail_price: Number(e.target.value) })}
-                    placeholder="45000"
+                    value={formatRupiahDisplay(variantForm.retail_price)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setVariantForm({ ...variantForm, retail_price: clean ? Number(clean) : '' });
+                    }}
+                    placeholder="Contoh: 45.000"
                   />
                 </div>
               </div>
