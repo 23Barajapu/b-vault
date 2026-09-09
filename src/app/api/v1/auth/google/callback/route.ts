@@ -66,8 +66,21 @@ export async function GET(request: Request) {
     // 4. Create session
     const { token, expiresAt } = await createSession(user.id);
 
-    // 5. Redirect with cookies
-    const successUrl = new URL(redirectPath, baseUrl);
+    // 5. Smart redirect:
+    // If admin -> direct to /ops
+    // If buyer -> direct to /vault (or redirectPath if already on a specific page)
+    let targetPath = redirectPath;
+    if (user.role === 'admin') {
+      if (!redirectPath || redirectPath === '/') {
+        targetPath = '/ops';
+      }
+    } else {
+      if (!redirectPath || redirectPath === '/') {
+        targetPath = '/vault';
+      }
+    }
+
+    const successUrl = new URL(targetPath, baseUrl);
     successUrl.searchParams.set('auth_success', '1');
 
     const response = NextResponse.redirect(successUrl.toString());

@@ -19,23 +19,23 @@ export function getAdminEmails(): string[] {
 }
 
 export function getAppBaseUrl(req?: Request): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
+  if (req) {
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    if (host) {
+      const proto = req.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+      return `${proto}://${host}`;
+    }
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
   }
-  if (req) {
-    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000';
-    const proto = req.headers.get('x-forwarded-proto') || 'http';
-    return `${proto}://${host}`;
-  }
-  return 'http://localhost:3000';
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
-const FALLBACK_GOOGLE_CLIENT_ID = '948822626098-n2j8quik7o342igurjga8ctv0iv6mutd.apps.googleusercontent.com';
-
 export function getGoogleConfig() {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || FALLBACK_GOOGLE_CLIENT_ID;
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-  const isConfigured = Boolean(clientId);
+  const isConfigured = Boolean(clientId && clientSecret);
   return { clientId, clientSecret, isConfigured };
 }
 
