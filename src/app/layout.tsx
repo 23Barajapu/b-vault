@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import UserNav from '@/components/UserNav';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 export const metadata: Metadata = {
   title: 'B-Vault: Official Pro License & Digital Vault',
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -39,19 +40,20 @@ export default function RootLayout({
           zIndex: 100,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)'
         }}>
-          <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px' }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'var(--ink)' }}>
+          <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--ink)' }}>
               <div style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
                 overflow: 'hidden',
                 border: '1.5px solid var(--accent-gold)',
-                boxShadow: '0 0 16px rgba(219, 177, 99, 0.45)',
+                boxShadow: '0 0 12px rgba(219, 177, 99, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#191814'
+                backgroundColor: '#191814',
+                flexShrink: 0
               }}>
                 <img
                   src="/logo.png"
@@ -60,10 +62,10 @@ export default function RootLayout({
                 />
               </div>
               <div>
-                <strong className="font-display" style={{ fontSize: '1.25rem', display: 'block', lineHeight: 1.1, color: '#fcfcfc', letterSpacing: '0.06em' }}>
+                <strong className="font-display" style={{ fontSize: '1.18rem', display: 'block', lineHeight: 1.1, color: '#fcfcfc', letterSpacing: '0.06em' }}>
                   B-VAULT
                 </strong>
-                <span style={{ fontSize: '0.72rem', color: 'var(--gold-light)', display: 'block', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                <span className="header-brand-tagline" style={{ fontSize: '0.68rem', color: 'var(--gold-light)', display: 'block', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   Digital License Vault
                 </span>
               </div>
@@ -76,11 +78,11 @@ export default function RootLayout({
               </span>
             </div>
 
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Link href="/" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Link href="/" className="btn btn-secondary desktop-nav-item" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 Katalog
               </Link>
-              <Link href="/vault" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+              <Link href="/vault" className="btn btn-secondary desktop-nav-item" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 Cek Lisensi
               </Link>
               <UserNav />
@@ -88,9 +90,11 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main style={{ minHeight: 'calc(100vh - 140px)', padding: '24px 0 48px' }}>
+        <main style={{ minHeight: 'calc(100vh - 140px)', padding: '20px 0 40px' }}>
           {children}
         </main>
+
+        <MobileBottomNav />
 
         {/* Footer with Exact Charcoal #191814, Velvet Red #640509 & Gold Cross Divider #dbb163 */}
         <footer style={{

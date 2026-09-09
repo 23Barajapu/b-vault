@@ -294,76 +294,74 @@ export default function HomePage() {
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '8px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="live-pulse-dot" />
-            <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Layanan Penjualan Online Aktif
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            <span>Estimasi aktivasi: <strong style={{ color: 'var(--primary)' }}>5 - 20 Menit</strong></span>
-            <span>&bull;</span>
-            <span>WhatsApp CS: <strong>0851 8341 0190</strong></span>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+            <span>Estimasi aktivasi: <strong style={{ color: 'var(--gold-light)', backgroundColor: 'rgba(219, 177, 99, 0.14)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap' }}>5 - 20 Menit</strong></span>
+            <span className="desktop-nav-item">&bull;</span>
+            <span>WhatsApp CS: <strong style={{ color: 'var(--ink)' }}>0851 8341 0190</strong></span>
           </div>
         </div>
       )}
 
-
-
       {/* Hero Intro with Luxury Private Vault Aesthetics */}
-      <div style={{ marginBottom: '36px', textAlign: 'center', maxWidth: '840px', margin: '0 auto 36px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '14px', padding: '6px 14px', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(219, 177, 99, 0.08)', border: '1px solid var(--hairline)' }}>
-          <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>✦</span>
-          <span className="font-label-uppercase" style={{ color: 'var(--gold-light)', fontSize: '0.74rem', letterSpacing: '0.14em' }}>
+      <div style={{ marginBottom: '28px', textAlign: 'center', maxWidth: '840px', margin: '0 auto 28px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '5px 12px', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(219, 177, 99, 0.08)', border: '1px solid var(--hairline)' }}>
+          <span style={{ color: 'var(--accent-gold)', fontSize: '0.8rem' }}>✦</span>
+          <span className="font-label-uppercase" style={{ color: 'var(--gold-light)', fontSize: '0.72rem', letterSpacing: '0.12em' }}>
             GARANSI ANTI-REVOKE 100% RESMI
           </span>
-          <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>✦</span>
+          <span style={{ color: 'var(--accent-gold)', fontSize: '0.8rem' }}>✦</span>
         </div>
 
         <h1 className="font-display-lg" style={{ color: '#ffffff', marginBottom: '12px' }}>
-          THE ULTIMATE PRO LICENSE VAULT
+          PRO LICENSE & DIGITAL VAULT
         </h1>
-        <p style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--gold-light)', marginBottom: '10px' }}>
+        <p style={{ fontSize: 'clamp(0.96rem, 3.2vw, 1.15rem)', fontWeight: 600, color: 'var(--gold-light)', marginBottom: '10px', lineHeight: 1.4 }}>
           Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda.
         </p>
-        <p style={{ fontSize: '0.94rem', color: 'var(--body)', maxWidth: '640px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--body)', maxWidth: '640px', margin: '0 auto 20px', lineHeight: 1.6 }}>
           Platform lisensi software resmi, tools AI, dan aplikasi produktivitas bergaransi penuh. Transaksi instan verifikasi QRIS otomatis & Virtual Account 24 jam dengan proteksi aktivasi terpercaya.
         </p>
 
-        {/* 3 Metrik Kepercayaan (Trust Stats) from DESIGN.md */}
+        {/* 3 Metrik Kepercayaan (Trust Stats) - Clean 3-Column Mobile Layout */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '12px',
-          padding: '16px 20px',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '6px',
+          padding: '12px 8px',
           backgroundColor: 'var(--surface-card)',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--hairline)',
-          marginTop: '16px'
+          marginTop: '14px'
         }}>
           <div>
-            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+            <strong className="font-display" style={{ fontSize: 'clamp(1.1rem, 3.8vw, 1.4rem)', color: 'var(--gold-light)', display: 'block' }}>
               1.200+
             </strong>
-            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 'clamp(0.64rem, 2vw, 0.76rem)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Lisensi Terkirim
             </span>
           </div>
           <div style={{ borderLeft: '1px solid var(--hairline)', borderRight: '1px solid var(--hairline)' }}>
-            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+            <strong className="font-display" style={{ fontSize: 'clamp(1.1rem, 3.8vw, 1.4rem)', color: 'var(--gold-light)', display: 'block' }}>
               99.8%
             </strong>
-            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 'clamp(0.64rem, 2vw, 0.76rem)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Uptime Garansi
             </span>
           </div>
           <div>
-            <strong className="font-display" style={{ fontSize: '1.4rem', color: 'var(--gold-light)', display: 'block' }}>
+            <strong className="font-display" style={{ fontSize: 'clamp(1.1rem, 3.8vw, 1.4rem)', color: 'var(--gold-light)', display: 'block' }}>
               7/24
             </strong>
-            <span style={{ fontSize: '0.78rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 'clamp(0.64rem, 2vw, 0.76rem)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Operator Siaga
             </span>
           </div>
@@ -498,8 +496,8 @@ export default function HomePage() {
       ) : (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '20px',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 290px), 1fr))',
+          gap: '16px',
           marginBottom: '48px',
         }}>
           {processedProducts.map((product) => {
