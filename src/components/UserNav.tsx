@@ -53,6 +53,9 @@ export default function UserNav() {
     try {
       await fetch('/api/v1/auth/logout', { method: 'POST' });
       sessionStorage.removeItem('bv_ops_token');
+      try {
+        localStorage.removeItem('bv_last_logged_user');
+      } catch {}
       setUser(null);
       setDropdownOpen(false);
       window.location.reload();

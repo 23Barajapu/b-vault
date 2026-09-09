@@ -71,6 +71,11 @@ export default function GoogleAuthButton({
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          const loggedEmail = (data.data?.user?.email || simEmail).toLowerCase().trim();
+          localStorage.setItem('bv_last_logged_user', loggedEmail);
+          localStorage.removeItem('bv_activities_dismissed');
+        } catch {}
         setShowConfigModal(false);
         if (onSuccess) {
           onSuccess(data.data.user);

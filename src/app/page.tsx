@@ -75,6 +75,22 @@ export default function HomePage() {
   const [activityIndex, setActivityIndex] = useState(0);
   const [showToast, setShowToast] = useState(true);
 
+  // Initialize dismissed state from localStorage on client
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('bv_activities_dismissed') === 'true') {
+        setShowToast(false);
+      }
+    } catch {}
+  }, []);
+
+  function handleCloseToast() {
+    setShowToast(false);
+    try {
+      localStorage.setItem('bv_activities_dismissed', 'true');
+    } catch {}
+  }
+
   // FAQ Accordion
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
 
@@ -95,7 +111,14 @@ export default function HomePage() {
     if (activities.length === 0) return;
     const timer = setInterval(() => {
       setActivityIndex((prev) => (prev + 1) % activities.length);
-      setShowToast(true);
+      try {
+        // Jangan hidupkan kembali jika user telah menutup (dismiss) toast
+        if (localStorage.getItem('bv_activities_dismissed') !== 'true') {
+          setShowToast(true);
+        }
+      } catch {
+        setShowToast(true);
+      }
     }, 7000);
     return () => clearInterval(timer);
   }, [activities.length]);
@@ -107,12 +130,32 @@ export default function HomePage() {
 
   async function checkAuthSession() {
     try {
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const isJustLoggedInFromUrl = urlParams?.get('auth_success') === '1';
+
       const res = await fetch('/api/v1/auth/session');
       const json = await res.json();
-      if (json.success && json.data?.authenticated) {
-        setAuthUser(json.data.user);
-        if (json.data.user.name) setName((prev) => prev || json.data.user.name);
-        if (json.data.user.email) setEmail((prev) => prev || json.data.user.email);
+      if (json.success && json.data?.authenticated && json.data.user) {
+        const u = json.data.user;
+        setAuthUser(u);
+        if (u.name) setName((prev) => prev || u.name);
+        if (u.email) setEmail((prev) => prev || u.email);
+
+        const currentEmail = (u.email || '').toLowerCase().trim();
+        const lastLoggedUser = typeof window !== 'undefined' ? localStorage.getItem('bv_last_logged_user') : null;
+
+        // Reset status dismiss jika user baru saja login (lewat redirect auth atau akun baru)
+        if (isJustLoggedInFromUrl || (currentEmail && currentEmail !== lastLoggedUser)) {
+          try {
+            localStorage.setItem('bv_last_logged_user', currentEmail);
+            localStorage.removeItem('bv_activities_dismissed');
+          } catch {}
+          setShowToast(true);
+        }
+      } else {
+        try {
+          localStorage.removeItem('bv_last_logged_user');
+        } catch {}
       }
     } catch {}
   }
@@ -926,7 +969,7 @@ export default function HomePage() {
           </div>
           <button
             type="button"
-            onClick={() => setShowToast(false)}
+            onClick={handleCloseToast}
             style={{
               background: 'none',
               border: 'none',
