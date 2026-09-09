@@ -20,6 +20,7 @@ dist/
 *.sqlite-shm
 *.db
 *.sql
+!supabase_schema.sql
 
 # Environment Variables & Secrets
 .env
