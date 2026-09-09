@@ -33,7 +33,11 @@ export function getAppBaseUrl(req?: Request): string {
 }
 
 export function getGoogleConfig() {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  const clientId =
+    process.env.GOOGLE_CLIENT_ID ||
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+    process.env.NEXT_PUBLIC_GOOGLE_CLII ||
+    '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
   const isConfigured = Boolean(clientId && clientSecret);
   return { clientId, clientSecret, isConfigured };
