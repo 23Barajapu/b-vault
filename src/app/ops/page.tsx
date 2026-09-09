@@ -77,13 +77,24 @@ function OpsConsoleInner() {
   // Modals for Products & Variants
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [productForm, setProductForm] = useState({
+  const [productForm, setProductForm] = useState<{
+    title: string;
+    platform_name: string;
+    category_id: number;
+    slug: string;
+    description: string;
+    is_active: number;
+    retail_price?: number | string;
+    cost_price?: number | string;
+  }>({
     title: '',
     platform_name: '',
     category_id: 1,
     slug: '',
     description: '',
     is_active: 1,
+    retail_price: '',
+    cost_price: '',
   });
 
   const [variantModalOpen, setVariantModalOpen] = useState(false);
@@ -273,12 +284,15 @@ function OpsConsoleInner() {
       slug: '',
       description: '',
       is_active: 1,
+      retail_price: '',
+      cost_price: '',
     });
     setProductModalOpen(true);
   }
 
   function handleOpenEditProduct(prod: any) {
     setEditingProductId(prod.id);
+    const mainVar = prod.variants?.[0];
     setProductForm({
       title: prod.title,
       platform_name: prod.platform_name,
@@ -286,6 +300,8 @@ function OpsConsoleInner() {
       slug: prod.slug,
       description: prod.description,
       is_active: prod.is_active,
+      retail_price: mainVar ? mainVar.retail_price : '',
+      cost_price: mainVar ? (mainVar.cost_price || '') : '',
     });
     setProductModalOpen(true);
   }
@@ -1448,6 +1464,35 @@ function OpsConsoleInner() {
                       ))
                     )}
                   </select>
+                </div>
+              </div>
+
+              <div className="modal-form-row">
+                <div>
+                  <div className="modal-label-header">
+                    <label className="modal-label" style={{ color: 'var(--gold-light)' }}>
+                      Harga Jual / Retail (Rp) <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                  </div>
+                  <input
+                    type="number"
+                    required
+                    value={productForm.retail_price}
+                    onChange={(e) => setProductForm({ ...productForm, retail_price: e.target.value })}
+                    placeholder="Contoh: 45000"
+                  />
+                </div>
+                <div>
+                  <div className="modal-label-header">
+                    <label className="modal-label">Harga Modal (Rp)</label>
+                    <span className="modal-label-hint">Opsional</span>
+                  </div>
+                  <input
+                    type="number"
+                    value={productForm.cost_price}
+                    onChange={(e) => setProductForm({ ...productForm, cost_price: e.target.value })}
+                    placeholder="Contoh: 25000"
+                  />
                 </div>
               </div>
 
