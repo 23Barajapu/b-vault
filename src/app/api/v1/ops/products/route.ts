@@ -1,48 +1,51 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 // GET /api/v1/ops/products
 // Mengambil semua kategori, produk, dan varian
 export async function GET() {
   try {
-    let categories = db.prepare('SELECT * FROM categories ORDER BY id ASC').all() as any[];
+    let { data: categories } = await supabase
+      .from('categories')
+      .select('*')
+      .order('id', { ascending: true });
 
     // Auto-seed default categories if empty so dropdown is never empty
-    if (categories.length === 0) {
+    if (!categories || categories.length === 0) {
       const defaultCategories = [
         { name: 'AI & Machine Learning', slug: 'ai-machine-learning' },
         { name: 'Desain & Video', slug: 'desain-video' },
         { name: 'Produktivitas & Cloud', slug: 'produktivitas-cloud' },
         { name: 'Developer & Utility', slug: 'developer-utility' },
+        { name: 'Lisensi & Akun Pro', slug: 'lisensi-pro' },
       ];
-      const insertCat = db.prepare('INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)');
-      for (const cat of defaultCategories) {
-        insertCat.run(cat.name, cat.slug);
-      }
-      categories = db.prepare('SELECT * FROM categories ORDER BY id ASC').all() as any[];
+      await supabase.from('categories').upsert(defaultCategories, { onConflict: 'slug' });
+      const { data: seeded } = await supabase.from('categories').select('*').order('id', { ascending: true });
+      categories = seeded || [];
     }
 
-    const products = db.prepare(`
-      SELECT p.*, c.name as category_name, c.slug as category_slug
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      ORDER BY p.id DESC
-    `).all() as any[];
+    const { data: rawProducts } = await supabase
+      .from('products')
+      .select('*, categories:category_id(name, slug)')
+      .order('id', { ascending: false });
 
-    const variants = db.prepare(`
-      SELECT * FROM product_variants
-      ORDER BY product_id ASC, retail_price ASC
-    `).all() as any[];
+    const { data: rawVariants } = await supabase
+      .from('product_variants')
+      .select('*')
+      .order('product_id', { ascending: true });
 
-    const productsWithVariants = products.map((p) => ({
+    const variants = rawVariants || [];
+    const productsWithVariants = (rawProducts || []).map((p: any) => ({
       ...p,
-      variants: variants.filter((v) => v.product_id === p.id),
+      category_name: p.categories?.name || '',
+      category_slug: p.categories?.slug || '',
+      variants: variants.filter((v: any) => v.product_id === p.id),
     }));
 
     return NextResponse.json({
       success: true,
       data: {
-        categories,
+        categories: categories || [],
         products: productsWithVariants,
       },
     });
@@ -66,9 +69,14 @@ export async function POST(req: Request) {
       if (!name || !slug) {
         return NextResponse.json({ success: false, error: { message: 'Nama dan slug kategori wajib diisi' } }, { status: 400 });
       }
-      const stmt = db.prepare('INSERT INTO categories (name, slug) VALUES (?, ?)');
-      const res = stmt.run(name.trim(), slug.trim().toLowerCase());
-      return NextResponse.json({ success: true, data: { id: res.lastInsertRowid } });
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({ name: name.trim(), slug: slug.trim().toLowerCase() })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, data: { id: data.id } });
     }
 
     if (action === 'create_product') {
@@ -77,18 +85,21 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: { message: 'Judul dan nama platform produk wajib diisi' } }, { status: 400 });
       }
       const safeSlug = slug ? slug.trim().toLowerCase() : title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const stmt = db.prepare(`
-        INSERT INTO products (category_id, title, slug, platform_name, description, is_active)
-        VALUES (?, ?, ?, ?, ?, 1)
-      `);
-      const res = stmt.run(
-        category_id ? Number(category_id) : 1,
-        title.trim(),
-        safeSlug,
-        platform_name.trim(),
-        description ? description.trim() : ''
-      );
-      return NextResponse.json({ success: true, data: { id: res.lastInsertRowid } });
+      const { data, error } = await supabase
+        .from('products')
+        .insert({
+          category_id: category_id ? Number(category_id) : null,
+          title: title.trim(),
+          slug: safeSlug,
+          platform_name: platform_name.trim(),
+          description: description ? description.trim() : '',
+          is_active: 1,
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, data: { id: data.id } });
     }
 
     if (action === 'create_variant') {
@@ -108,25 +119,25 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: { message: 'Produk ID, nama varian, dan harga retail wajib diisi' } }, { status: 400 });
       }
 
-      const stmt = db.prepare(`
-        INSERT INTO product_variants 
-        (product_id, name, duration_days, cost_price, retail_price, input_requirement_label, estimated_delivery_text, warranty_duration_days, activation_guide, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-      `);
+      const { data, error } = await supabase
+        .from('product_variants')
+        .insert({
+          product_id: Number(product_id),
+          name: name.trim(),
+          duration_days: Number(duration_days) || 30,
+          cost_price: Number(cost_price) || 0,
+          retail_price: Number(retail_price),
+          input_requirement_label: input_requirement_label ? input_requirement_label.trim() : 'Email Akun Anda',
+          estimated_delivery_text: estimated_delivery_text ? estimated_delivery_text.trim() : '5 - 20 Menit',
+          warranty_duration_days: Number(warranty_duration_days) || Number(duration_days) || 30,
+          activation_guide: activation_guide ? activation_guide.trim() : 'Ikuti link atau kredensial yang diserahkan admin di status pesanan.',
+          is_active: 1,
+        })
+        .select('id')
+        .single();
 
-      const res = stmt.run(
-        Number(product_id),
-        name.trim(),
-        Number(duration_days) || 30,
-        Number(cost_price) || 0,
-        Number(retail_price),
-        input_requirement_label ? input_requirement_label.trim() : 'Email Akun Anda',
-        estimated_delivery_text ? estimated_delivery_text.trim() : '5 - 20 Menit',
-        Number(warranty_duration_days) || Number(duration_days) || 30,
-        activation_guide ? activation_guide.trim() : 'Ikuti link atau kredensial yang diserahkan admin di status pesanan.'
-      );
-
-      return NextResponse.json({ success: true, data: { id: res.lastInsertRowid } });
+      if (error) throw error;
+      return NextResponse.json({ success: true, data: { id: data.id } });
     }
 
     return NextResponse.json({ success: false, error: { message: 'Aksi tidak dikenali' } }, { status: 400 });
@@ -149,23 +160,15 @@ export async function PUT(req: Request) {
       const { id, title, platform_name, description, category_id, is_active } = body;
       if (!id) return NextResponse.json({ success: false, error: { message: 'ID produk wajib disertakan' } }, { status: 400 });
 
-      const stmt = db.prepare(`
-        UPDATE products 
-        SET title = COALESCE(?, title),
-            platform_name = COALESCE(?, platform_name),
-            description = COALESCE(?, description),
-            category_id = COALESCE(?, category_id),
-            is_active = COALESCE(?, is_active)
-        WHERE id = ?
-      `);
-      stmt.run(
-        title ? title.trim() : null,
-        platform_name ? platform_name.trim() : null,
-        description !== undefined ? description.trim() : null,
-        category_id !== undefined ? Number(category_id) : null,
-        is_active !== undefined ? Number(is_active) : null,
-        Number(id)
-      );
+      const updateObj: Record<string, any> = {};
+      if (title !== undefined) updateObj.title = title.trim();
+      if (platform_name !== undefined) updateObj.platform_name = platform_name.trim();
+      if (description !== undefined) updateObj.description = description.trim();
+      if (category_id !== undefined) updateObj.category_id = Number(category_id);
+      if (is_active !== undefined) updateObj.is_active = Number(is_active);
+
+      const { error } = await supabase.from('products').update(updateObj).eq('id', Number(id));
+      if (error) throw error;
 
       return NextResponse.json({ success: true, message: 'Produk berhasil diperbarui' });
     }
@@ -186,32 +189,19 @@ export async function PUT(req: Request) {
 
       if (!id) return NextResponse.json({ success: false, error: { message: 'ID varian wajib disertakan' } }, { status: 400 });
 
-      const stmt = db.prepare(`
-        UPDATE product_variants
-        SET name = COALESCE(?, name),
-            duration_days = COALESCE(?, duration_days),
-            cost_price = COALESCE(?, cost_price),
-            retail_price = COALESCE(?, retail_price),
-            input_requirement_label = COALESCE(?, input_requirement_label),
-            estimated_delivery_text = COALESCE(?, estimated_delivery_text),
-            warranty_duration_days = COALESCE(?, warranty_duration_days),
-            activation_guide = COALESCE(?, activation_guide),
-            is_active = COALESCE(?, is_active)
-        WHERE id = ?
-      `);
+      const updateObj: Record<string, any> = {};
+      if (name !== undefined) updateObj.name = name.trim();
+      if (duration_days !== undefined) updateObj.duration_days = Number(duration_days);
+      if (cost_price !== undefined) updateObj.cost_price = Number(cost_price);
+      if (retail_price !== undefined) updateObj.retail_price = Number(retail_price);
+      if (input_requirement_label !== undefined) updateObj.input_requirement_label = input_requirement_label.trim();
+      if (estimated_delivery_text !== undefined) updateObj.estimated_delivery_text = estimated_delivery_text.trim();
+      if (warranty_duration_days !== undefined) updateObj.warranty_duration_days = Number(warranty_duration_days);
+      if (activation_guide !== undefined) updateObj.activation_guide = activation_guide.trim();
+      if (is_active !== undefined) updateObj.is_active = Number(is_active);
 
-      stmt.run(
-        name !== undefined ? name.trim() : null,
-        duration_days !== undefined ? Number(duration_days) : null,
-        cost_price !== undefined ? Number(cost_price) : null,
-        retail_price !== undefined ? Number(retail_price) : null,
-        input_requirement_label !== undefined ? input_requirement_label.trim() : null,
-        estimated_delivery_text !== undefined ? estimated_delivery_text.trim() : null,
-        warranty_duration_days !== undefined ? Number(warranty_duration_days) : null,
-        activation_guide !== undefined ? activation_guide.trim() : null,
-        is_active !== undefined ? Number(is_active) : null,
-        Number(id)
-      );
+      const { error } = await supabase.from('product_variants').update(updateObj).eq('id', Number(id));
+      if (error) throw error;
 
       return NextResponse.json({ success: true, message: 'Varian berhasil diperbarui' });
     }
@@ -221,8 +211,8 @@ export async function PUT(req: Request) {
       if (!id || !name) return NextResponse.json({ success: false, error: { message: 'ID dan nama kategori wajib disertakan' } }, { status: 400 });
 
       const safeSlug = slug ? slug.trim().toLowerCase() : name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const stmt = db.prepare('UPDATE categories SET name = ?, slug = ? WHERE id = ?');
-      stmt.run(name.trim(), safeSlug, Number(id));
+      const { error } = await supabase.from('categories').update({ name: name.trim(), slug: safeSlug }).eq('id', Number(id));
+      if (error) throw error;
 
       return NextResponse.json({ success: true, message: 'Kategori berhasil diperbarui' });
     }
@@ -249,17 +239,20 @@ export async function DELETE(req: Request) {
     }
 
     if (type === 'product') {
-      db.prepare('DELETE FROM products WHERE id = ?').run(Number(id));
+      const { error } = await supabase.from('products').delete().eq('id', Number(id));
+      if (error) throw error;
       return NextResponse.json({ success: true, message: 'Produk berhasil dihapus' });
     }
 
     if (type === 'variant') {
-      db.prepare('DELETE FROM product_variants WHERE id = ?').run(Number(id));
+      const { error } = await supabase.from('product_variants').delete().eq('id', Number(id));
+      if (error) throw error;
       return NextResponse.json({ success: true, message: 'Varian berhasil dihapus' });
     }
 
     if (type === 'category') {
-      db.prepare('DELETE FROM categories WHERE id = ?').run(Number(id));
+      const { error } = await supabase.from('categories').delete().eq('id', Number(id));
+      if (error) throw error;
       return NextResponse.json({ success: true, message: 'Kategori berhasil dihapus' });
     }
 

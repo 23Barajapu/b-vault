@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function GET(
   request: Request,
@@ -15,13 +15,13 @@ export async function GET(
       );
     }
 
-    const order = db.prepare(`
-      SELECT o.*
-      FROM orders o
-      WHERE o.secure_token = ?
-    `).get(token) as any;
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('secure_token', token)
+      .single();
 
-    if (!order) {
+    if (orderErr || !order) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'Pesanan tidak ditemukan atau tautan tidak valid.' } },
         { status: 404 }
@@ -30,24 +30,34 @@ export async function GET(
 
     // Auto expire check if still pending and past expired_at
     if (order.payment_status === 'PENDING_PAYMENT' && new Date(order.expired_at).getTime() < Date.now()) {
-      db.prepare("UPDATE orders SET payment_status = 'EXPIRED' WHERE id = ?").run(order.id);
+      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', order.id);
       order.payment_status = 'EXPIRED';
     }
 
-    const items = db.prepare(`
-      SELECT oi.*, pv.name as variant_name, pv.duration_days, pv.activation_guide,
-             pv.warranty_duration_days, pv.estimated_delivery_text,
-             p.title as product_title, p.platform_name, p.thumbnail_url
-      FROM order_items oi
-      JOIN product_variants pv ON oi.variant_id = pv.id
-      JOIN products p ON pv.product_id = p.id
-      WHERE oi.order_id = ?
-    `).all(order.id) as any[];
+    // Fetch order items with variant and product
+    const { data: items } = await supabase
+      .from('order_items')
+      .select(`
+        *,
+        product_variants (
+          name,
+          duration_days,
+          activation_guide,
+          warranty_duration_days,
+          estimated_delivery_text,
+          products (
+            title,
+            platform_name,
+            thumbnail_url
+          )
+        )
+      `)
+      .eq('order_id', order.id);
 
-    // Check store settings
-    const adminPhoneRow = db.prepare("SELECT value FROM store_settings WHERE key = 'admin_whatsapp'").get() as any;
-    const storeStatusRow = db.prepare("SELECT value FROM store_settings WHERE key = 'store_status'").get() as any;
-    const storeNoticeRow = db.prepare("SELECT value FROM store_settings WHERE key = 'operating_hours_notice'").get() as any;
+    // Fetch store settings
+    const { data: settings } = await supabase.from('store_settings').select('key, value');
+    const settingsMap: Record<string, string> = {};
+    (settings || []).forEach((s) => { settingsMap[s.key] = s.value; });
 
     // Calculate elapsed minutes since paid_at
     let elapsedMinutesSincePaid = 0;
@@ -65,19 +75,22 @@ export async function GET(
     }
 
     // Hide sensitive activation payload if not fulfilled yet
-    const sanitizedItems = items.map((item) => {
+    const sanitizedItems = (items || []).map((item: any) => {
       const isFulfilled = order.payment_status === 'FULFILLED';
+      const variant = item.product_variants;
+      const product = variant?.products;
+
       return {
         id: item.id,
-        product_title: item.product_title,
-        platform_name: item.platform_name,
-        variant_name: item.variant_name,
-        duration_days: item.duration_days,
+        product_title: product?.title || 'Lisensi Pro',
+        platform_name: product?.platform_name || '',
+        variant_name: variant?.name || '',
+        duration_days: variant?.duration_days || 30,
         unit_price: item.unit_price,
-        estimated_delivery_text: item.estimated_delivery_text,
+        estimated_delivery_text: variant?.estimated_delivery_text || '5 - 20 Menit',
         activation_payload: isFulfilled ? item.activation_payload : null,
         admin_delivery_notes: isFulfilled ? item.admin_delivery_notes : null,
-        activation_guide: isFulfilled ? item.activation_guide : null,
+        activation_guide: isFulfilled ? variant?.activation_guide : null,
         warranty_expired_at: isFulfilled ? item.warranty_expired_at : null,
       };
     });
@@ -104,10 +117,10 @@ export async function GET(
         },
         items: sanitizedItems,
         support: {
-          admin_whatsapp: adminPhoneRow?.value || '6281234567890',
+          admin_whatsapp: settingsMap['admin_whatsapp'] || '085183410190',
           is_sla_breached: elapsedMinutesSincePaid >= 20,
-          store_status: storeStatusRow?.value || 'ONLINE',
-          store_notice: storeNoticeRow?.value || '',
+          store_status: settingsMap['store_status'] || 'ONLINE',
+          store_notice: settingsMap['operating_hours_notice'] || '',
         },
       },
     });

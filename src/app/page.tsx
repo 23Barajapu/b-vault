@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 interface Variant {
   id: number;
@@ -31,128 +32,6 @@ interface StoreInfo {
   notice: string;
 }
 
-// Sample demo products for interactive preview when DB is empty
-const DEMO_PRODUCTS: Product[] = [
-  {
-    id: 101,
-    title: 'Google AI Pro',
-    slug: 'google-ai-pro',
-    platform_name: 'Google',
-    description: 'Langganan resmi Google AI Pro selama 18 bulan. Termasuk Google One 5TB cloud dan akses penuh fitur Gemini Advanced.',
-    category_name: 'AI & Machine Learning',
-    category_slug: 'ai-machine-learning',
-    variants: [
-      {
-        id: 201,
-        product_id: 101,
-        name: '18 Bulan Access (Google One 5TB & Gemini Pro)',
-        duration_days: 540,
-        retail_price: 30000,
-        input_requirement_label: 'Email Google Pribadi Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 540,
-        activation_guide: '1. Pastikan email Google Anda aktif.\n2. Buka link aktivasi resmi yang diberikan di status pesanan.\n3. Login dan nikmati Gemini Advanced serta cloud 5TB.',
-      },
-    ],
-  },
-  {
-    id: 102,
-    title: 'CapCut Pro',
-    slug: 'capcut-pro',
-    platform_name: 'ByteDance',
-    description: 'Fitur edit video tanpa batas, transisi premium, efek AI pro, dan ekspor 4K tanpa watermark untuk mobile & desktop.',
-    category_name: 'Desain & Video',
-    category_slug: 'desain-video',
-    variants: [
-      {
-        id: 202,
-        product_id: 102,
-        name: '1 Bulan Private Access',
-        duration_days: 30,
-        retail_price: 50000,
-        input_requirement_label: 'Email Akun CapCut Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 30,
-        activation_guide: '1. Login ke aplikasi CapCut dengan akun yang didaftarkan.\n2. Terima undangan aktivasi atau akses akun pro yang diberikan.\n3. Fitur CapCut Pro aktif seketika.',
-      },
-    ],
-  },
-  {
-    id: 103,
-    title: 'Canva Pro',
-    slug: 'canva-pro',
-    platform_name: 'Canva',
-    description: 'Akses resmi ke ribuan template premium, penghapus latar belakang instan, brand kit, dan penyimpanan cloud 1TB.',
-    category_name: 'Desain & Video',
-    category_slug: 'desain-video',
-    variants: [
-      {
-        id: 203,
-        product_id: 103,
-        name: '1 Bulan Access',
-        duration_days: 30,
-        retail_price: 50000,
-        input_requirement_label: 'Email Akun Canva Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 30,
-        activation_guide: '1. Cek email masuk dari Canva Team Invite.\n2. Klik "Gabung Tim" dan profil otomatis upgrade ke Canva Pro.\n3. Elemen pro terbuka seketika.',
-      },
-      {
-        id: 204,
-        product_id: 103,
-        name: '3 Bulan Bisnis (Garansi 2 Bulan)',
-        duration_days: 90,
-        retail_price: 100000,
-        input_requirement_label: 'Email Akun Canva Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 60,
-        activation_guide: '1. Buka tautan aktivasi tim bisnis di invoice Anda.\n2. Terima undangan tim.\n3. Full garansi 2 bulan penuh.',
-      },
-    ],
-  },
-  {
-    id: 104,
-    title: 'Claude Pro',
-    slug: 'claude-pro',
-    platform_name: 'Anthropic',
-    description: 'Akses penuh Claude 3.5 Sonnet & Opus dengan kuota pesan 5x lebih banyak, batas pemikiran mendalam, dan Artifacts interaktif.',
-    category_name: 'AI & Machine Learning',
-    category_slug: 'ai-machine-learning',
-    variants: [
-      {
-        id: 205,
-        product_id: 104,
-        name: '1 Bulan Access (Full Garansi)',
-        duration_days: 30,
-        retail_price: 280000,
-        input_requirement_label: 'Email Akun Claude Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 30,
-        activation_guide: '1. Login kredensial atau link aktivasi yang disediakan admin.\n2. Gunakan di browser dan aplikasi Claude resmi.\n3. Full garansi 30 hari.',
-      },
-      {
-        id: 206,
-        product_id: 104,
-        name: 'Claude Max (Kapasitas Maksimum)',
-        duration_days: 30,
-        retail_price: 1600000,
-        input_requirement_label: 'Email Akun Claude Anda',
-        estimated_delivery_text: '5 - 20 Menit',
-        warranty_duration_days: 30,
-        activation_guide: '1. Akses akun privat berkecepatan tinggi yang disediakan tim aktivasi B-Vault.\n2. Bebas antrean dan full garansi performa 30 hari.',
-      },
-    ],
-  },
-];
-
-const RECENT_ACTIVITIES = [
-  'Rian (Surabaya) baru saja mengaktifkan Google AI Pro 18 Bulan',
-  'Devi (Jakarta) baru saja mengaktifkan Canva Pro 1 Bulan',
-  'Fajar (Bandung) baru saja mengaktifkan Claude Pro Full Garansi',
-  'Aldi (Yogyakarta) baru saja mengaktifkan CapCut Pro Private',
-  'Siti (Semarang) baru saja mengaktifkan Canva Pro Bisnis 3 Bulan',
-];
-
 export default function HomePage() {
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -161,7 +40,6 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [store, setStore] = useState<StoreInfo>({ status: 'ONLINE', notice: '' });
-  const [useDemoPreview, setUseDemoPreview] = useState(false);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,6 +54,7 @@ export default function HomePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeVariant, setActiveVariant] = useState<Variant | null>(null);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -192,7 +71,8 @@ export default function HomePage() {
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponMessage, setCouponMessage] = useState('');
 
-  // Floating Live Activity
+  // Floating Live Activity from Real Orders
+  const [activities, setActivities] = useState<string[]>([]);
   const [activityIndex, setActivityIndex] = useState(0);
   const [showToast, setShowToast] = useState(true);
 
@@ -211,18 +91,32 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Activity ticker timer
+  // Activity ticker timer for real database orders
   useEffect(() => {
+    if (activities.length === 0) return;
     const timer = setInterval(() => {
-      setActivityIndex((prev) => (prev + 1) % RECENT_ACTIVITIES.length);
+      setActivityIndex((prev) => (prev + 1) % activities.length);
       setShowToast(true);
     }, 7000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activities.length]);
 
   useEffect(() => {
     fetchProducts();
+    checkAuthSession();
   }, []);
+
+  async function checkAuthSession() {
+    try {
+      const res = await fetch('/api/v1/auth/session');
+      const json = await res.json();
+      if (json.success && json.data?.authenticated) {
+        setAuthUser(json.data.user);
+        if (json.data.user.name) setName((prev) => prev || json.data.user.name);
+        if (json.data.user.email) setEmail((prev) => prev || json.data.user.email);
+      }
+    } catch {}
+  }
 
   async function fetchProducts() {
     try {
@@ -233,6 +127,7 @@ export default function HomePage() {
         setProducts(data.data.products || []);
         setCategories(data.data.categories || []);
         setStore(data.data.store || { status: 'ONLINE', notice: '' });
+        setActivities(data.data.activities || []);
       }
     } catch (err) {
       console.error('Failed to load products', err);
@@ -241,24 +136,9 @@ export default function HomePage() {
     }
   }
 
-  // Active products to display (DB products or demo preview)
-  const effectiveProducts = useMemo(() => {
-    if (products.length > 0) return products;
-    if (useDemoPreview) return DEMO_PRODUCTS;
-    return [];
-  }, [products, useDemoPreview]);
-
-  // Dynamic category list
-  const effectiveCategories = useMemo(() => {
-    if (categories.length > 0) return categories;
-    if (useDemoPreview) {
-      return [
-        { id: 1, name: 'AI & Machine Learning', slug: 'ai-machine-learning' },
-        { id: 2, name: 'Desain & Video', slug: 'desain-video' },
-      ];
-    }
-    return [];
-  }, [categories, useDemoPreview]);
+  // Active products & categories to display from DB
+  const effectiveProducts = useMemo(() => products, [products]);
+  const effectiveCategories = useMemo(() => categories, [categories]);
 
   // Filter & Sort Logic
   const processedProducts = useMemo(() => {
@@ -385,24 +265,6 @@ export default function HomePage() {
 
   return (
     <div className="container" style={{ position: 'relative' }}>
-      {/* Floating Customer Activity Ticker */}
-      {showToast && (
-        <div className="floating-activity-toast">
-          <span className="live-pulse-dot" />
-          <div style={{ flex: 1, lineHeight: 1.3 }}>
-            <span style={{ fontSize: '0.74rem', color: '#94a3b8', display: 'block' }}>Aktivasi Terverifikasi</span>
-            <strong>{RECENT_ACTIVITIES[activityIndex]}</strong>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowToast(false)}
-            aria-label="Tutup notifikasi"
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.1rem', padding: '0 4px', minHeight: 'auto', minWidth: 'auto' }}
-          >
-            &times;
-          </button>
-        </div>
-      )}
 
       {/* Store status banner */}
       {store.status === 'RESTING' ? (
@@ -448,27 +310,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Empty Database Helper Banner */}
-      {products.length === 0 && !loading && (
-        <div className="card" style={{ marginBottom: '24px', backgroundColor: 'rgba(100, 5, 9, 0.18)', borderColor: 'var(--gold-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.95rem' }}>
-              Database Tabel Bersih & Kosong (Mode Fleksibel)
-            </strong>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Kerangka tabel database siap diisi SQL manual. Aktifkan mode preview untuk menguji seluruh interaktivitas langsung.
-            </span>
-          </div>
-          <button
-            type="button"
-            className={useDemoPreview ? 'btn btn-secondary' : 'btn btn-primary'}
-            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-            onClick={() => setUseDemoPreview(!useDemoPreview)}
-          >
-            {useDemoPreview ? 'Matikan Preview' : 'Aktifkan Preview Demo (6 Produk)'}
-          </button>
-        </div>
-      )}
+
 
       {/* Hero Intro with Luxury Private Vault Aesthetics */}
       <div style={{ marginBottom: '36px', textAlign: 'center', maxWidth: '840px', margin: '0 auto 36px' }}>
@@ -487,7 +329,7 @@ export default function HomePage() {
           Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda.
         </p>
         <p style={{ fontSize: '0.94rem', color: 'var(--body)', maxWidth: '640px', margin: '0 auto 24px', lineHeight: 1.6 }}>
-          Penyedia resmi Google AI Pro (18 Bulan), CapCut Pro, Canva Pro Bisnis, dan Claude Pro. Transaksi instan verifikasi QRIS otomatis & Virtual Account 24 jam dengan proteksi penggantian penuh.
+          Platform lisensi software resmi, tools AI, dan aplikasi produktivitas bergaransi penuh. Transaksi instan verifikasi QRIS otomatis & Virtual Account 24 jam dengan proteksi aktivasi terpercaya.
         </p>
 
         {/* 3 Metrik Kepercayaan (Trust Stats) from DESIGN.md */}
@@ -624,20 +466,32 @@ export default function HomePage() {
         </div>
       ) : processedProducts.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '6px' }}>
-            {searchQuery ? `Tidak ada produk yang cocok dengan "${searchQuery}".` : 'Belum ada produk aktif di katalog.'}
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🔒</div>
+          <p style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--gold-light)', marginBottom: '8px' }}>
+            {searchQuery ? `Tidak ada produk yang cocok dengan "${searchQuery}".` : 'Belum Ada Produk di Katalog'}
           </p>
-          <p style={{ fontSize: '0.88rem' }}>
-            {searchQuery ? 'Coba gunakan kata kunci lain atau reset filter.' : 'Tambahkan produk ke tabel SQLite atau aktifkan Mode Preview Demo di atas.'}
+          <p style={{ fontSize: '0.88rem', color: 'var(--body)', maxWidth: '480px', margin: '0 auto 16px', lineHeight: 1.6 }}>
+            {searchQuery
+              ? 'Coba gunakan kata kunci lain atau reset filter pencarian Anda.'
+              : 'Katalog produk saat ini masih kosong. Silakan tambahkan produk baru melalui panel admin /ops.'}
           </p>
-          {searchQuery && (
+          {searchQuery ? (
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setSearchQuery('')}
-              style={{ marginTop: '14px', fontSize: '0.85rem' }}
+              style={{ marginTop: '8px', fontSize: '0.85rem' }}
             >
               Reset Pencarian
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => router.push('/ops')}
+              style={{ marginTop: '8px', fontSize: '0.85rem' }}
+            >
+              Buka Panel Admin / Kelola Produk
             </button>
           )}
         </div>
@@ -920,6 +774,28 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* Google Fast Checkout Sync */}
+            {authUser ? (
+              <div style={{ backgroundColor: 'rgba(219, 177, 99, 0.08)', border: '1px solid var(--accent-gold)', borderRadius: 'var(--radius-xs)', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--ink)' }}>
+                  Data otomatis terisi via Google: <strong style={{ color: 'var(--gold-light)' }}>{authUser.email}</strong>
+                </span>
+              </div>
+            ) : (
+              <div style={{ marginBottom: '16px' }}>
+                <GoogleAuthButton
+                  label="Isi Cepat dengan Akun Google"
+                  style={{ width: '100%', padding: '10px', fontSize: '0.86rem' }}
+                  onSuccess={(u) => {
+                    setAuthUser(u);
+                    if (u.name) setName(u.name);
+                    if (u.email) setEmail(u.email);
+                  }}
+                />
+              </div>
+            )}
+
             <form onSubmit={handleCheckoutSubmit}>
               {/* 1. Nama Lengkap */}
               <div style={{ marginBottom: '14px' }}>
@@ -1053,6 +929,52 @@ export default function HomePage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Real-time Live Activity Notification Toast */}
+      {activities.length > 0 && showToast && activities[activityIndex] && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '24px',
+            backgroundColor: 'var(--surface-elevated)',
+            border: '1px solid var(--accent-gold)',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.8)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            zIndex: 90,
+            maxWidth: '380px',
+          }}
+        >
+          <span className="live-pulse-dot" />
+          <div style={{ flex: 1, fontSize: '0.82rem', color: 'var(--ink)' }}>
+            <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Aktivitas Lisensi Terkini
+            </strong>
+            <span>{activities[activityIndex]}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowToast(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted)',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: '2px 4px',
+              minHeight: 'auto',
+              minWidth: 'auto',
+            }}
+            aria-label="Tutup notifikasi"
+          >
+            &times;
+          </button>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function POST(
   request: Request,
@@ -17,8 +17,13 @@ export async function POST(
     const body = await request.json();
     const action = body.action || 'TOGGLE_ISSUE'; // 'TOGGLE_ISSUE' | 'REFUND'
 
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
-    if (!order) {
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+
+    if (orderErr || !order) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'Pesanan tidak ditemukan.' } },
         { status: 404 }
@@ -26,12 +31,13 @@ export async function POST(
     }
 
     if (action === 'REFUND') {
-      db.prepare(`
-        UPDATE orders
-        SET payment_status = 'REFUNDED',
-            supplier_issue = 0
-        WHERE id = ?
-      `).run(orderId);
+      await supabase
+        .from('orders')
+        .update({
+          payment_status: 'REFUNDED',
+          supplier_issue: 0,
+        })
+        .eq('id', orderId);
 
       return NextResponse.json({
         success: true,
@@ -40,11 +46,12 @@ export async function POST(
       });
     } else {
       const newStatus = order.supplier_issue ? 0 : 1;
-      db.prepare(`
-        UPDATE orders
-        SET supplier_issue = ?
-        WHERE id = ?
-      `).run(newStatus, orderId);
+      await supabase
+        .from('orders')
+        .update({
+          supplier_issue: newStatus,
+        })
+        .eq('id', orderId);
 
       return NextResponse.json({
         success: true,

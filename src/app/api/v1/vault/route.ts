@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -15,30 +15,56 @@ export async function GET(request: Request) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    const orders = db.prepare(`
-      SELECT o.id, o.order_number, o.secure_token, o.customer_email, o.target_account_input,
-             o.total_amount, o.payment_status, o.payment_method, o.paid_at, o.fulfilled_at, o.created_at
-      FROM orders o
-      WHERE o.customer_email = ? AND o.payment_status = 'FULFILLED'
-      ORDER BY o.fulfilled_at DESC
-    `).all(cleanEmail) as any[];
+    const { data: orders, error: ordersErr } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        secure_token,
+        customer_email,
+        target_account_input,
+        total_amount,
+        payment_status,
+        payment_method,
+        paid_at,
+        fulfilled_at,
+        created_at,
+        order_items (
+          id,
+          unit_price,
+          activation_payload,
+          admin_delivery_notes,
+          warranty_expired_at,
+          product_variants (
+            name,
+            duration_days,
+            activation_guide,
+            warranty_duration_days,
+            products (
+              title,
+              platform_name
+            )
+          )
+        )
+      `)
+      .eq('customer_email', cleanEmail)
+      .eq('payment_status', 'FULFILLED')
+      .order('fulfilled_at', { ascending: false });
 
-    const result = orders.map((order) => {
-      const items = db.prepare(`
-        SELECT oi.*, pv.name as variant_name, pv.duration_days, pv.activation_guide,
-               pv.warranty_duration_days, p.title as product_title, p.platform_name
-        FROM order_items oi
-        JOIN product_variants pv ON oi.variant_id = pv.id
-        JOIN products p ON pv.product_id = p.id
-        WHERE oi.order_id = ?
-      `).all(order.id) as any[];
+    if (ordersErr) throw ordersErr;
+
+    const result = (orders || []).map((order: any) => {
+      const items = order.order_items || [];
 
       return {
         order_number: order.order_number,
         secure_token: order.secure_token,
         target_account: order.target_account_input,
         fulfilled_at: order.fulfilled_at,
-        items: items.map((item) => {
+        items: items.map((item: any) => {
+          const variant = item.product_variants;
+          const product = variant?.products;
+
           let daysRemainingWarranty = 0;
           if (item.warranty_expired_at) {
             const exp = new Date(item.warranty_expired_at).getTime();
@@ -46,12 +72,12 @@ export async function GET(request: Request) {
           }
 
           return {
-            product_title: item.product_title,
-            platform_name: item.platform_name,
-            variant_name: item.variant_name,
+            product_title: product?.title || 'Lisensi Pro',
+            platform_name: product?.platform_name || '',
+            variant_name: variant?.name || '',
             activation_payload: item.activation_payload,
             admin_delivery_notes: item.admin_delivery_notes,
-            activation_guide: item.activation_guide,
+            activation_guide: variant?.activation_guide,
             warranty_expired_at: item.warranty_expired_at,
             warranty_days_left: daysRemainingWarranty,
           };

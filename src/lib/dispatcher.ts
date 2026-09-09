@@ -1,4 +1,4 @@
-import db from './db';
+import supabase from './supabase';
 
 interface TelegramAlertPayload {
   orderNumber: string;
@@ -14,8 +14,13 @@ interface TelegramAlertPayload {
 
 export async function dispatchTelegramAdminAlert(payload: TelegramAlertPayload, orderId: number) {
   // Get Telegram credentials from store_settings or env
-  const tokenRow = db.prepare(`SELECT value FROM store_settings WHERE key = 'telegram_bot_token'`).get() as { value: string } | undefined;
-  const chatRow = db.prepare(`SELECT value FROM store_settings WHERE key = 'telegram_chat_id'`).get() as { value: string } | undefined;
+  const { data: settings } = await supabase
+    .from('store_settings')
+    .select('key, value')
+    .in('key', ['telegram_bot_token', 'telegram_chat_id']);
+
+  const tokenRow = settings?.find((s) => s.key === 'telegram_bot_token');
+  const chatRow = settings?.find((s) => s.key === 'telegram_chat_id');
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN || tokenRow?.value || '';
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID || chatRow?.value || '';
@@ -68,12 +73,15 @@ export async function dispatchTelegramAdminAlert(payload: TelegramAlertPayload, 
     }
   }
 
-  // Record audit log
+  // Record audit log in Supabase
   try {
-    db.prepare(`
-      INSERT INTO dispatcher_logs (order_id, channel, status, payload, error_message)
-      VALUES (?, 'TELEGRAM_ADMIN', ?, ?, ?)
-    `).run(orderId, status, JSON.stringify({ message, botTokenSet: Boolean(botToken), chatIdSet: Boolean(chatId) }), errorMessage);
+    await supabase.from('dispatcher_logs').insert({
+      order_id: orderId,
+      channel: 'TELEGRAM_ADMIN',
+      status,
+      payload: JSON.stringify({ message, botTokenSet: Boolean(botToken), chatIdSet: Boolean(chatId) }),
+      error_message: errorMessage,
+    });
   } catch (logErr) {
     console.error('Failed to write dispatcher log', logErr);
   }

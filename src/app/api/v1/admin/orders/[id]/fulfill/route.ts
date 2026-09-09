@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function POST(
   request: Request,
@@ -30,8 +30,13 @@ export async function POST(
       );
     }
 
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
-    if (!order) {
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+
+    if (orderErr || !order) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'Pesanan tidak ditemukan.' } },
         { status: 404 }
@@ -39,18 +44,16 @@ export async function POST(
     }
 
     // Get order item to calculate warranty expiration
-    const item = db.prepare(`
-      SELECT oi.*, pv.warranty_duration_days
-      FROM order_items oi
-      JOIN product_variants pv ON oi.variant_id = pv.id
-      WHERE oi.order_id = ?
-    `).get(orderId) as any;
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('id, product_variants(warranty_duration_days)')
+      .eq('order_id', orderId);
 
-    const warrantyDays = item?.warranty_duration_days || 30;
+    const firstItem: any = items?.[0];
+    const warrantyDays = firstItem?.product_variants?.warranty_duration_days || 30;
     const warrantyExpiredAt = new Date(Date.now() + warrantyDays * 24 * 60 * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
 
-    // Sanitize activation payload
     const sanitizedPayload = activation_payload.trim();
     const sanitizedNotes = admin_delivery_notes ? admin_delivery_notes.trim() : null;
 
@@ -58,32 +61,34 @@ export async function POST(
       ? Math.max(0, Math.floor((Date.now() - new Date(order.paid_at).getTime()) / 1000))
       : null;
 
-    db.transaction(() => {
-      // Update order item
-      db.prepare(`
-        UPDATE order_items
-        SET activation_payload = ?,
-            admin_delivery_notes = ?,
-            warranty_expired_at = ?
-        WHERE order_id = ?
-      `).run(sanitizedPayload, sanitizedNotes, warrantyExpiredAt, orderId);
+    // Update order item in Supabase
+    await supabase
+      .from('order_items')
+      .update({
+        activation_payload: sanitizedPayload,
+        admin_delivery_notes: sanitizedNotes,
+        warranty_expired_at: warrantyExpiredAt,
+      })
+      .eq('order_id', orderId);
 
-      // Update order status
-      db.prepare(`
-        UPDATE orders
-        SET payment_status = 'FULFILLED',
-            fulfilled_at = ?,
-            fulfillment_duration_seconds = ?,
-            supplier_issue = 0
-        WHERE id = ?
-      `).run(nowIso, fulfillmentDurationSeconds, orderId);
+    // Update order in Supabase
+    await supabase
+      .from('orders')
+      .update({
+        payment_status: 'FULFILLED',
+        fulfilled_at: nowIso,
+        fulfillment_duration_seconds: fulfillmentDurationSeconds,
+        supplier_issue: 0,
+      })
+      .eq('id', orderId);
 
-      // Log dispatcher fulfillment audit
-      db.prepare(`
-        INSERT INTO dispatcher_logs (order_id, channel, status, payload)
-        VALUES (?, 'CUSTOMER_DELIVERY', 'SENT', ?)
-      `).run(orderId, JSON.stringify({ fulfilled_at: nowIso, duration_seconds: fulfillmentDurationSeconds, hasNotes: Boolean(sanitizedNotes) }));
-    })();
+    // Record dispatcher log
+    await supabase.from('dispatcher_logs').insert({
+      order_id: orderId,
+      channel: 'CUSTOMER_DELIVERY',
+      status: 'SENT',
+      payload: JSON.stringify({ fulfilled_at: nowIso, duration_seconds: fulfillmentDurationSeconds, hasNotes: Boolean(sanitizedNotes) }),
+    });
 
     return NextResponse.json({
       success: true,
@@ -99,10 +104,7 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: {
-          code: 'ERR_FULFILL_FAILED',
-          message: error.message || 'Gagal menyerahkan lisensi.',
-        },
+        error: { code: 'ERR_FULFILL_FAILED', message: error.message || 'Gagal memproses penyerahan lisensi.' },
       },
       { status: 500 }
     );

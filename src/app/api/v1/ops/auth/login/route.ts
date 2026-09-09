@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 const DEFAULT_ADMIN_EMAIL = 'ops@b-vault.id';
 const DEFAULT_ADMIN_PIN = '882399'; // Default secure 6-digit TOTP/PIN for local operations
@@ -15,7 +15,12 @@ export async function POST(request: Request) {
     const inputTotp = (totp_code || '').trim();
 
     // Check user in DB or fallback default admin credentials
-    let adminUser = db.prepare("SELECT * FROM users WHERE role = 'admin' AND email = ?").get(inputEmail) as any;
+    const { data: adminUser } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', 'admin')
+      .eq('email', inputEmail)
+      .maybeSingle();
 
     const isValidDefault = (inputEmail === DEFAULT_ADMIN_EMAIL || inputEmail === 'admin@b-vault.id') &&
       (inputPass === 'B-Vault2026!' || inputPass === 'admin123') &&
@@ -37,6 +42,15 @@ export async function POST(request: Request) {
     // Generate 8-hour session token
     const sessionToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+
+    // Persist session in user_sessions if user exists
+    if (adminUser?.id) {
+      await supabase.from('user_sessions').insert({
+        token: sessionToken,
+        user_id: adminUser.id,
+        expires_at: expiresAt,
+      });
+    }
 
     const response = NextResponse.json({
       success: true,

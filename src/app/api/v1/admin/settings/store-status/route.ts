@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const rows = db.prepare('SELECT key, value FROM store_settings').all() as any[];
+    const { data: rows, error } = await supabase.from('store_settings').select('key, value');
+    if (error) throw error;
+
     const settings: Record<string, string> = {};
-    for (const r of rows) {
+    for (const r of (rows || [])) {
       settings[r.key] = r.value;
     }
 
@@ -27,19 +29,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const updateStmt = db.prepare(`
-      INSERT INTO store_settings (key, value)
-      VALUES (?, ?)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value
-    `);
+    const entries = Object.entries(body)
+      .filter(([_, value]) => typeof value === 'string')
+      .map(([key, value]) => ({ key, value: value as string }));
 
-    db.transaction(() => {
-      for (const [key, value] of Object.entries(body)) {
-        if (typeof value === 'string') {
-          updateStmt.run(key, value);
-        }
-      }
-    })();
+    if (entries.length > 0) {
+      const { error } = await supabase.from('store_settings').upsert(entries, { onConflict: 'key' });
+      if (error) throw error;
+    }
 
     return NextResponse.json({
       success: true,

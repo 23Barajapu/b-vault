@@ -654,3 +654,9 @@ label {
     transform: scale(1);
   }
 }
+
+.dropdown-hover:hover {
+  background-color: rgba(219, 177, 99, 0.1) !important;
+  color: var(--gold-light) !important;
+}
+

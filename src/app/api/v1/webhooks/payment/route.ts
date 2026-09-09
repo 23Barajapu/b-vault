@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 import { dispatchTelegramAdminAlert } from '@/lib/dispatcher';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Support both standardized webhook & direct simulator payload
     const orderNumber = body.order_number || body.order_id || body.external_id;
     const paymentStatus = body.status || body.transaction_status || 'PAID';
 
@@ -17,8 +16,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = db.prepare('SELECT * FROM orders WHERE order_number = ?').get(orderNumber) as any;
-    if (!order) {
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('order_number', orderNumber)
+      .single();
+
+    if (orderErr || !order) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'Pesanan tidak ditemukan.' } },
         { status: 404 }
@@ -39,33 +43,41 @@ export async function POST(request: Request) {
 
     if (isPaid) {
       const nowIso = new Date().toISOString();
-      db.prepare(`
-        UPDATE orders
-        SET payment_status = 'PAID_PROCESSING',
-            paid_at = ?
-        WHERE id = ?
-      `).run(nowIso, order.id);
+      await supabase
+        .from('orders')
+        .update({
+          payment_status: 'PAID_PROCESSING',
+          paid_at: nowIso,
+        })
+        .eq('id', order.id);
 
       // Fetch items for Telegram notification
-      const items = db.prepare(`
-        SELECT oi.*, pv.name as variant_name, p.title as product_title
-        FROM order_items oi
-        JOIN product_variants pv ON oi.variant_id = pv.id
-        JOIN products p ON pv.product_id = p.id
-        WHERE oi.order_id = ?
-      `).all(order.id) as any[];
+      const { data: items } = await supabase
+        .from('order_items')
+        .select(`
+          *,
+          product_variants (
+            name,
+            products (
+              title
+            )
+          )
+        `)
+        .eq('order_id', order.id);
 
-      const firstItem = items[0] || { product_title: 'Lisensi Digital', variant_name: 'Standar' };
+      const firstItem = items?.[0];
+      const variant = firstItem?.product_variants;
+      const product = variant?.products;
 
       // Dispatch alert to Telegram Bot Admin
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      const fulfillUrl = `${baseUrl}/admin?focus=${order.order_number}`;
+      const fulfillUrl = `${baseUrl}/ops?focus=${order.order_number}`;
 
       await dispatchTelegramAdminAlert(
         {
           orderNumber: order.order_number,
-          productName: firstItem.product_title,
-          variantName: firstItem.variant_name,
+          productName: product?.title || 'Lisensi Digital',
+          variantName: variant?.name || 'Standar',
           customerEmail: order.customer_email,
           customerPhone: order.customer_phone,
           targetAccount: order.target_account_input,

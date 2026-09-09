@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 interface AdminOrder {
   id: number;
@@ -117,12 +118,24 @@ function OpsConsoleInner() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState('');
 
-  // Auto-login if session stored in sessionStorage
+  // Auto-login if session stored in sessionStorage or Google session
   useEffect(() => {
-    const cachedToken = sessionStorage.getItem('bv_ops_token');
-    if (cachedToken) {
-      setIsAuthenticated(true);
+    async function checkExistingAuth() {
+      const cachedToken = sessionStorage.getItem('bv_ops_token');
+      if (cachedToken) {
+        setIsAuthenticated(true);
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/auth/session');
+        const json = await res.json();
+        if (json.success && json.data?.authenticated && json.data.user?.role === 'admin') {
+          sessionStorage.setItem('bv_ops_token', 'google_session');
+          setIsAuthenticated(true);
+        }
+      } catch {}
     }
+    checkExistingAuth();
   }, []);
 
   // Auth Handler
@@ -679,6 +692,26 @@ function OpsConsoleInner() {
             >
               {authLoading ? 'Memverifikasi Sesi...' : 'Buka Panel Operasional'}
             </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0 16px', gap: '12px' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--hairline)' }} />
+              <span style={{ fontSize: '0.74rem', color: 'var(--muted)', textTransform: 'uppercase' }}>atau</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--hairline)' }} />
+            </div>
+
+            <GoogleAuthButton
+              redirectPath="/ops"
+              style={{ width: '100%', padding: '10px' }}
+              label="Masuk via Google (Akun Ops)"
+              onSuccess={(user) => {
+                if (user.role === 'admin') {
+                  sessionStorage.setItem('bv_ops_token', 'google_session');
+                  setIsAuthenticated(true);
+                } else {
+                  setAuthError('Akun Google ini terdaftar sebagai Member biasa, bukan staf Ops.');
+                }
+              }}
+            />
           </form>
         </div>
       </div>
@@ -1622,13 +1655,13 @@ function OpsConsoleInner() {
               </strong>
 
               <div style={{ marginBottom: '12px' }}>
-                <label>Nama Kategori (Contoh: AI & Machine Learning)</label>
+                <label>Nama Kategori (Masukan nama kategori)</label>
                 <input
                   type="text"
                   required
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  placeholder="Contoh: AI & Machine Learning"
+                  placeholder="Masukan nama kategori"
                 />
               </div>
 

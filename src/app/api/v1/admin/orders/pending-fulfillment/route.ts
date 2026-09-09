@@ -1,50 +1,59 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'PENDING';
 
-    let query = `
-      SELECT o.*, 
-        (SELECT json_group_array(
-          json_object(
-            'id', oi.id,
-            'variant_id', oi.variant_id,
-            'variant_name', pv.name,
-            'product_title', p.title,
-            'platform_name', p.platform_name,
-            'unit_price', oi.unit_price,
-            'activation_payload', oi.activation_payload,
-            'admin_delivery_notes', oi.admin_delivery_notes,
-            'activation_guide', pv.activation_guide,
-            'warranty_days', pv.warranty_duration_days
+    let query = supabase.from('orders').select(`
+      *,
+      order_items (
+        id,
+        variant_id,
+        unit_price,
+        activation_payload,
+        admin_delivery_notes,
+        product_variants (
+          name,
+          activation_guide,
+          warranty_duration_days,
+          products (
+            title,
+            platform_name
           )
-        ) FROM order_items oi
-        JOIN product_variants pv ON oi.variant_id = pv.id
-        JOIN products p ON pv.product_id = p.id
-        WHERE oi.order_id = o.id) as items_json
-      FROM orders o
-    `;
+        )
+      )
+    `);
 
     if (filter === 'PENDING') {
-      query += ` WHERE o.payment_status = 'PAID_PROCESSING' ORDER BY o.paid_at ASC`;
+      query = query.eq('payment_status', 'PAID_PROCESSING').order('paid_at', { ascending: true });
     } else if (filter === 'FULFILLED') {
-      query += ` WHERE o.payment_status = 'FULFILLED' ORDER BY o.fulfilled_at DESC LIMIT 50`;
+      query = query.eq('payment_status', 'FULFILLED').order('fulfilled_at', { ascending: false }).limit(50);
     } else {
-      query += ` ORDER BY o.id DESC LIMIT 50`;
+      query = query.order('id', { ascending: false }).limit(50);
     }
 
-    const rows = db.prepare(query).all() as any[];
+    const { data: rows, error } = await query;
+    if (error) throw error;
 
-    const orders = rows.map((r) => {
-      let items = [];
-      try {
-        items = JSON.parse(r.items_json);
-      } catch {
-        items = [];
-      }
+    const orders = (rows || []).map((r: any) => {
+      const items = (r.order_items || []).map((oi: any) => {
+        const variant = oi.product_variants;
+        const product = variant?.products;
+        return {
+          id: oi.id,
+          variant_id: oi.variant_id,
+          variant_name: variant?.name || '',
+          product_title: product?.title || 'Lisensi Pro',
+          platform_name: product?.platform_name || '',
+          unit_price: oi.unit_price,
+          activation_payload: oi.activation_payload,
+          admin_delivery_notes: oi.admin_delivery_notes,
+          activation_guide: variant?.activation_guide,
+          warranty_days: variant?.warranty_duration_days,
+        };
+      });
 
       let elapsedMinutes = 0;
       if (r.paid_at) {
@@ -72,25 +81,39 @@ export async function GET(request: Request) {
       };
     });
 
-    // Summary statistics
-    const statsRow = db.prepare(`
-      SELECT 
-        SUM(CASE WHEN payment_status = 'PAID_PROCESSING' THEN 1 ELSE 0 END) as pending_count,
-        SUM(CASE WHEN payment_status = 'FULFILLED' THEN 1 ELSE 0 END) as fulfilled_count,
-        SUM(CASE WHEN payment_status IN ('PAID_PROCESSING', 'FULFILLED') THEN total_amount ELSE 0 END) as total_gmv
-      FROM orders
-    `).get() as any;
+    // Summary statistics from Supabase
+    const { data: allOrderStats } = await supabase
+      .from('orders')
+      .select('payment_status, total_amount');
 
-    const storeStatusRow = db.prepare("SELECT value FROM store_settings WHERE key = 'store_status'").get() as any;
+    let pendingCount = 0;
+    let fulfilledCount = 0;
+    let totalGmv = 0;
+
+    for (const o of (allOrderStats || [])) {
+      if (o.payment_status === 'PAID_PROCESSING') {
+        pendingCount++;
+        totalGmv += Number(o.total_amount) || 0;
+      } else if (o.payment_status === 'FULFILLED') {
+        fulfilledCount++;
+        totalGmv += Number(o.total_amount) || 0;
+      }
+    }
+
+    const { data: storeSetting } = await supabase
+      .from('store_settings')
+      .select('value')
+      .eq('key', 'store_status')
+      .maybeSingle();
 
     return NextResponse.json({
       success: true,
       data: {
         stats: {
-          pending_fulfillment: statsRow?.pending_count || 0,
-          fulfilled_total: statsRow?.fulfilled_count || 0,
-          total_revenue: statsRow?.total_gmv || 0,
-          store_status: storeStatusRow?.value || 'ONLINE',
+          pending_fulfillment: pendingCount,
+          fulfilled_total: fulfilledCount,
+          total_revenue: totalGmv,
+          store_status: storeSetting?.value || 'ONLINE',
         },
         orders,
       },
@@ -99,10 +122,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: {
-          code: 'ERR_FETCH_ADMIN_ORDERS',
-          message: error.message || 'Gagal mengambil antrean order admin.',
-        },
+        error: { code: 'ERR_GET_PENDING_ORDERS', message: error.message || 'Gagal memuat pesanan pending.' },
       },
       { status: 500 }
     );

@@ -1,10 +1,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import UserNav from '@/components/UserNav';
 
 export const metadata: Metadata = {
-  title: 'B-Vault: Platform Lisensi Google AI & Aplikasi Pro',
-  description: 'B-Vault penyedia resmi Google AI Pro (18 Bulan), CapCut Pro, Canva Pro, Canva Pro Bisnis, Claude Pro, dan Claude Max.',
+  title: 'B-Vault: Official Pro License & Digital Vault',
+  description: 'B-Vault platform lisensi software pro resmi, AI tools, dan aplikasi digital bergaransi penuh.',
   icons: {
     icon: '/logo.png',
   },
@@ -79,9 +80,10 @@ export default function RootLayout({
               <Link href="/" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 Katalog
               </Link>
-              <Link href="/vault" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+              <Link href="/vault" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 Cek Lisensi
               </Link>
+              <UserNav />
             </nav>
           </div>
         </header>

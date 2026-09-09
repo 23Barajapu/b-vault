@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const WA_REGEX = /^(?:\+62|62|0)8[1-9][0-9]{7,11}$/;
@@ -19,14 +19,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const variant = db.prepare(`
-      SELECT pv.*, p.title as product_title, p.platform_name
-      FROM product_variants pv
-      JOIN products p ON pv.product_id = p.id
-      WHERE pv.id = ? AND pv.is_active = 1
-    `).get(variant_id) as any;
+    const { data: variant, error: varErr } = await supabase
+      .from('product_variants')
+      .select('*, products:product_id(title, platform_name)')
+      .eq('id', variant_id)
+      .eq('is_active', 1)
+      .single();
 
-    if (!variant) {
+    if (varErr || !variant) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_VARIANT_NOT_FOUND', message: 'Varian produk tidak ditemukan atau tidak aktif.' } },
         { status: 404 }
@@ -86,14 +86,20 @@ export async function POST(request: Request) {
     }
 
     // Silent user provisioning
-    let user = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail) as any;
-    if (!user) {
-      const insertUser = db.prepare(`
-        INSERT INTO users (name, email, phone_number, role)
-        VALUES (?, ?, ?, 'customer')
-      `);
-      const res = insertUser.run(cleanName, cleanEmail, cleanPhone);
-      user = { id: res.lastInsertRowid };
+    let { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
+    let userId = existingUser?.id;
+    if (!userId) {
+      const { data: newUser } = await supabase
+        .from('users')
+        .insert({ name: cleanName, email: cleanEmail, phone_number: cleanPhone, role: 'customer' })
+        .select('id')
+        .single();
+      userId = newUser?.id;
     }
 
     // Generate Order Number & Secure Token
@@ -105,7 +111,7 @@ export async function POST(request: Request) {
     // 15 minutes expiration
     const expiredAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // Generate simulated payment payload
+    // Generate payment payload
     const paymentChannelData: Record<string, any> = {
       method: payment_method,
       amount: variant.retail_price,
@@ -129,54 +135,50 @@ export async function POST(request: Request) {
       paymentChannelData.bank_name = bankCode;
     }
 
-    // Insert Order in transaction
-    const insertOrderTx = db.transaction(() => {
-      const insOrder = db.prepare(`
-        INSERT INTO orders (
-          order_number, secure_token, user_id, customer_name, customer_email, customer_phone,
-          target_account_input, total_amount, payment_status, payment_method,
-          payment_reference, payment_channel_data, expired_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?, ?, ?)
-      `);
-
-      const resOrder = insOrder.run(
-        orderNumber,
-        secureToken,
-        user.id,
-        cleanName,
-        cleanEmail,
-        cleanPhone,
-        target_account_input ? target_account_input.trim() : null,
-        variant.retail_price,
+    // Insert Order in Supabase
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .insert({
+        order_number: orderNumber,
+        secure_token: secureToken,
+        user_id: userId,
+        customer_name: cleanName,
+        customer_email: cleanEmail,
+        customer_phone: cleanPhone,
+        target_account_input: target_account_input ? target_account_input.trim() : null,
+        total_amount: variant.retail_price,
+        payment_status: 'PENDING_PAYMENT',
         payment_method,
-        `REF-${orderNumber}`,
-        JSON.stringify(paymentChannelData),
-        expiredAt
-      );
+        payment_reference: `REF-${orderNumber}`,
+        payment_channel_data: JSON.stringify(paymentChannelData),
+        expired_at: expiredAt,
+      })
+      .select('id')
+      .single();
 
-      const orderId = resOrder.lastInsertRowid;
+    if (orderErr || !order) {
+      throw new Error(orderErr?.message || 'Gagal menyimpan data pesanan.');
+    }
 
-      const insItem = db.prepare(`
-        INSERT INTO order_items (order_id, variant_id, unit_price, cost_price, retail_price)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-      insItem.run(orderId, variant.id, variant.retail_price, variant.cost_price || 0, variant.retail_price);
-
-      return { orderId, orderNumber, secureToken, expiredAt };
+    // Insert Order Item
+    await supabase.from('order_items').insert({
+      order_id: order.id,
+      variant_id: variant.id,
+      unit_price: variant.retail_price,
+      cost_price: variant.cost_price || 0,
+      retail_price: variant.retail_price,
     });
-
-    const result = insertOrderTx();
 
     return NextResponse.json({
       success: true,
       data: {
-        order_number: result.orderNumber,
-        secure_token: result.secureToken,
+        order_number: orderNumber,
+        secure_token: secureToken,
         total_amount: variant.retail_price,
         payment_method,
         payment_channel_data: paymentChannelData,
-        expired_at: result.expiredAt,
-        redirect_url: `/orders/${result.orderNumber}?token=${result.secureToken}`,
+        expired_at: expiredAt,
+        redirect_url: `/orders/${orderNumber}?token=${secureToken}`,
       },
     });
   } catch (error: any) {

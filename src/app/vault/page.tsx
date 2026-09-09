@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 interface VaultItem {
   order_number: string;
@@ -21,21 +22,20 @@ interface VaultItem {
 
 export default function VaultPage() {
   const [email, setEmail] = useState('');
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [vaultItems, setVaultItems] = useState<VaultItem[]>([]);
   const [searched, setSearched] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email) return;
-
+  const searchVault = useCallback(async (targetEmail: string) => {
+    if (!targetEmail) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/store/vault?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/v1/store/vault?email=${encodeURIComponent(targetEmail)}`);
       const json = await res.json();
       if (json.success) {
-        setVaultItems(json.data.vault_items);
+        setVaultItems(json.data.vault_items || []);
       } else {
         setVaultItems([]);
       }
@@ -46,6 +46,27 @@ export default function VaultPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Check if user is logged in via Google session
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/v1/auth/session');
+        const data = await res.json();
+        if (data.success && data.data?.authenticated && data.data.user?.email) {
+          setUser(data.data.user);
+          setEmail(data.data.user.email);
+          searchVault(data.data.user.email);
+        }
+      } catch {}
+    }
+    checkSession();
+  }, [searchVault]);
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    searchVault(email);
   }
 
   function copyText(key: string, text: string) {
@@ -69,6 +90,43 @@ export default function VaultPage() {
         <p style={{ fontSize: '0.92rem', color: 'var(--body)', maxWidth: '560px', margin: '0 auto' }}>
           Akses riwayat seluruh lisensi aktif, kode aktivasi privat, serta sisa durasi garansi Anda dengan memasukkan email transaksi.
         </p>
+      </div>
+
+      {/* User Login Banner / Quick Google Sync */}
+      <div className="card" style={{ marginBottom: '20px', padding: '14px 20px', backgroundColor: 'var(--surface-elevated)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          {user ? (
+            <div>
+              <span style={{ fontSize: '0.74rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', fontWeight: 700 }}>
+                ✦ TERHUBUNG AKUN GOOGLE
+              </span>
+              <strong style={{ color: 'var(--gold-light)', fontSize: '0.94rem' }}>
+                {user.name} ({user.email})
+              </strong>
+            </div>
+          ) : (
+            <div>
+              <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.92rem' }}>
+                Buka Vault Lebih Cepat dengan Google
+              </strong>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                Masuk dengan akun Google untuk langsung membuka seluruh lisensi terdaftar tanpa input manual.
+              </span>
+            </div>
+          )}
+        </div>
+        {!user && (
+          <GoogleAuthButton
+            redirectPath="/vault"
+            label="Masuk Google"
+            style={{ padding: '8px 16px', fontSize: '0.84rem' }}
+            onSuccess={(u) => {
+              setUser(u);
+              setEmail(u.email);
+              searchVault(u.email);
+            }}
+          />
+        )}
       </div>
 
       {/* Search Input Box */}

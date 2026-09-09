@@ -1,49 +1,72 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import supabase from '@/lib/supabase';
 
 export async function GET() {
   try {
     const todayStr = new Date().toISOString().slice(0, 10);
 
-    // 1. Financial stats: GMV and Net Profit
-    const financialStats = db.prepare(`
-      SELECT 
-        COALESCE(SUM(CASE WHEN o.payment_status = 'FULFILLED' THEN oi.unit_price ELSE 0 END), 0) as total_gmv,
-        COALESCE(SUM(CASE WHEN o.payment_status = 'FULFILLED' THEN (oi.unit_price - oi.cost_price) ELSE 0 END), 0) as total_net_profit,
-        COALESCE(SUM(CASE WHEN o.payment_status = 'FULFILLED' AND o.paid_at LIKE ? THEN oi.unit_price ELSE 0 END), 0) as today_gmv,
-        COALESCE(SUM(CASE WHEN o.payment_status = 'FULFILLED' AND o.paid_at LIKE ? THEN (oi.unit_price - oi.cost_price) ELSE 0 END), 0) as today_net_profit
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-    `).get(`${todayStr}%`, `${todayStr}%`) as any;
+    // Fetch all orders with order_items
+    const { data: allOrders, error } = await supabase
+      .from('orders')
+      .select('id, payment_status, paid_at, fulfillment_duration_seconds, order_items(unit_price, cost_price)');
 
-    // 2. Orders status count
-    const statusCounts = db.prepare(`
-      SELECT 
-        SUM(CASE WHEN payment_status = 'PAID_PROCESSING' THEN 1 ELSE 0 END) as pending_fulfillment,
-        SUM(CASE WHEN payment_status = 'FULFILLED' THEN 1 ELSE 0 END) as fulfilled_total,
-        SUM(CASE WHEN payment_status = 'PENDING_PAYMENT' THEN 1 ELSE 0 END) as pending_payment,
-        SUM(CASE WHEN payment_status = 'REFUNDED' THEN 1 ELSE 0 END) as refunded_total,
-        SUM(CASE WHEN payment_status = 'EXPIRED' THEN 1 ELSE 0 END) as expired_total
-      FROM orders
-    `).get() as any;
+    if (error) throw error;
 
-    // 3. SLA Fulfillment Performance
-    const slaStats = db.prepare(`
-      SELECT 
-        COUNT(*) as total_measured,
-        AVG(fulfillment_duration_seconds) as avg_duration_seconds,
-        SUM(CASE WHEN fulfillment_duration_seconds <= 1200 THEN 1 ELSE 0 END) as under_sla_count,
-        SUM(CASE WHEN fulfillment_duration_seconds > 1200 THEN 1 ELSE 0 END) as breached_sla_count
-      FROM orders
-      WHERE payment_status = 'FULFILLED' AND fulfillment_duration_seconds IS NOT NULL
-    `).get() as any;
+    const orders = allOrders || [];
 
-    const avgSeconds = Math.round(slaStats?.avg_duration_seconds || 0);
+    let totalGmv = 0;
+    let totalNetProfit = 0;
+    let todayGmv = 0;
+    let todayNetProfit = 0;
+
+    let pendingFulfillment = 0;
+    let fulfilledTotal = 0;
+    let pendingPayment = 0;
+    let refundedTotal = 0;
+    let expiredTotal = 0;
+
+    let measuredDurationSum = 0;
+    let measuredCount = 0;
+    let underSlaCount = 0;
+    let breachedSlaCount = 0;
+
+    for (const o of orders) {
+      if (o.payment_status === 'PAID_PROCESSING') pendingFulfillment++;
+      else if (o.payment_status === 'FULFILLED') fulfilledTotal++;
+      else if (o.payment_status === 'PENDING_PAYMENT') pendingPayment++;
+      else if (o.payment_status === 'REFUNDED') refundedTotal++;
+      else if (o.payment_status === 'EXPIRED') expiredTotal++;
+
+      if (o.payment_status === 'FULFILLED') {
+        const isToday = o.paid_at && o.paid_at.startsWith(todayStr);
+
+        for (const item of (o.order_items || [])) {
+          const unit = Number(item.unit_price) || 0;
+          const cost = Number(item.cost_price) || 0;
+          const profit = unit - cost;
+
+          totalGmv += unit;
+          totalNetProfit += profit;
+
+          if (isToday) {
+            todayGmv += unit;
+            todayNetProfit += profit;
+          }
+        }
+
+        if (o.fulfillment_duration_seconds !== null && o.fulfillment_duration_seconds !== undefined) {
+          const dur = Number(o.fulfillment_duration_seconds);
+          measuredCount++;
+          measuredDurationSum += dur;
+          if (dur <= 1200) underSlaCount++;
+          else breachedSlaCount++;
+        }
+      }
+    }
+
+    const avgSeconds = measuredCount > 0 ? Math.round(measuredDurationSum / measuredCount) : 0;
     const avgMinutes = Math.round(avgSeconds / 60);
-    const measuredCount = slaStats?.total_measured || 0;
-    const slaComplianceRate = measuredCount > 0
-      ? Math.round(((slaStats?.under_sla_count || 0) / measuredCount) * 100)
-      : 100;
+    const slaComplianceRate = measuredCount > 0 ? Math.round((underSlaCount / measuredCount) * 100) : 100;
 
     return NextResponse.json({
       success: true,
@@ -51,26 +74,26 @@ export async function GET() {
         currency: 'IDR',
         today: {
           date: todayStr,
-          gmv: financialStats?.today_gmv || 0,
-          net_profit: financialStats?.today_net_profit || 0,
+          gmv: todayGmv,
+          net_profit: todayNetProfit,
         },
         all_time: {
-          gmv: financialStats?.total_gmv || 0,
-          net_profit: financialStats?.total_net_profit || 0,
+          gmv: totalGmv,
+          net_profit: totalNetProfit,
         },
         orders: {
-          pending_fulfillment: statusCounts?.pending_fulfillment || 0,
-          fulfilled: statusCounts?.fulfilled_total || 0,
-          pending_payment: statusCounts?.pending_payment || 0,
-          refunded: statusCounts?.refunded_total || 0,
-          expired: statusCounts?.expired_total || 0,
+          pending_fulfillment: pendingFulfillment,
+          fulfilled: fulfilledTotal,
+          pending_payment: pendingPayment,
+          refunded: refundedTotal,
+          expired: expiredTotal,
         },
         sla_performance: {
           target_sla_minutes: 20,
           avg_fulfillment_seconds: avgSeconds,
           avg_fulfillment_minutes: avgMinutes,
           compliance_rate_percentage: slaComplianceRate,
-          breached_count: slaStats?.breached_sla_count || 0,
+          breached_count: breachedSlaCount,
         },
       },
     });
