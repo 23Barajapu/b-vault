@@ -14,7 +14,7 @@ export async function GET() {
       data: {
         store_status: map['store_status'] || 'ONLINE',
         operating_hours_notice: map['operating_hours_notice'] || '',
-        whatsapp_cs_number: map['admin_whatsapp'] || '085183410190',
+        whatsapp_cs_number: map['admin_whatsapp'] || '085861708659',
       },
     });
   } catch (error: any) {

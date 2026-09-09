@@ -101,7 +101,7 @@ export default function MobileBottomNav() {
 
         {/* Tab 3: Bantuan CS WhatsApp */}
         <a
-          href="https://wa.me/6285183410190?text=Halo%20CS%20B-Vault,%20saya%20butuh%20bantuan"
+          href="https://wa.me/6285861708659?text=Halo%20CS%20B-Vault,%20saya%20butuh%20bantuan"
           target="_blank"
           rel="noopener noreferrer"
           style={{

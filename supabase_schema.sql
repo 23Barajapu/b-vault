@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS store_settings (
 INSERT INTO store_settings (key, value) VALUES 
   ('store_status', 'ONLINE'),
   ('operating_hours_notice', 'Pesanan di luar jam kerja (23:00 - 07:30 WIB) diproses mulai pukul 08:00 WIB'),
-  ('admin_whatsapp', '085183410190'),
+  ('admin_whatsapp', '085861708659'),
   ('telegram_bot_token', ''),
   ('telegram_chat_id', ''),
   ('baseline_delivered_licenses', '50')

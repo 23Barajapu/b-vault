@@ -121,7 +121,7 @@ export async function GET(
         },
         items: sanitizedItems,
         support: {
-          admin_whatsapp: settingsMap['admin_whatsapp'] || '085183410190',
+          admin_whatsapp: settingsMap['admin_whatsapp'] || '085861708659',
           is_sla_breached: elapsedMinutesSincePaid >= 20,
           store_status: settingsMap['store_status'] || 'ONLINE',
           store_notice: settingsMap['operating_hours_notice'] || '',

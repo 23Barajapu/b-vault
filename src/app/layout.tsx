@@ -114,7 +114,7 @@ export default function RootLayout({
                 <strong className="font-display" style={{ color: 'var(--gold-light)', fontSize: '1.05rem', letterSpacing: '0.04em' }}>B-VAULT</strong> &bull; Official Pro License & Digital Suite Provider.
               </p>
               <p style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
-                CS WhatsApp: <strong style={{ color: 'var(--ink)' }}>0851 8341 0190</strong> &bull; Verifikasi instan QRIS 24 Jam.
+                CS WhatsApp: <strong style={{ color: 'var(--ink)' }}>0858-6170-8659</strong> &bull; Verifikasi instan QRIS 24 Jam.
               </p>
             </div>
             <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>

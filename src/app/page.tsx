@@ -374,7 +374,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             <span>Estimasi aktivasi: <strong style={{ color: 'var(--gold-light)', backgroundColor: 'rgba(219, 177, 99, 0.14)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap' }}>5 - 20 Menit</strong></span>
             <span className="desktop-nav-item">&bull;</span>
-            <span>WhatsApp CS: <strong style={{ color: 'var(--ink)' }}>0851 8341 0190</strong></span>
+            <span>WhatsApp CS: <strong style={{ color: 'var(--ink)' }}>0858-6170-8659</strong></span>
           </div>
         </div>
       )}

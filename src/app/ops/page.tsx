@@ -130,7 +130,7 @@ function OpsConsoleInner() {
   // Settings State
   const [storeStatus, setStoreStatus] = useState('ONLINE');
   const [operatingNotice, setOperatingNotice] = useState('');
-  const [adminPhone, setAdminPhone] = useState('085183410190');
+  const [adminPhone, setAdminPhone] = useState('085861708659');
   const [tgToken, setTgToken] = useState('');
   const [tgChatId, setTgChatId] = useState('');
   const [baselineLicenses, setBaselineLicenses] = useState<number | string>(50);
@@ -238,7 +238,7 @@ function OpsConsoleInner() {
       if (json.success) {
         setStoreStatus(json.data.store_status || 'ONLINE');
         setOperatingNotice(json.data.operating_hours_notice || '');
-        setAdminPhone(json.data.admin_whatsapp || '085183410190');
+        setAdminPhone(json.data.admin_whatsapp || '085861708659');
         setTgToken(json.data.telegram_bot_token || '');
         setTgChatId(json.data.telegram_chat_id || '');
         setBaselineLicenses(json.data.baseline_delivered_licenses || 50);
@@ -1215,7 +1215,7 @@ function OpsConsoleInner() {
                 type="text"
                 value={adminPhone}
                 onChange={(e) => setAdminPhone(e.target.value)}
-                placeholder="085183410190"
+                placeholder="085861708659"
               />
             </div>
 
