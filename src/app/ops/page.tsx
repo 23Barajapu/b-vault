@@ -39,12 +39,13 @@ interface AnalyticsData {
   sla_performance: { target_sla_minutes: number; avg_fulfillment_seconds: number; avg_fulfillment_minutes: number; compliance_rate_percentage: number; breached_count: number };
 }
 
-function formatRupiahDisplay(val: number | string | undefined | null): string {
+function formatNumberDisplay(val: number | string | undefined | null): string {
   if (val === undefined || val === null || val === '') return '';
   const clean = val.toString().replace(/\D/g, '');
   if (!clean) return '';
   return Number(clean).toLocaleString('id-ID');
 }
+const formatRupiahDisplay = formatNumberDisplay;
 
 function OpsConsoleInner() {
   const searchParams = useSearchParams();
@@ -98,12 +99,12 @@ function OpsConsoleInner() {
   const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
   const [variantForm, setVariantForm] = useState<{
     name: string;
-    duration_days: number;
+    duration_days: number | string;
     cost_price: number | string;
     retail_price: number | string;
     input_requirement_label: string;
     estimated_delivery_text: string;
-    warranty_duration_days: number;
+    warranty_duration_days: number | string;
     activation_guide: string;
     is_active: number;
   }>({
@@ -415,6 +416,8 @@ function OpsConsoleInner() {
     setProductMessage(null);
     const cleanRetail = variantForm.retail_price ? Number(variantForm.retail_price.toString().replace(/\D/g, '')) : 0;
     const cleanCost = variantForm.cost_price ? Number(variantForm.cost_price.toString().replace(/\D/g, '')) : 0;
+    const cleanDuration = variantForm.duration_days ? Number(variantForm.duration_days.toString().replace(/\D/g, '')) : 30;
+    const cleanWarranty = variantForm.warranty_duration_days ? Number(variantForm.warranty_duration_days.toString().replace(/\D/g, '')) : cleanDuration;
     try {
       if (editingVariantId) {
         // Edit variant
@@ -425,6 +428,8 @@ function OpsConsoleInner() {
             target: 'variant',
             id: editingVariantId,
             ...variantForm,
+            duration_days: cleanDuration,
+            warranty_duration_days: cleanWarranty,
             retail_price: cleanRetail,
             cost_price: cleanCost,
           }),
@@ -446,6 +451,8 @@ function OpsConsoleInner() {
             action: 'create_variant',
             product_id: selectedProductIdForVariant,
             ...variantForm,
+            duration_days: cleanDuration,
+            warranty_duration_days: cleanWarranty,
             retail_price: cleanRetail,
             cost_price: cleanCost,
           }),
@@ -798,7 +805,7 @@ function OpsConsoleInner() {
           style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => setActiveTab('FULFILLMENT')}
         >
-          Quick Fulfillment ({orders.filter(o => o.payment_status === 'PAID_PROCESSING').length})
+          Quick Fulfillment ({orders.filter(o => o.payment_status === 'PAID_PROCESSING').length.toLocaleString('id-ID')})
         </button>
         <button
           type="button"
@@ -806,7 +813,7 @@ function OpsConsoleInner() {
           style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => { setActiveTab('PRODUCTS'); fetchAdminProducts(); }}
         >
-          Katalog Produk & Paket ({adminProducts.length})
+          Katalog Produk & Paket ({adminProducts.length.toLocaleString('id-ID')})
         </button>
         <button
           type="button"
@@ -1084,17 +1091,17 @@ function OpsConsoleInner() {
                 <div className="card" style={{ padding: '16px' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rata-rata Waktu Proses</span>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
-                    {analytics.sla_performance.avg_fulfillment_minutes} Menit
+                    {Number(analytics.sla_performance.avg_fulfillment_minutes).toLocaleString('id-ID')} Menit
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    ({analytics.sla_performance.avg_fulfillment_seconds} detik)
+                    ({Number(analytics.sla_performance.avg_fulfillment_seconds).toLocaleString('id-ID')} detik)
                   </span>
                 </div>
 
                 <div className="card" style={{ padding: '16px' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tingkat Kepatuhan SLA</span>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--success)' }}>
-                    {analytics.sla_performance.compliance_rate_percentage}%
+                    {Number(analytics.sla_performance.compliance_rate_percentage).toLocaleString('id-ID')}%
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Pesanan diproses &le; 20 menit
@@ -1104,10 +1111,51 @@ function OpsConsoleInner() {
                 <div className="card" style={{ padding: '16px' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pelanggaran SLA (&gt;20m)</span>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: analytics.sla_performance.breached_count > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
-                    {analytics.sla_performance.breached_count} Pesanan
+                    {Number(analytics.sla_performance.breached_count).toLocaleString('id-ID')} Pesanan
                   </div>
                 </div>
               </div>
+
+              {/* Volume Status Pesanan Toko */}
+              {analytics.orders && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px' }}>
+                    Volume Status Pesanan (Total Realtime)
+                  </h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+                    <div className="card" style={{ padding: '14px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block' }}>Lunas & Selesai</span>
+                      <strong style={{ fontSize: '1.3rem', color: 'var(--success)' }}>
+                        {Number(analytics.orders.fulfilled || 0).toLocaleString('id-ID')}
+                      </strong>
+                    </div>
+                    <div className="card" style={{ padding: '14px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block' }}>Perlu Diproses</span>
+                      <strong style={{ fontSize: '1.3rem', color: 'var(--warning)' }}>
+                        {Number(analytics.orders.pending_fulfillment || 0).toLocaleString('id-ID')}
+                      </strong>
+                    </div>
+                    <div className="card" style={{ padding: '14px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block' }}>Menunggu Bayar</span>
+                      <strong style={{ fontSize: '1.3rem', color: 'var(--primary)' }}>
+                        {Number(analytics.orders.pending_payment || 0).toLocaleString('id-ID')}
+                      </strong>
+                    </div>
+                    <div className="card" style={{ padding: '14px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block' }}>Kadaluarsa</span>
+                      <strong style={{ fontSize: '1.3rem', color: 'var(--muted)' }}>
+                        {Number(analytics.orders.expired || 0).toLocaleString('id-ID')}
+                      </strong>
+                    </div>
+                    <div className="card" style={{ padding: '14px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block' }}>Di-refund</span>
+                      <strong style={{ fontSize: '1.3rem', color: 'var(--danger)' }}>
+                        {Number(analytics.orders.refunded || 0).toLocaleString('id-ID')}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : null}
         </div>
@@ -1345,16 +1393,16 @@ function OpsConsoleInner() {
                                 {v.name}
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
-                                {v.duration_days} Hari
+                                {Number(v.duration_days).toLocaleString('id-ID')} Hari
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--muted)' }}>
-                                Rp {(v.cost_price || 0).toLocaleString('id-ID')}
+                                Rp {Number(v.cost_price || 0).toLocaleString('id-ID')}
                               </td>
                               <td style={{ padding: '10px 8px', fontWeight: 700, color: 'var(--gold-light)' }}>
-                                Rp {v.retail_price.toLocaleString('id-ID')}
+                                Rp {Number(v.retail_price).toLocaleString('id-ID')}
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
-                                {v.warranty_duration_days} Hari
+                                {Number(v.warranty_duration_days).toLocaleString('id-ID')} Hari
                               </td>
                               <td style={{ padding: '10px 8px' }}>
                                 {v.is_active === 1 && prod.is_active === 1 ? (
@@ -1598,10 +1646,14 @@ function OpsConsoleInner() {
                     </label>
                   </div>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    value={variantForm.duration_days}
-                    onChange={(e) => setVariantForm({ ...variantForm, duration_days: Number(e.target.value) })}
+                    value={formatNumberDisplay(variantForm.duration_days)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setVariantForm({ ...variantForm, duration_days: clean ? Number(clean) : '' });
+                    }}
                     placeholder="30"
                   />
                 </div>
@@ -1612,10 +1664,14 @@ function OpsConsoleInner() {
                     </label>
                   </div>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    value={variantForm.warranty_duration_days}
-                    onChange={(e) => setVariantForm({ ...variantForm, warranty_duration_days: Number(e.target.value) })}
+                    value={formatNumberDisplay(variantForm.warranty_duration_days)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '');
+                      setVariantForm({ ...variantForm, warranty_duration_days: clean ? Number(clean) : '' });
+                    }}
                     placeholder="30"
                   />
                 </div>
@@ -1629,7 +1685,7 @@ function OpsConsoleInner() {
                   <input
                     type="text"
                     inputMode="numeric"
-                    value={formatRupiahDisplay(variantForm.cost_price)}
+                    value={formatNumberDisplay(variantForm.cost_price)}
                     onChange={(e) => {
                       const clean = e.target.value.replace(/\D/g, '');
                       setVariantForm({ ...variantForm, cost_price: clean ? Number(clean) : '' });
@@ -1647,7 +1703,7 @@ function OpsConsoleInner() {
                     type="text"
                     inputMode="numeric"
                     required
-                    value={formatRupiahDisplay(variantForm.retail_price)}
+                    value={formatNumberDisplay(variantForm.retail_price)}
                     onChange={(e) => {
                       const clean = e.target.value.replace(/\D/g, '');
                       setVariantForm({ ...variantForm, retail_price: clean ? Number(clean) : '' });
@@ -1655,6 +1711,26 @@ function OpsConsoleInner() {
                     placeholder="Contoh: 45.000"
                   />
                 </div>
+              </div>
+
+              {/* Estimasi Laba Bersih per Unit */}
+              <div style={{
+                backgroundColor: 'var(--surface-elevated)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 'var(--radius-xs)',
+                padding: '10px 14px',
+                marginBottom: '16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.84rem'
+              }}>
+                <span style={{ color: 'var(--muted)' }}>Estimasi Margin Keuntungan / Unit:</span>
+                <strong style={{
+                  color: (Number(variantForm.retail_price || 0) - Number(variantForm.cost_price || 0)) >= 0 ? 'var(--success)' : 'var(--danger)'
+                }}>
+                  Rp {(Number(variantForm.retail_price || 0) - Number(variantForm.cost_price || 0)).toLocaleString('id-ID')}
+                </strong>
               </div>
 
               <div className="modal-form-row">

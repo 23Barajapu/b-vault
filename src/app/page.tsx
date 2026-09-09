@@ -479,7 +479,7 @@ export default function HomePage() {
             style={{ padding: '8px 16px', fontSize: '0.85rem', flexShrink: 0, whiteSpace: 'nowrap' }}
             onClick={() => setSelectedCategory('all')}
           >
-            Semua ({effectiveProducts.length})
+            Semua ({effectiveProducts.length.toLocaleString('id-ID')})
           </button>
           {effectiveCategories.map((c) => {
             const count = effectiveProducts.filter((p) => p.category_slug === c.slug).length;
@@ -491,7 +491,7 @@ export default function HomePage() {
                 style={{ padding: '8px 16px', fontSize: '0.85rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                 onClick={() => setSelectedCategory(c.slug)}
               >
-                {c.name} ({count})
+                {c.name} ({count.toLocaleString('id-ID')})
               </button>
             );
           })}
@@ -565,7 +565,7 @@ export default function HomePage() {
                       </span>
                     </div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--gold-light)', fontWeight: 600 }}>
-                      Garansi {activeVar?.warranty_duration_days} Hari
+                      Garansi {Number(activeVar?.warranty_duration_days || 0).toLocaleString('id-ID')} Hari
                     </span>
                   </div>
 

@@ -186,7 +186,7 @@ export default function VaultPage() {
               style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)' }}
               onClick={() => setFilter('ALL')}
             >
-              Semua Pesanan ({countAll})
+              Semua Pesanan ({countAll.toLocaleString('id-ID')})
             </button>
             <button
               type="button"
@@ -194,7 +194,7 @@ export default function VaultPage() {
               style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)' }}
               onClick={() => setFilter('FULFILLED')}
             >
-              ✦ Lunas (Lisensi Aktif) ({countFulfilled})
+              ✦ Lunas (Lisensi Aktif) ({countFulfilled.toLocaleString('id-ID')})
             </button>
             <button
               type="button"
@@ -202,7 +202,7 @@ export default function VaultPage() {
               style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)' }}
               onClick={() => setFilter('UNPAID')}
             >
-              ⏳ Belum Dibayar ({countUnpaid})
+              ⏳ Belum Dibayar ({countUnpaid.toLocaleString('id-ID')})
             </button>
           </div>
 
@@ -391,7 +391,7 @@ export default function VaultPage() {
 
                                 {it.warranty_days_left > 0 ? (
                                   <span className="badge badge-online" style={{ fontSize: '0.75rem' }}>
-                                    ✦ Garansi Aktif ({it.warranty_days_left} Hari Lagi)
+                                    ✦ Garansi Aktif ({Number(it.warranty_days_left).toLocaleString('id-ID')} Hari Lagi)
                                   </span>
                                 ) : (
                                   <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>Garansi Berakhir</span>

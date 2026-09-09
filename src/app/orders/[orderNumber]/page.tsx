@@ -437,7 +437,7 @@ function OrderStatusContent() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Waktu Berjalan:</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{order.elapsed_minutes_since_paid} Menit</span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{Number(order.elapsed_minutes_since_paid || 0).toLocaleString('id-ID')} Menit</span>
                 </div>
               </div>
 
