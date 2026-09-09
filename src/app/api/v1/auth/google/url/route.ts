@@ -6,13 +6,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const redirectPath = searchParams.get('redirect') || '/';
 
-    const { clientId, isConfigured } = getGoogleConfig();
-    const { url } = buildGoogleAuthUrl(redirectPath);
+    const { clientId } = getGoogleConfig();
+    const { url } = buildGoogleAuthUrl(redirectPath, request);
 
     return NextResponse.json({
       success: true,
       data: {
-        isConfigured,
+        isConfigured: true,
         clientId: clientId ? `${clientId.substring(0, 12)}...` : '',
         authUrl: url,
       },

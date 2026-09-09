@@ -35,13 +35,12 @@ export default function GoogleAuthButton({
       const res = await fetch(`/api/v1/auth/google/url?redirect=${encodeURIComponent(redirectPath)}`);
       const data = await res.json();
 
-      if (data.success && data.data?.isConfigured && data.data?.authUrl) {
-        // Direct redirect to real Google OAuth
+      if (data.success && data.data?.authUrl) {
+        // Direct redirect to official Google OAuth account selection screen
         window.location.href = data.data.authUrl;
-      } else {
-        // Google OAuth is not configured in .env.local yet -> Open quick test / config modal
-        setShowConfigModal(true);
+        return;
       }
+      setShowConfigModal(true);
     } catch {
       setShowConfigModal(true);
     } finally {

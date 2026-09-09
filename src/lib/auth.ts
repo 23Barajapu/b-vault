@@ -24,20 +24,22 @@ export function getAppBaseUrl(req?: Request): string {
   return 'http://localhost:3000';
 }
 
+const FALLBACK_GOOGLE_CLIENT_ID = '948822626098-n2j8quik7o342igurjga8ctv0iv6mutd.apps.googleusercontent.com';
+
 export function getGoogleConfig() {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || FALLBACK_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-  const isConfigured = Boolean(clientId && clientSecret);
+  const isConfigured = Boolean(clientId);
   return { clientId, clientSecret, isConfigured };
 }
 
-export function buildGoogleAuthUrl(redirectPath = '/'): { url: string; isConfigured: boolean } {
-  const { clientId, isConfigured } = getGoogleConfig();
-  if (!isConfigured) {
+export function buildGoogleAuthUrl(redirectPath = '/', req?: Request): { url: string; isConfigured: boolean } {
+  const { clientId } = getGoogleConfig();
+  if (!clientId) {
     return { url: '', isConfigured: false };
   }
 
-  const baseUrl = getAppBaseUrl();
+  const baseUrl = getAppBaseUrl(req);
   const redirectUri = `${baseUrl}/api/v1/auth/google/callback`;
   const state = Buffer.from(JSON.stringify({ redirectPath })).toString('base64');
 
