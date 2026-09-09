@@ -372,6 +372,8 @@ function OpsConsoleInner() {
 
   // Variant Modal Openers
   function handleOpenCreateVariant(productId: number) {
+    const parentProd = adminProducts.find((p) => p.id === productId);
+    const defaultActive = parentProd ? parentProd.is_active : 1;
     setSelectedProductIdForVariant(productId);
     setEditingVariantId(null);
     setVariantForm({
@@ -383,7 +385,7 @@ function OpsConsoleInner() {
       estimated_delivery_text: '5 - 20 Menit',
       warranty_duration_days: 30,
       activation_guide: '1. Pastikan email Anda aktif.\n2. Buka link aktivasi di invoice Anda.',
-      is_active: 1,
+      is_active: defaultActive,
     });
     setVariantModalOpen(true);
   }
@@ -1329,6 +1331,7 @@ function OpsConsoleInner() {
                             <th style={{ padding: '8px' }}>Modal</th>
                             <th style={{ padding: '8px' }}>Harga Jual</th>
                             <th style={{ padding: '8px' }}>Garansi</th>
+                            <th style={{ padding: '8px' }}>Status Paket</th>
                             <th style={{ padding: '8px', textAlign: 'right' }}>Aksi</th>
                           </tr>
                         </thead>
@@ -1349,6 +1352,17 @@ function OpsConsoleInner() {
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
                                 {v.warranty_duration_days} Hari
+                              </td>
+                              <td style={{ padding: '10px 8px' }}>
+                                {v.is_active === 1 && prod.is_active === 1 ? (
+                                  <span className="badge badge-online" style={{ fontSize: '0.72rem' }}>
+                                    Aktif
+                                  </span>
+                                ) : (
+                                  <span className="badge badge-neutral" style={{ fontSize: '0.72rem' }}>
+                                    {prod.is_active === 0 ? 'Non-Aktif (Ikut Produk)' : 'Non-Aktif'}
+                                  </span>
+                                )}
                               </td>
                               <td style={{ padding: '10px 8px', textAlign: 'right' }}>
                                 <button
@@ -1681,12 +1695,17 @@ function OpsConsoleInner() {
               <div className="modal-form-group" style={{ marginBottom: '22px' }}>
                 <div className="modal-label-header">
                   <label className="modal-label">Status Varian</label>
+                  {adminProducts.find((p) => p.id === selectedProductIdForVariant)?.is_active === 0 && (
+                    <span className="modal-label-hint" style={{ color: 'var(--warning)' }}>
+                      ⚠️ Produk induk Non-Aktif
+                    </span>
+                  )}
                 </div>
                 <select
                   value={variantForm.is_active}
                   onChange={(e) => setVariantForm({ ...variantForm, is_active: Number(e.target.value) })}
                 >
-                  <option value={1}>Aktif (Bisa dibeli pembeli)</option>
+                  <option value={1}>Aktif (Bisa dibeli jika produk aktif)</option>
                   <option value={0}>Non-Aktif (Stok Kosong / Disembunyikan)</option>
                 </select>
               </div>

@@ -113,11 +113,23 @@ export async function POST(req: Request) {
         estimated_delivery_text,
         warranty_duration_days,
         activation_guide,
+        is_active,
       } = body;
 
       if (!product_id || !name || retail_price === undefined) {
         return NextResponse.json({ success: false, error: { message: 'Produk ID, nama varian, dan harga retail wajib diisi' } }, { status: 400 });
       }
+
+      // Periksa status produk induk: jika produk non-aktif, paket otomatis non-aktif
+      const { data: parentProduct } = await supabase
+        .from('products')
+        .select('is_active')
+        .eq('id', Number(product_id))
+        .single();
+
+      const variantActiveStatus = (parentProduct && parentProduct.is_active === 0)
+        ? 0
+        : (is_active !== undefined ? Number(is_active) : 1);
 
       const { data, error } = await supabase
         .from('product_variants')
@@ -131,7 +143,7 @@ export async function POST(req: Request) {
           estimated_delivery_text: estimated_delivery_text ? estimated_delivery_text.trim() : '5 - 20 Menit',
           warranty_duration_days: Number(warranty_duration_days) || Number(duration_days) || 30,
           activation_guide: activation_guide ? activation_guide.trim() : 'Ikuti link atau kredensial yang diserahkan admin di status pesanan.',
-          is_active: 1,
+          is_active: variantActiveStatus,
         })
         .select('id')
         .single();
@@ -165,12 +177,21 @@ export async function PUT(req: Request) {
       if (platform_name !== undefined) updateObj.platform_name = platform_name.trim();
       if (description !== undefined) updateObj.description = description.trim();
       if (category_id !== undefined) updateObj.category_id = Number(category_id);
-      if (is_active !== undefined) updateObj.is_active = Number(is_active);
+
+      if (is_active !== undefined) {
+        const newActive = Number(is_active);
+        updateObj.is_active = newActive;
+        // Cascade sinkronisasi: saat status produk diubah, seluruh paket otomatis diselaraskan
+        await supabase
+          .from('product_variants')
+          .update({ is_active: newActive })
+          .eq('product_id', Number(id));
+      }
 
       const { error } = await supabase.from('products').update(updateObj).eq('id', Number(id));
       if (error) throw error;
 
-      return NextResponse.json({ success: true, message: 'Produk berhasil diperbarui' });
+      return NextResponse.json({ success: true, message: 'Produk dan paket berhasil diperbarui' });
     }
 
     if (target === 'variant') {
