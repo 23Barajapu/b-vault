@@ -93,6 +93,7 @@ function OpsConsoleInner() {
     is_active: number;
     retail_price?: number | string;
     cost_price?: number | string;
+    warranty_duration_days?: number | string;
   }>({
     title: '',
     platform_name: '',
@@ -102,6 +103,7 @@ function OpsConsoleInner() {
     is_active: 1,
     retail_price: '',
     cost_price: '',
+    warranty_duration_days: 30,
   });
 
   const [variantModalOpen, setVariantModalOpen] = useState(false);
@@ -303,6 +305,7 @@ function OpsConsoleInner() {
       is_active: 1,
       retail_price: '',
       cost_price: '',
+      warranty_duration_days: 30,
     });
     setProductModalOpen(true);
   }
@@ -319,6 +322,7 @@ function OpsConsoleInner() {
       is_active: prod.is_active,
       retail_price: mainVar ? mainVar.retail_price : '',
       cost_price: mainVar ? (mainVar.cost_price || '') : '',
+      warranty_duration_days: mainVar ? (mainVar.warranty_duration_days ?? 30) : 30,
     });
     setProductModalOpen(true);
   }
@@ -328,6 +332,7 @@ function OpsConsoleInner() {
     setProductMessage(null);
     const cleanRetail = productForm.retail_price ? Number(productForm.retail_price.toString().replace(/\D/g, '')) : 0;
     const cleanCost = productForm.cost_price ? Number(productForm.cost_price.toString().replace(/\D/g, '')) : 0;
+    const cleanWarranty = productForm.warranty_duration_days ? Number(productForm.warranty_duration_days) : 30;
     try {
       if (editingProductId) {
         // Edit product
@@ -340,6 +345,7 @@ function OpsConsoleInner() {
             ...productForm,
             retail_price: cleanRetail,
             cost_price: cleanCost,
+            warranty_duration_days: cleanWarranty,
           }),
         });
         const json = await res.json();
@@ -360,6 +366,7 @@ function OpsConsoleInner() {
             ...productForm,
             retail_price: cleanRetail,
             cost_price: cleanCost,
+            warranty_duration_days: cleanWarranty,
           }),
         });
         const json = await res.json();
@@ -1533,17 +1540,35 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              <div className="modal-form-group">
-                <div className="modal-label-header">
-                  <label className="modal-label">Slug URL</label>
-                  <span className="modal-label-hint">Opsional, otomatis dibuat jika kosong</span>
+              <div className="modal-form-row">
+                <div>
+                  <div className="modal-label-header">
+                    <label className="modal-label">
+                      Garansi (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
+                    </label>
+                    <span className="modal-label-hint">Default: 30 Hari</span>
+                  </div>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={productForm.warranty_duration_days}
+                    onChange={(e) => setProductForm({ ...productForm, warranty_duration_days: e.target.value })}
+                    placeholder="30"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={productForm.slug}
-                  onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
-                  placeholder="contoh: google-ai-pro"
-                />
+                <div>
+                  <div className="modal-label-header">
+                    <label className="modal-label">Slug URL</label>
+                    <span className="modal-label-hint">Opsional, otomatis</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={productForm.slug}
+                    onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
+                    placeholder="contoh: google-ai-pro"
+                  />
+                </div>
               </div>
 
               <div className="modal-form-group">

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     }
 
     if (action === 'create_product') {
-      const { category_id, title, slug, platform_name, description, retail_price, cost_price, duration_days } = body;
+      const { category_id, title, slug, platform_name, description, retail_price, cost_price, duration_days, warranty_duration_days } = body;
       if (!title || !platform_name) {
         return NextResponse.json({ success: false, error: { message: 'Judul dan nama platform produk wajib diisi' } }, { status: 400 });
       }
@@ -103,6 +103,7 @@ export async function POST(req: Request) {
       // Buat varian default jika harga diisi
       if (retail_price !== undefined && retail_price !== null && retail_price !== '') {
         const dur = Number(duration_days) || 30;
+        const war = warranty_duration_days !== undefined && warranty_duration_days !== '' ? Number(warranty_duration_days) : dur;
         await supabase.from('product_variants').insert({
           product_id: data.id,
           name: `${dur} Hari Private Access`,
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
           retail_price: Number(retail_price),
           input_requirement_label: 'Email Akun Anda',
           estimated_delivery_text: '5 - 20 Menit',
-          warranty_duration_days: dur,
+          warranty_duration_days: war,
           activation_guide: 'Ikuti instruksi aktivasi yang dikirimkan oleh admin pada detail pesanan.',
           is_active: 1,
         });
@@ -175,7 +176,7 @@ export async function PUT(req: Request) {
     const { target } = body;
 
     if (target === 'product') {
-      const { id, title, platform_name, description, category_id, is_active, retail_price, cost_price } = body;
+      const { id, title, platform_name, description, category_id, is_active, retail_price, cost_price, warranty_duration_days } = body;
       if (!id) return NextResponse.json({ success: false, error: { message: 'ID produk wajib disertakan' } }, { status: 400 });
 
       const updateObj: Record<string, any> = {};
@@ -200,8 +201,10 @@ export async function PUT(req: Request) {
         if (existingVariants && existingVariants.length > 0) {
           const varUpdate: any = { retail_price: Number(retail_price) };
           if (cost_price !== undefined && cost_price !== '') varUpdate.cost_price = Number(cost_price);
+          if (warranty_duration_days !== undefined && warranty_duration_days !== '') varUpdate.warranty_duration_days = Number(warranty_duration_days);
           await supabase.from('product_variants').update(varUpdate).eq('id', existingVariants[0].id);
         } else {
+          const war = warranty_duration_days !== undefined && warranty_duration_days !== '' ? Number(warranty_duration_days) : 30;
           await supabase.from('product_variants').insert({
             product_id: Number(id),
             name: '30 Hari Private Access',
@@ -210,7 +213,7 @@ export async function PUT(req: Request) {
             retail_price: Number(retail_price),
             input_requirement_label: 'Email Akun Anda',
             estimated_delivery_text: '5 - 20 Menit',
-            warranty_duration_days: 30,
+            warranty_duration_days: war,
             activation_guide: 'Ikuti instruksi aktivasi yang dikirimkan oleh admin pada detail pesanan.',
             is_active: 1,
           });
