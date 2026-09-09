@@ -209,9 +209,10 @@ function OrderStatusContent() {
   const firstItem = items[0];
 
   // Stepper state calculation
+  const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
   const isPaid = ['PAID_PROCESSING', 'FULFILLED'].includes(order.payment_status);
   const isFulfilled = order.payment_status === 'FULFILLED';
-  const isExpired = order.payment_status === 'EXPIRED';
+  const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && (timeLeftSeconds === 0 || isTimeExpired));
   const isRefunded = order.payment_status === 'REFUNDED';
 
   // WhatsApp emergency message

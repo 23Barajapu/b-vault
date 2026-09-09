@@ -4,6 +4,19 @@ import supabase from '@/lib/supabase';
 export async function GET() {
   try {
     const todayStr = new Date().toISOString().slice(0, 10);
+    const nowIso = new Date().toISOString();
+
+    // Auto-expire check: pesanan tidak dibayar dalam 10 menit otomatis kadaluwarsa
+    const { data: expiredOrders } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('payment_status', 'PENDING_PAYMENT')
+      .lt('expired_at', nowIso);
+
+    if (expiredOrders && expiredOrders.length > 0) {
+      const ids = expiredOrders.map((o: any) => o.id);
+      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', ids);
+    }
 
     // Fetch all orders with order_items
     const { data: allOrders, error } = await supabase

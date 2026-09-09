@@ -29,7 +29,7 @@ interface VaultItem {
   items: OrderItemPayload[];
 }
 
-type VaultFilter = 'ALL' | 'FULFILLED' | 'UNPAID';
+type VaultFilter = 'ALL' | 'FULFILLED' | 'UNPAID' | 'EXPIRED';
 
 export default function VaultPage() {
   const [email, setEmail] = useState('');
@@ -92,7 +92,17 @@ export default function VaultPage() {
     [vaultItems]
   );
   const countUnpaid = useMemo(
-    () => vaultItems.filter((o) => o.payment_status === 'PENDING_PAYMENT').length,
+    () => vaultItems.filter((o) => {
+      const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
+      return o.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
+    }).length,
+    [vaultItems]
+  );
+  const countExpired = useMemo(
+    () => vaultItems.filter((o) => {
+      const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
+      return o.payment_status === 'EXPIRED' || (o.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+    }).length,
     [vaultItems]
   );
 
@@ -102,7 +112,16 @@ export default function VaultPage() {
       return vaultItems.filter((o) => o.payment_status === 'FULFILLED' || o.payment_status === 'PAID_PROCESSING');
     }
     if (filter === 'UNPAID') {
-      return vaultItems.filter((o) => o.payment_status === 'PENDING_PAYMENT');
+      return vaultItems.filter((o) => {
+        const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
+        return o.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
+      });
+    }
+    if (filter === 'EXPIRED') {
+      return vaultItems.filter((o) => {
+        const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
+        return o.payment_status === 'EXPIRED' || (o.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+      });
     }
     return vaultItems;
   }, [vaultItems, filter]);
@@ -205,6 +224,16 @@ export default function VaultPage() {
             >
               ⏳ Belum Dibayar ({countUnpaid.toLocaleString('id-ID')})
             </button>
+            {countExpired > 0 && (
+              <button
+                type="button"
+                className={`btn ${filter === 'EXPIRED' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)', color: filter === 'EXPIRED' ? undefined : 'var(--danger)', borderColor: filter === 'EXPIRED' ? undefined : 'rgba(239, 68, 68, 0.3)' }}
+                onClick={() => setFilter('EXPIRED')}
+              >
+                ✕ Kadaluarsa ({countExpired.toLocaleString('id-ID')})
+              </button>
+            )}
           </div>
 
           {/* Empty state for specific filter */}
@@ -213,6 +242,8 @@ export default function VaultPage() {
               <p style={{ fontSize: '0.95rem', marginBottom: '6px', color: 'var(--ink)' }}>
                 {filter === 'UNPAID'
                   ? 'Tidak ada pesanan yang belum dibayar. Semua transaksi Anda telah lunas!'
+                  : filter === 'EXPIRED'
+                  ? 'Tidak ada pesanan yang kadaluwarsa.'
                   : 'Tidak ada pesanan pada kategori filter ini.'}
               </p>
               <button
@@ -227,10 +258,11 @@ export default function VaultPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {filteredItems.map((order) => {
+                const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
                 const isFulfilled = order.payment_status === 'FULFILLED';
                 const isPaidProcessing = order.payment_status === 'PAID_PROCESSING';
-                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT';
-                const isExpired = order.payment_status === 'EXPIRED';
+                const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
                 const isRefunded = order.payment_status === 'REFUNDED';
 
                 const orderDate = order.fulfilled_at || order.paid_at || order.created_at;

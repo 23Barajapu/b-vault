@@ -28,8 +28,12 @@ export async function GET(
       );
     }
 
-    // Auto expire check if still pending and past expired_at
-    if (order.payment_status === 'PENDING_PAYMENT' && new Date(order.expired_at).getTime() < Date.now()) {
+    // Auto expire check if still pending and past expired_at (10 menit batas pembayaran)
+    const isTimeExpired = order.expired_at
+      ? new Date(order.expired_at).getTime() < Date.now()
+      : (Date.now() - new Date(order.created_at).getTime() > 10 * 60 * 1000);
+
+    if (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired) {
       await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', order.id);
       order.payment_status = 'EXPIRED';
     }

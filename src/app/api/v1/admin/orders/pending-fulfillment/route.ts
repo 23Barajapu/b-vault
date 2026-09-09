@@ -6,6 +6,19 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'PENDING';
 
+    // Auto-expire check: bersihkan pesanan yang tidak dibayar dalam 10 menit
+    const nowIso = new Date().toISOString();
+    const { data: expiredOrders } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('payment_status', 'PENDING_PAYMENT')
+      .lt('expired_at', nowIso);
+
+    if (expiredOrders && expiredOrders.length > 0) {
+      const ids = expiredOrders.map((o: any) => o.id);
+      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', ids);
+    }
+
     let query = supabase.from('orders').select(`
       *,
       order_items (

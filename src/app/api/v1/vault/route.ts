@@ -53,7 +53,26 @@ export async function GET(request: Request) {
 
     if (ordersErr) throw ordersErr;
 
-    const result = (orders || []).map((order: any) => {
+    // Auto-expire check: pesanan PENDING_PAYMENT yang melewati batas 10 menit otomatis kadaluwarsa
+    const expiredIds: number[] = [];
+    const normalizedOrders = (orders || []).map((order: any) => {
+      const isTimeExpired = order.expired_at
+        ? new Date(order.expired_at).getTime() < Date.now()
+        : (Date.now() - new Date(order.created_at).getTime() > 10 * 60 * 1000);
+
+      if (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired) {
+        expiredIds.push(order.id);
+        return { ...order, payment_status: 'EXPIRED' };
+      }
+      return order;
+    });
+
+    if (expiredIds.length > 0) {
+      // Async update ke Supabase database
+      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', expiredIds);
+    }
+
+    const result = normalizedOrders.map((order: any) => {
       const items = order.order_items || [];
 
       return {
