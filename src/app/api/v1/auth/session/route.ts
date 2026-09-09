@@ -4,7 +4,7 @@ import { getSessionUser } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const tokenFromCookie = cookieStore.get('bv_user_session')?.value || cookieStore.get('bv_ops_session')?.value;
     
     // Also check Authorization header

@@ -3,10 +3,11 @@ import supabase from '@/lib/supabase';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = Number(params.id);
+    const { id } = await params;
+    const orderId = Number(id);
     if (!orderId) {
       return NextResponse.json(
         { success: false, error: { code: 'ERR_INVALID_ID', message: 'ID pesanan tidak valid.' } },

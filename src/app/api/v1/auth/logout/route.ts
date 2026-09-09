@@ -4,7 +4,7 @@ import { destroySession } from '@/lib/auth';
 
 export async function POST() {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const userToken = cookieStore.get('bv_user_session')?.value;
     const opsToken = cookieStore.get('bv_ops_session')?.value;
 
