@@ -120,7 +120,6 @@ export default function RootLayout({
             <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>
               <Link href="/" style={{ color: 'var(--accent-gold)' }}>Katalog Lisensi</Link>
               <Link href="/vault" style={{ color: 'var(--accent-gold)' }}>Customer Vault</Link>
-              <Link href="/ops" style={{ color: 'var(--muted)' }}>Ops Desk</Link>
             </div>
           </div>
         </footer>
