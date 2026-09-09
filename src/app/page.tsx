@@ -327,7 +327,7 @@ export default function HomePage() {
           Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda.
         </p>
         <p style={{ fontSize: '0.9rem', color: 'var(--body)', maxWidth: '640px', margin: '0 auto 20px', lineHeight: 1.6 }}>
-          Platform lisensi software resmi, tools AI, dan aplikasi produktivitas bergaransi penuh. Transaksi instan verifikasi QRIS otomatis & Virtual Account 24 jam dengan proteksi aktivasi terpercaya.
+          Platform lisensi software resmi, tools AI, dan aplikasi produktivitas bergaransi penuh. Transaksi instan verifikasi QRIS otomatis 24 jam dengan proteksi aktivasi terpercaya.
         </p>
 
         {/* 3 Metrik Kepercayaan (Trust Stats) - Clean 3-Column Mobile Layout */}
@@ -645,7 +645,7 @@ export default function HomePage() {
           {[
             {
               q: 'Bagaimana cara akun saya diaktivasi setelah pembayaran berhasil?',
-              a: 'Setelah pembayaran diverifikasi oleh QRIS/VA otomatis, invoice Anda akan langsung menampilkan tautan aktivasi resmi (invite link) atau kredensial privat. Panduan langkah demi langkah juga ditampilkan seketika di layar Anda.',
+              a: 'Setelah pembayaran diverifikasi oleh QRIS otomatis, invoice Anda akan langsung menampilkan tautan aktivasi resmi (invite link) atau kredensial privat. Panduan langkah demi langkah juga ditampilkan seketika di layar Anda.',
             },
             {
               q: 'Berapa lama rata-rata proses aktivasi lisensi?',
@@ -863,60 +863,35 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* 5. Interactive Payment Selector */}
+              {/* 5. Metode Pembayaran Tunggal: QRIS */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px' }}>Metode Pembayaran</label>
-                <div style={{ display: 'grid', gap: '8px' }}>
-                  {[
-                    { id: 'QRIS', title: 'QRIS All Payment (BCA, Mandiri, GoPay, OVO, Dana)', desc: 'Baraja Putra Digital & Kreatif (NMID: ID1026505289292)' },
-                    { id: 'BCA_VA', title: 'BCA Virtual Account', desc: 'Verifikasi instan otomatis 24 jam' },
-                    { id: 'MANDIRI_VA', title: 'Mandiri Virtual Account', desc: 'Livin by Mandiri & ATM' },
-                    { id: 'BNI_VA', title: 'BNI Virtual Account', desc: 'BNI Mobile Banking' },
-                    { id: 'BRI_VA', title: 'BRI Virtual Account', desc: 'BRImo & ATM BRI' },
-                  ].map((method) => (
-                    <div
-                      key={method.id}
-                      className={`payment-option-card ${paymentMethod === method.id ? 'selected' : ''}`}
-                      onClick={() => setPaymentMethod(method.id)}
-                    >
-                      <div>
-                        <strong style={{ fontSize: '0.9rem', display: 'block' }}>{method.title}</strong>
-                        <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>{method.desc}</span>
-                      </div>
-                      <span style={{ fontSize: '0.76rem', color: 'var(--success)', fontWeight: 600 }}>Gratis Admin</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* QRIS Merchant Badge when selected */}
-                {paymentMethod === 'QRIS' && (
-                  <div style={{
-                    marginTop: '10px',
-                    padding: '10px 14px',
-                    backgroundColor: 'var(--surface-elevated)',
-                    borderRadius: 'var(--radius-xs)',
-                    border: '1px solid var(--hairline)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                  }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#fff', padding: '2px', flexShrink: 0 }}>
+                <div
+                  className="payment-option-card selected"
+                  style={{ cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#ffffff', padding: '2px', flexShrink: 0, border: '1px solid var(--hairline)' }}>
                       <img
                         src="/qris-all-pay.jpeg"
-                        alt="Preview QRIS Baraja Putra"
+                        alt="QRIS Baraja Putra"
                         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                       />
                     </div>
                     <div>
-                      <strong style={{ fontSize: '0.84rem', color: 'var(--ink)', display: 'block' }}>
-                        BARAJA PUTRA, DIGITAL &amp; KREATIF
+                      <strong style={{ fontSize: '0.9rem', display: 'block', color: 'var(--ink)' }}>
+                        QRIS All Payment
                       </strong>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--gold-light)' }}>
-                        NMID: ID1026505289292 &bull; QRIS Standar Nasional (GPN)
+                      <span style={{ fontSize: '0.75rem', color: 'var(--gold-light)', display: 'block' }}>
+                        BARAJA PUTRA, DIGITAL &amp; KREATIF &bull; NMID: ID1026505289292
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        Semua Bank (BCA, Mandiri, BRI, BNI) &amp; e-Wallet (GoPay, OVO, DANA, ShopeePay)
                       </span>
                     </div>
                   </div>
-                )}
+                  <span style={{ fontSize: '0.76rem', color: 'var(--success)', fontWeight: 600, flexShrink: 0 }}>Gratis Admin</span>
+                </div>
               </div>
 
               {/* Resting Confirmation */}

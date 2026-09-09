@@ -67,14 +67,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Validasi Payment Method
-    const validMethods = ['QRIS', 'BCA_VA', 'MANDIRI_VA', 'BNI_VA', 'BRI_VA'];
-    if (!payment_method || !validMethods.includes(payment_method)) {
-      return NextResponse.json(
-        { success: false, error: { code: 'ERR_INVALID_PAYMENT_METHOD', message: 'Metode pembayaran tidak didukung.' } },
-        { status: 422 }
-      );
-    }
+    // 5. Validasi Payment Method (Hanya QRIS)
+    const effectivePaymentMethod = 'QRIS';
 
     // 6. Validasi Nama Pembeli
     const cleanName = (customer_name && typeof customer_name === 'string') ? customer_name.trim() : cleanEmail.split('@')[0];
@@ -111,31 +105,16 @@ export async function POST(request: Request) {
     // 15 minutes expiration
     const expiredAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // Generate payment payload
+    // Generate payment payload (QRIS Baraja Putra)
     const paymentChannelData: Record<string, any> = {
-      method: payment_method,
+      method: effectivePaymentMethod,
       amount: variant.retail_price,
       currency: 'IDR',
+      qr_content: `00020101021226670016ID.CO.B-VAULT.WWW01189360091100000000005204581253033605405${variant.retail_price}5802ID5910B-VAULT6007JAKARTA61051234062070703A016304${orderNumber.slice(-4)}`,
+      qr_image_url: '/qris-all-pay.jpeg',
+      merchant_name: 'BARAJA PUTRA, DIGITAL & KREATIF',
+      nmid: 'ID1026505289292',
     };
-
-    if (payment_method === 'QRIS') {
-      paymentChannelData.qr_content = `00020101021226670016ID.CO.B-VAULT.WWW01189360091100000000005204581253033605405${variant.retail_price}5802ID5910B-VAULT6007JAKARTA61051234062070703A016304${orderNumber.slice(-4)}`;
-      paymentChannelData.qr_image_url = '/qris-all-pay.jpeg';
-      paymentChannelData.merchant_name = 'BARAJA PUTRA, DIGITAL & KREATIF';
-      paymentChannelData.nmid = 'ID1026505289292';
-    } else {
-      const bankCode = payment_method.replace('_VA', '');
-      const prefixMap: Record<string, string> = {
-        BCA: '88000',
-        MANDIRI: '89000',
-        BNI: '98800',
-        BRI: '88800',
-      };
-      const prefix = prefixMap[bankCode] || '88000';
-      const cleanPhoneDigits = cleanPhone.replace(/\D/g, '').slice(-8);
-      paymentChannelData.va_number = `${prefix}${cleanPhoneDigits}`;
-      paymentChannelData.bank_name = bankCode;
-    }
 
     // Insert Order in Supabase
     const { data: order, error: orderErr } = await supabase
