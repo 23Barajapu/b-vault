@@ -723,3 +723,69 @@ label {
   color: var(--gold-light) !important;
 }
 
+/* Profile Icon / User Nav Styles */
+.user-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-xs);
+  padding: 4px 10px 4px 6px;
+  cursor: pointer;
+  color: var(--ink);
+  min-height: 44px;
+  transition: all 0.15s ease;
+}
+
+.user-nav-btn:hover {
+  background-color: var(--surface-highlight);
+  border-color: var(--gold-light);
+  box-shadow: 0 0 10px rgba(219, 177, 99, 0.25);
+}
+
+.user-nav-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent-gold);
+  flex-shrink: 0;
+}
+
+.user-nav-avatar-fallback {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1.5px solid var(--accent-gold);
+  flex-shrink: 0;
+}
+
+.user-nav-details {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 540px) {
+  .user-nav-details,
+  .user-nav-arrow {
+    display: none !important;
+  }
+  .user-nav-btn {
+    padding: 3px;
+    border-radius: 50%;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    background-color: rgba(219, 177, 99, 0.08);
+  }
+}
+

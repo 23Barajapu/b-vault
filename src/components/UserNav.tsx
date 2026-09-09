@@ -16,6 +16,7 @@ export default function UserNav() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,49 +85,27 @@ export default function UserNav() {
     <div style={{ position: 'relative' }} ref={dropdownRef}>
       <button
         type="button"
+        className="user-nav-btn"
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          backgroundColor: 'var(--surface-elevated)',
-          border: '1px solid var(--accent-gold)',
-          borderRadius: 'var(--radius-xs)',
-          padding: '4px 10px 4px 6px',
-          cursor: 'pointer',
-          color: 'var(--ink)',
-          minHeight: 'auto',
-          minWidth: 'auto',
-        }}
+        aria-label="Menu profil akun pengguna"
+        title={user.name}
       >
-        {/* Avatar */}
-        {user.avatar_url ? (
+        {/* Profile Avatar Icon */}
+        {user.avatar_url && !imgError ? (
           <img
             src={user.avatar_url}
             alt={user.name}
-            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--accent-gold)' }}
+            className="user-nav-avatar"
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--primary)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-            }}
-          >
+          <div className="user-nav-avatar-fallback">
             {initial}
           </div>
         )}
 
-        {/* Name and Role */}
-        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+        {/* Name and Role (auto-hidden on mobile to keep profile icon clean) */}
+        <div className="user-nav-details">
           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user.name.split(' ')[0]}
           </span>
@@ -135,7 +114,7 @@ export default function UserNav() {
           </span>
         </div>
 
-        <span style={{ fontSize: '0.7rem', color: 'var(--muted)', marginLeft: '2px' }}>▼</span>
+        <span className="user-nav-arrow" style={{ fontSize: '0.7rem', color: 'var(--muted)', marginLeft: '2px' }}>▼</span>
       </button>
 
       {/* Dropdown Menu */}
