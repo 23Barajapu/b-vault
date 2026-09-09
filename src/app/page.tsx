@@ -450,9 +450,9 @@ export default function HomePage() {
 
       {/* Empty Database Helper Banner */}
       {products.length === 0 && !loading && (
-        <div className="card" style={{ marginBottom: '24px', backgroundColor: '#f0fdfa', borderColor: '#99f6e4', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div className="card" style={{ marginBottom: '24px', backgroundColor: 'rgba(127, 13, 21, 0.15)', borderColor: 'var(--gold-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.95rem' }}>
+            <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.95rem' }}>
               Database Tabel Bersih & Kosong (Mode Fleksibel)
             </strong>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -470,23 +470,28 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Hero Intro */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+      {/* Hero Intro with Luxury Aesthetics */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
           <span className="badge badge-online">AMAN</span>
           <span className="badge badge-online">RESMI</span>
           <span className="badge badge-neutral">PRIVAT</span>
           <span className="badge badge-neutral">TERPERCAYA</span>
         </div>
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '8px' }}>
+        <h1 className="font-display" style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '0.02em', marginBottom: '8px', color: '#ffffff' }}>
           B-Vault: Google AI & Aplikasi Pro
         </h1>
-        <p style={{ fontSize: '1.08rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '8px' }}>
-          Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda (@barajapu_).
+        <p style={{ fontSize: '1.08rem', fontWeight: 600, color: 'var(--gold-light)', marginBottom: '8px' }}>
+          Aplikasi Lisensi Pro Resmi. Aktif di Akun Pribadi Anda.
         </p>
         <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', maxWidth: '660px' }}>
           Pemesanan instan dengan sistem verifikasi QRIS dan Virtual Account otomatis. Garansi penggantian penuh selama masa aktif.
         </p>
+      </div>
+
+      {/* Signature Metallic Gold Cross Divider (Matching Palette Reference) */}
+      <div className="gold-cross-divider">
+        <div className="gold-cross-badge">+</div>
       </div>
 
       {/* Interactive Controls Bar: Search, Category, Sorting */}
@@ -659,7 +664,7 @@ export default function HomePage() {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
                           Harga Lisensi Resmi
                         </span>
-                        <strong style={{ fontSize: '1.35rem', color: 'var(--primary)' }}>
+                        <strong style={{ fontSize: '1.35rem', color: 'var(--gold-light)' }}>
                           Rp {activeVar?.retail_price.toLocaleString('id-ID')}
                         </strong>
                       </div>
@@ -677,7 +682,7 @@ export default function HomePage() {
                       background: 'none',
                       border: 'none',
                       fontSize: '0.8rem',
-                      color: 'var(--primary)',
+                      color: 'var(--gold)',
                       cursor: 'pointer',
                       padding: 0,
                       marginBottom: '14px',
@@ -809,7 +814,7 @@ export default function HomePage() {
                       Rp {activeVariant.retail_price.toLocaleString('id-ID')}
                     </span>
                   )}
-                  <strong style={{ fontSize: '1.25rem', color: 'var(--primary)' }}>
+                  <strong style={{ fontSize: '1.25rem', color: 'var(--gold-light)' }}>
                     Rp {finalAmount.toLocaleString('id-ID')}
                   </strong>
                 </div>
