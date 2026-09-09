@@ -1,30 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Theme: Charcoal + Velvet Red + Gold Accent */
-  --bg-main: #0a0a0d;
-  --bg-surface: #121216;
-  --bg-subtle: #191920;
+  /* Exact Palette: Charcoal (#191814) + Velvet Red (#640509) + Metallic Gold (#dbb163) */
+  --bg-main: #191814;
+  --bg-surface: #22201b;
+  --bg-subtle: #2d2a23;
   --text-primary: #fcfcfc;
-  --text-secondary: #d4d4d8;
-  --text-muted: #94949e;
+  --text-secondary: #ded9cd;
+  --text-muted: #a69f91;
   
-  --border-color: rgba(255, 255, 255, 0.09);
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(219, 177, 99, 0.22);
+  --border-subtle: rgba(219, 177, 99, 0.12);
   
-  /* Red Palette (Velvet / Crimson) */
-  --primary: #991b1b;
-  --primary-hover: #b91c1c;
-  --primary-dark: #660708;
+  /* Red Palette (#640509) */
+  --primary: #640509;
+  --primary-hover: #7d0a10;
+  --primary-dark: #4d0306;
   --primary-contrast: #ffffff;
-  --primary-glow: rgba(185, 28, 28, 0.35);
+  --primary-glow: rgba(100, 5, 9, 0.45);
   
-  /* Gold Palette (Metallic Brass / Gold Divider) */
-  --gold: #d4af37;
-  --gold-light: #f3e5ab;
-  --gold-dark: #997a22;
-  --gold-border: rgba(212, 175, 55, 0.4);
-  --gold-glow: rgba(212, 175, 55, 0.25);
+  /* Gold Palette (#dbb163) */
+  --gold: #dbb163;
+  --gold-light: #f2dcaf;
+  --gold-dark: #b88d3b;
+  --gold-border: rgba(219, 177, 99, 0.45);
+  --gold-glow: rgba(219, 177, 99, 0.3);
   
   /* Status Colors */
   --success: #22c55e;
@@ -43,8 +43,8 @@
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -106,23 +106,23 @@ button, .btn {
   text-align: center;
 }
 
-/* Primary Button: Velvet Red with subtle Gold edge */
+/* Primary Button: Velvet Red #640509 with Metallic Gold #dbb163 border */
 .btn-primary {
-  background: linear-gradient(135deg, #7f0d15 0%, #a81720 100%);
+  background: linear-gradient(135deg, #640509 0%, #820910 100%);
   color: #ffffff;
   border: 1px solid var(--gold-border);
-  box-shadow: 0 4px 16px rgba(127, 13, 21, 0.4);
+  box-shadow: 0 4px 16px rgba(100, 5, 9, 0.5);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #99101a 0%, #c51d28 100%);
+  background: linear-gradient(135deg, #7a080d 0%, #9e0e16 100%);
   border-color: var(--gold);
-  box-shadow: 0 6px 22px rgba(197, 29, 40, 0.55);
+  box-shadow: 0 6px 22px rgba(130, 9, 16, 0.65);
   text-decoration: none;
   transform: translateY(-1px);
 }
 
-/* Secondary Button: Dark Charcoal with subtle edge */
+/* Secondary Button: Dark Charcoal with Gold edge */
 .btn-secondary {
   background-color: var(--bg-surface);
   color: var(--text-primary);
@@ -131,7 +131,7 @@ button, .btn {
 
 .btn-secondary:hover {
   background-color: var(--bg-subtle);
-  border-color: var(--gold-border);
+  border-color: var(--gold);
   color: var(--gold-light);
   text-decoration: none;
   transform: translateY(-1px);
@@ -191,7 +191,7 @@ label {
   padding: 0 16px;
 }
 
-/* Signature Metallic Gold Cross Divider */
+/* Signature Metallic Gold Cross Divider with Exact #dbb163 */
 .gold-cross-divider {
   position: relative;
   display: flex;
@@ -207,23 +207,23 @@ label {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.6) 25%, rgba(212, 175, 55, 0.9) 50%, rgba(212, 175, 55, 0.6) 75%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(219, 177, 99, 0.5) 25%, #dbb163 50%, rgba(219, 177, 99, 0.5) 75%, transparent 100%);
 }
 
 .gold-cross-badge {
   position: relative;
   z-index: 2;
-  width: 22px;
-  height: 22px;
-  background-color: var(--bg-main);
-  border: 1.5px solid var(--gold);
-  color: var(--gold);
+  width: 24px;
+  height: 24px;
+  background-color: #191814;
+  border: 1.5px solid #dbb163;
+  color: #dbb163;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 800;
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 14px rgba(219, 177, 99, 0.45);
   border-radius: 2px;
 }
 

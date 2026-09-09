@@ -24,31 +24,31 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {/* Sticky Header with Charcoal & Gold Sheen */}
+        {/* Sticky Header with Exact Charcoal #191814 & Gold #dbb163 */}
         <header style={{
-          backgroundColor: 'rgba(12, 12, 16, 0.88)',
+          backgroundColor: 'rgba(25, 24, 20, 0.94)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid var(--gold-border)',
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)'
         }}>
           <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '68px' }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--text-primary)' }}>
               <div style={{
-                width: '36px',
-                height: '36px',
+                width: '38px',
+                height: '38px',
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #7f0d15 0%, #a81720 100%)',
-                border: '1.5px solid var(--gold)',
+                backgroundColor: '#640509',
+                border: '1.5px solid #dbb163',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 800,
                 fontSize: '1.15rem',
-                boxShadow: '0 0 12px rgba(212, 175, 55, 0.35)',
+                boxShadow: '0 0 14px rgba(219, 177, 99, 0.4)',
                 fontFamily: 'Cinzel, serif'
               }}>
                 B
@@ -78,10 +78,10 @@ export default function RootLayout({
           {children}
         </main>
 
-        {/* Footer with Signature Charcoal + Red + Gold Cross Divider */}
+        {/* Footer with Exact Charcoal #191814, Velvet Red #640509 & Gold Cross Divider #dbb163 */}
         <footer style={{
-          backgroundColor: '#0c0c0e',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: '#191814',
+          borderTop: '1px solid rgba(219, 177, 99, 0.2)',
           padding: '36px 0 28px',
           position: 'relative'
         }}>

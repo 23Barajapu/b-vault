@@ -450,7 +450,7 @@ export default function HomePage() {
 
       {/* Empty Database Helper Banner */}
       {products.length === 0 && !loading && (
-        <div className="card" style={{ marginBottom: '24px', backgroundColor: 'rgba(127, 13, 21, 0.15)', borderColor: 'var(--gold-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div className="card" style={{ marginBottom: '24px', backgroundColor: 'rgba(100, 5, 9, 0.18)', borderColor: 'var(--gold-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <strong style={{ color: 'var(--gold-light)', display: 'block', fontSize: '0.95rem' }}>
               Database Tabel Bersih & Kosong (Mode Fleksibel)
