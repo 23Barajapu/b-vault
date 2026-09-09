@@ -212,7 +212,11 @@ export default function HomePage() {
 
       if (sortBy === 'price-asc') return aPrice - bPrice;
       if (sortBy === 'price-desc') return bPrice - aPrice;
-      if (sortBy === 'warranty') return bWarranty - aWarranty;
+      if (sortBy === 'warranty') {
+        const aEff = Number(aWarranty) === 0 || Number(aWarranty) >= 9999 ? 999999 : Number(aWarranty);
+        const bEff = Number(bWarranty) === 0 || Number(bWarranty) >= 9999 ? 999999 : Number(bWarranty);
+        return bEff - aEff;
+      }
       return (a.title || '').localeCompare(b.title || ''); // Default Rekomendasi: A - Z
     });
 
@@ -565,7 +569,9 @@ export default function HomePage() {
                       </span>
                     </div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--gold-light)', fontWeight: 600 }}>
-                      Garansi {Number(activeVar?.warranty_duration_days || 0).toLocaleString('id-ID')} Hari
+                      {Number(activeVar?.warranty_duration_days) === 0 || Number(activeVar?.warranty_duration_days) >= 9999
+                        ? '✦ Garansi Lifetime'
+                        : `Garansi ${Number(activeVar?.warranty_duration_days || 0).toLocaleString('id-ID')} Hari`}
                     </span>
                   </div>
 

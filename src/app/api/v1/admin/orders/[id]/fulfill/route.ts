@@ -51,7 +51,9 @@ export async function POST(
       .eq('order_id', orderId);
 
     const firstItem: any = items?.[0];
-    const warrantyDays = firstItem?.product_variants?.warranty_duration_days || 30;
+    const rawWarrantyDays = firstItem?.product_variants?.warranty_duration_days;
+    const isLifetimeWarranty = rawWarrantyDays === 0 || Number(rawWarrantyDays) >= 9999;
+    const warrantyDays = isLifetimeWarranty ? 36500 : (rawWarrantyDays !== undefined && rawWarrantyDays !== null ? Number(rawWarrantyDays) : 30);
     const warrantyExpiredAt = new Date(Date.now() + warrantyDays * 24 * 60 * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
 

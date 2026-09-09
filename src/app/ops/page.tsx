@@ -416,8 +416,12 @@ function OpsConsoleInner() {
     setProductMessage(null);
     const cleanRetail = variantForm.retail_price ? Number(variantForm.retail_price.toString().replace(/\D/g, '')) : 0;
     const cleanCost = variantForm.cost_price ? Number(variantForm.cost_price.toString().replace(/\D/g, '')) : 0;
-    const cleanDuration = variantForm.duration_days ? Number(variantForm.duration_days.toString().replace(/\D/g, '')) : 30;
-    const cleanWarranty = variantForm.warranty_duration_days ? Number(variantForm.warranty_duration_days.toString().replace(/\D/g, '')) : cleanDuration;
+    const cleanDuration = (variantForm.duration_days !== undefined && variantForm.duration_days !== '' && variantForm.duration_days !== null)
+      ? Number(variantForm.duration_days.toString().replace(/\D/g, ''))
+      : 30;
+    const cleanWarranty = (variantForm.warranty_duration_days !== undefined && variantForm.warranty_duration_days !== '' && variantForm.warranty_duration_days !== null)
+      ? Number(variantForm.warranty_duration_days.toString().replace(/\D/g, ''))
+      : cleanDuration;
     try {
       if (editingVariantId) {
         // Edit variant
@@ -1393,7 +1397,11 @@ function OpsConsoleInner() {
                                 {v.name}
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
-                                {Number(v.duration_days).toLocaleString('id-ID')} Hari
+                                {Number(v.duration_days) === 0 || Number(v.duration_days) >= 9999 ? (
+                                  <span className="badge badge-online" style={{ fontSize: '0.72rem' }}>✦ Lifetime</span>
+                                ) : (
+                                  `${Number(v.duration_days).toLocaleString('id-ID')} Hari`
+                                )}
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--muted)' }}>
                                 Rp {Number(v.cost_price || 0).toLocaleString('id-ID')}
@@ -1402,7 +1410,11 @@ function OpsConsoleInner() {
                                 Rp {Number(v.retail_price).toLocaleString('id-ID')}
                               </td>
                               <td style={{ padding: '10px 8px', color: 'var(--body)' }}>
-                                {Number(v.warranty_duration_days).toLocaleString('id-ID')} Hari
+                                {Number(v.warranty_duration_days) === 0 || Number(v.warranty_duration_days) >= 9999 ? (
+                                  <span className="badge badge-online" style={{ fontSize: '0.72rem' }}>✦ Garansi Lifetime</span>
+                                ) : (
+                                  `${Number(v.warranty_duration_days).toLocaleString('id-ID')} Hari`
+                                )}
                               </td>
                               <td style={{ padding: '10px 8px' }}>
                                 {v.is_active === 1 && prod.is_active === 1 ? (
@@ -1644,36 +1656,129 @@ function OpsConsoleInner() {
                     <label className="modal-label">
                       Durasi Aktif (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
                     </label>
+                    <button
+                      type="button"
+                      className="modal-inline-action"
+                      style={{
+                        color: Number(variantForm.duration_days) === 0 ? 'var(--gold-light)' : 'var(--muted)',
+                        fontWeight: Number(variantForm.duration_days) === 0 ? 700 : 500
+                      }}
+                      onClick={() => {
+                        setVariantForm({
+                          ...variantForm,
+                          duration_days: Number(variantForm.duration_days) === 0 ? 30 : 0
+                        });
+                      }}
+                    >
+                      {Number(variantForm.duration_days) === 0 ? '✓ Mode Lifetime' : '+ Set Lifetime'}
+                    </button>
                   </div>
                   <input
                     type="text"
                     inputMode="numeric"
                     required
-                    value={formatNumberDisplay(variantForm.duration_days)}
+                    value={Number(variantForm.duration_days) === 0 ? '0 (Lifetime / Selamanya)' : formatNumberDisplay(variantForm.duration_days)}
                     onChange={(e) => {
                       const clean = e.target.value.replace(/\D/g, '');
-                      setVariantForm({ ...variantForm, duration_days: clean ? Number(clean) : '' });
+                      setVariantForm({ ...variantForm, duration_days: clean !== '' ? Number(clean) : '' });
                     }}
-                    placeholder="30"
+                    placeholder="30 atau 0 untuk Lifetime"
+                    style={{
+                      borderColor: Number(variantForm.duration_days) === 0 ? 'var(--accent-gold)' : undefined,
+                      color: Number(variantForm.duration_days) === 0 ? 'var(--gold-light)' : undefined,
+                      fontWeight: Number(variantForm.duration_days) === 0 ? 700 : undefined,
+                    }}
                   />
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, duration_days: 30 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                    >
+                      30 Hari
+                    </button>
+                    <span style={{ color: 'var(--hairline)', fontSize: '0.72rem' }}>&bull;</span>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, duration_days: 365 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                    >
+                      1 Tahun (365)
+                    </button>
+                    <span style={{ color: 'var(--hairline)', fontSize: '0.72rem' }}>&bull;</span>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, duration_days: 0 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px', fontWeight: 600 }}
+                    >
+                      ✦ Lifetime / Unlimited
+                    </button>
+                  </div>
                 </div>
+
                 <div>
                   <div className="modal-label-header">
                     <label className="modal-label">
                       Garansi (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
                     </label>
+                    <button
+                      type="button"
+                      className="modal-inline-action"
+                      style={{
+                        color: Number(variantForm.warranty_duration_days) === 0 ? 'var(--gold-light)' : 'var(--muted)',
+                        fontWeight: Number(variantForm.warranty_duration_days) === 0 ? 700 : 500
+                      }}
+                      onClick={() => {
+                        setVariantForm({
+                          ...variantForm,
+                          warranty_duration_days: Number(variantForm.warranty_duration_days) === 0 ? 30 : 0
+                        });
+                      }}
+                    >
+                      {Number(variantForm.warranty_duration_days) === 0 ? '✓ Garansi Lifetime' : '+ Set Lifetime'}
+                    </button>
                   </div>
                   <input
                     type="text"
                     inputMode="numeric"
                     required
-                    value={formatNumberDisplay(variantForm.warranty_duration_days)}
+                    value={Number(variantForm.warranty_duration_days) === 0 ? '0 (Garansi Selamanya)' : formatNumberDisplay(variantForm.warranty_duration_days)}
                     onChange={(e) => {
                       const clean = e.target.value.replace(/\D/g, '');
-                      setVariantForm({ ...variantForm, warranty_duration_days: clean ? Number(clean) : '' });
+                      setVariantForm({ ...variantForm, warranty_duration_days: clean !== '' ? Number(clean) : '' });
                     }}
-                    placeholder="30"
+                    placeholder="30 atau 0 untuk Lifetime"
+                    style={{
+                      borderColor: Number(variantForm.warranty_duration_days) === 0 ? 'var(--accent-gold)' : undefined,
+                      color: Number(variantForm.warranty_duration_days) === 0 ? 'var(--gold-light)' : undefined,
+                      fontWeight: Number(variantForm.warranty_duration_days) === 0 ? 700 : undefined,
+                    }}
                   />
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 30 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                    >
+                      30 Hari
+                    </button>
+                    <span style={{ color: 'var(--hairline)', fontSize: '0.72rem' }}>&bull;</span>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 365 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px' }}
+                    >
+                      1 Tahun (365)
+                    </button>
+                    <span style={{ color: 'var(--hairline)', fontSize: '0.72rem' }}>&bull;</span>
+                    <button
+                      type="button"
+                      onClick={() => setVariantForm({ ...variantForm, warranty_duration_days: 0 })}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '0.72rem', cursor: 'pointer', padding: '1px 4px', fontWeight: 600 }}
+                    >
+                      ✦ Garansi Lifetime
+                    </button>
+                  </div>
                 </div>
               </div>
 

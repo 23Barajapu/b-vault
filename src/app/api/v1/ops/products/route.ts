@@ -136,12 +136,12 @@ export async function POST(req: Request) {
         .insert({
           product_id: Number(product_id),
           name: name.trim(),
-          duration_days: Number(duration_days) || 30,
+          duration_days: duration_days !== undefined && duration_days !== null && duration_days !== '' ? Number(duration_days) : 30,
           cost_price: Number(cost_price) || 0,
           retail_price: Number(retail_price),
           input_requirement_label: input_requirement_label ? input_requirement_label.trim() : 'Email Akun Anda',
           estimated_delivery_text: estimated_delivery_text ? estimated_delivery_text.trim() : '5 - 20 Menit',
-          warranty_duration_days: Number(warranty_duration_days) || Number(duration_days) || 30,
+          warranty_duration_days: warranty_duration_days !== undefined && warranty_duration_days !== null && warranty_duration_days !== '' ? Number(warranty_duration_days) : 30,
           activation_guide: activation_guide ? activation_guide.trim() : 'Ikuti link atau kredensial yang diserahkan admin di status pesanan.',
           is_active: variantActiveStatus,
         })

@@ -70,9 +70,12 @@ export async function GET(request: Request) {
         items: items.map((item: any) => {
           const variant = item.product_variants;
           const product = variant?.products;
+          const isLifetimeWarranty = variant?.warranty_duration_days === 0 || Number(variant?.warranty_duration_days) >= 9999;
 
           let daysRemainingWarranty = 0;
-          if (item.warranty_expired_at) {
+          if (isLifetimeWarranty) {
+            daysRemainingWarranty = 99999;
+          } else if (item.warranty_expired_at) {
             const exp = new Date(item.warranty_expired_at).getTime();
             daysRemainingWarranty = Math.max(0, Math.ceil((exp - Date.now()) / (24 * 60 * 60 * 1000)));
           }
@@ -81,6 +84,7 @@ export async function GET(request: Request) {
             product_title: product?.title || 'Lisensi Pro',
             platform_name: product?.platform_name || '',
             variant_name: variant?.name || '',
+            is_lifetime_warranty: isLifetimeWarranty,
             activation_payload: item.activation_payload,
             admin_delivery_notes: item.admin_delivery_notes,
             activation_guide: variant?.activation_guide,

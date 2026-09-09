@@ -7,6 +7,7 @@ interface OrderItemPayload {
   product_title: string;
   platform_name: string;
   variant_name: string;
+  is_lifetime_warranty?: boolean;
   activation_payload: string | null;
   admin_delivery_notes: string | null;
   activation_guide: string | null;
@@ -389,7 +390,11 @@ export default function VaultPage() {
                                   <div style={{ fontSize: '0.82rem', color: 'var(--gold-light)', marginTop: '2px' }}>{it.variant_name}</div>
                                 </div>
 
-                                {it.warranty_days_left > 0 ? (
+                                {it.is_lifetime_warranty || it.warranty_days_left >= 9999 ? (
+                                  <span className="badge badge-online" style={{ fontSize: '0.75rem' }}>
+                                    ✦ Garansi Lifetime (Selamanya)
+                                  </span>
+                                ) : it.warranty_days_left > 0 ? (
                                   <span className="badge badge-online" style={{ fontSize: '0.75rem' }}>
                                     ✦ Garansi Aktif ({Number(it.warranty_days_left).toLocaleString('id-ID')} Hari Lagi)
                                   </span>
