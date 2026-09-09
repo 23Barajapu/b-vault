@@ -59,13 +59,10 @@ export async function POST(request: Request) {
     }
     const cleanPhone = customer_whatsapp.replace(/\s+/g, '');
 
-    // 4. Validasi Target Account Input
-    if (variant.input_requirement_label && (!target_account_input || target_account_input.trim().length < 5)) {
-      return NextResponse.json(
-        { success: false, error: { code: 'ERR_TARGET_INPUT_REQUIRED', message: `Kolom ${variant.input_requirement_label} wajib diisi minimal 5 karakter.` } },
-        { status: 422 }
-      );
-    }
+    // 4. Target Account Input (Opsional - default ke email pembeli)
+    const effectiveTargetAccount = (target_account_input && typeof target_account_input === 'string' && target_account_input.trim())
+      ? target_account_input.trim()
+      : cleanEmail;
 
     // 5. Validasi Payment Method (Hanya QRIS)
     const effectivePaymentMethod = 'QRIS';
@@ -126,10 +123,10 @@ export async function POST(request: Request) {
         customer_name: cleanName,
         customer_email: cleanEmail,
         customer_phone: cleanPhone,
-        target_account_input: target_account_input ? target_account_input.trim() : null,
+        target_account_input: effectiveTargetAccount,
         total_amount: variant.retail_price,
         payment_status: 'PENDING_PAYMENT',
-        payment_method,
+        payment_method: effectivePaymentMethod,
         payment_reference: `REF-${orderNumber}`,
         payment_channel_data: JSON.stringify(paymentChannelData),
         expired_at: expiredAt,

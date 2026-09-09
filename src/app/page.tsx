@@ -59,7 +59,6 @@ export default function HomePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [targetAccount, setTargetAccount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('QRIS');
   const [agreeOperatingNotice, setAgreeOperatingNotice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -243,7 +242,7 @@ export default function HomePage() {
           customer_name: name.trim(),
           customer_email: email,
           customer_whatsapp: whatsapp,
-          target_account_input: targetAccount,
+          target_account_input: email,
           payment_method: paymentMethod,
         }),
       });
@@ -843,27 +842,7 @@ export default function HomePage() {
                 </span>
               </div>
 
-              {/* 4. Target Account Input */}
-              {activeVariant.input_requirement_label && (
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="checkout-target">
-                    {activeVariant.input_requirement_label} (Wajib)
-                  </label>
-                  <input
-                    id="checkout-target"
-                    type="text"
-                    required
-                    placeholder="Masukkan data akun target yang ingin diupgrade..."
-                    value={targetAccount}
-                    onChange={(e) => setTargetAccount(e.target.value)}
-                  />
-                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                    Admin supplier akan mengundang atau mengaktivasi akun sesuai input ini.
-                  </span>
-                </div>
-              )}
-
-              {/* 5. Metode Pembayaran Tunggal: QRIS */}
+              {/* 4. Metode Pembayaran Tunggal: QRIS */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px' }}>Metode Pembayaran</label>
                 <div
