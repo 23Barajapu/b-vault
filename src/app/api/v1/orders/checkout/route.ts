@@ -99,8 +99,8 @@ export async function POST(request: Request) {
     const orderNumber = `INV-${dateStr}-${randomSuffix}`;
     const secureToken = crypto.randomBytes(32).toString('hex');
 
-    // 15 minutes expiration
-    const expiredAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    // 10 minutes expiration
+    const expiredAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // Generate payment payload (QRIS Baraja Putra)
     const paymentChannelData: Record<string, any> = {

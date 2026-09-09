@@ -105,12 +105,24 @@ function OrderStatusContent() {
 
   // Local timer tick
   useEffect(() => {
-    if (timeLeftSeconds === null || timeLeftSeconds <= 0) return;
+    if (timeLeftSeconds === null || timeLeftSeconds < 0) return;
+    if (timeLeftSeconds === 0) {
+      fetchStatus();
+      return;
+    }
     const timer = setInterval(() => {
-      setTimeLeftSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      setTimeLeftSeconds((prev) => {
+        if (prev !== null && prev > 0) {
+          if (prev - 1 === 0) {
+            fetchStatus();
+          }
+          return prev - 1;
+        }
+        return 0;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeftSeconds]);
+  }, [timeLeftSeconds, fetchStatus]);
 
   async function handleSimulatePayment() {
     if (!order) return;
@@ -421,7 +433,7 @@ function OrderStatusContent() {
                     Silakan ikuti instruksi aktivasi di bawah ini.
                   </span>
                 </div>
-              </div>z
+              </div>
 
               {/* License Payload Box */}
               <div style={{
@@ -495,7 +507,7 @@ function OrderStatusContent() {
                 Waktu Pembayaran Telah Berakhir
               </h2>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                Invoice ini telah kadaluarsa karena batas pembayaran 15 menit telah terlampaui.
+                Invoice ini otomatis dibatalkan karena batas pembayaran 10 menit telah terlampaui.
               </p>
               <Link href="/" className="btn btn-primary">Pesan Ulang</Link>
             </div>

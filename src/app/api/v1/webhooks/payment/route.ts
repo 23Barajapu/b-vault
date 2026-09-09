@@ -38,6 +38,18 @@ export async function POST(request: Request) {
       });
     }
 
+    // Auto-cancel check: if expired or past expired_at
+    const isTimeExpired = order.expired_at && new Date(order.expired_at).getTime() < Date.now();
+    if (order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired)) {
+      if (order.payment_status === 'PENDING_PAYMENT') {
+        await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', order.id);
+      }
+      return NextResponse.json(
+        { success: false, error: { code: 'ERR_ORDER_EXPIRED', message: 'Pesanan otomatis dibatalkan karena tidak dibayar dalam 10 menit.' } },
+        { status: 400 }
+      );
+    }
+
     // Check if status represents a successful payment
     const isPaid = ['PAID', 'settlement', 'capture', 'SUCCESS'].includes(paymentStatus);
 
