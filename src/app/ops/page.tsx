@@ -84,26 +84,13 @@ function OpsConsoleInner() {
   // Modals for Products & Variants
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [productForm, setProductForm] = useState<{
-    title: string;
-    platform_name: string;
-    category_id: number;
-    slug: string;
-    description: string;
-    is_active: number;
-    retail_price?: number | string;
-    cost_price?: number | string;
-    warranty_duration_days?: number | string;
-  }>({
+  const [productForm, setProductForm] = useState({
     title: '',
     platform_name: '',
     category_id: 1,
     slug: '',
     description: '',
     is_active: 1,
-    retail_price: '',
-    cost_price: '',
-    warranty_duration_days: 30,
   });
 
   const [variantModalOpen, setVariantModalOpen] = useState(false);
@@ -303,16 +290,12 @@ function OpsConsoleInner() {
       slug: '',
       description: '',
       is_active: 1,
-      retail_price: '',
-      cost_price: '',
-      warranty_duration_days: 30,
     });
     setProductModalOpen(true);
   }
 
   function handleOpenEditProduct(prod: any) {
     setEditingProductId(prod.id);
-    const mainVar = prod.variants?.[0];
     setProductForm({
       title: prod.title,
       platform_name: prod.platform_name,
@@ -320,9 +303,6 @@ function OpsConsoleInner() {
       slug: prod.slug,
       description: prod.description,
       is_active: prod.is_active,
-      retail_price: mainVar ? mainVar.retail_price : '',
-      cost_price: mainVar ? (mainVar.cost_price || '') : '',
-      warranty_duration_days: mainVar ? (mainVar.warranty_duration_days ?? 30) : 30,
     });
     setProductModalOpen(true);
   }
@@ -330,9 +310,6 @@ function OpsConsoleInner() {
   async function handleSaveProduct(e: React.FormEvent) {
     e.preventDefault();
     setProductMessage(null);
-    const cleanRetail = productForm.retail_price ? Number(productForm.retail_price.toString().replace(/\D/g, '')) : 0;
-    const cleanCost = productForm.cost_price ? Number(productForm.cost_price.toString().replace(/\D/g, '')) : 0;
-    const cleanWarranty = productForm.warranty_duration_days ? Number(productForm.warranty_duration_days) : 30;
     try {
       if (editingProductId) {
         // Edit product
@@ -343,9 +320,6 @@ function OpsConsoleInner() {
             target: 'product',
             id: editingProductId,
             ...productForm,
-            retail_price: cleanRetail,
-            cost_price: cleanCost,
-            warranty_duration_days: cleanWarranty,
           }),
         });
         const json = await res.json();
@@ -364,9 +338,6 @@ function OpsConsoleInner() {
           body: JSON.stringify({
             action: 'create_product',
             ...productForm,
-            retail_price: cleanRetail,
-            cost_price: cleanCost,
-            warranty_duration_days: cleanWarranty,
           }),
         });
         const json = await res.json();
@@ -870,7 +841,7 @@ function OpsConsoleInner() {
                 style={{ padding: '6px 12px', fontSize: '0.82rem' }}
                 onClick={() => setFilter('FULFILLED')}
               >
-                Riwayat Selesai (50)
+                Riwayat Selesai
               </button>
             </div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -1503,72 +1474,17 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              <div className="modal-form-row">
-                <div>
-                  <div className="modal-label-header">
-                    <label className="modal-label" style={{ color: 'var(--gold-light)' }}>
-                      Harga Jual / Retail (Rp) <span style={{ color: 'var(--accent-gold)' }}>*</span>
-                    </label>
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    required
-                    value={formatRupiahDisplay(productForm.retail_price)}
-                    onChange={(e) => {
-                      const clean = e.target.value.replace(/\D/g, '');
-                      setProductForm({ ...productForm, retail_price: clean ? Number(clean) : '' });
-                    }}
-                    placeholder="Contoh: 45.000"
-                  />
+              <div className="modal-form-group">
+                <div className="modal-label-header">
+                  <label className="modal-label">Slug URL</label>
+                  <span className="modal-label-hint">Opsional, otomatis dibuat jika kosong</span>
                 </div>
-                <div>
-                  <div className="modal-label-header">
-                    <label className="modal-label">Harga Modal (Rp)</label>
-                    <span className="modal-label-hint">Opsional</span>
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={formatRupiahDisplay(productForm.cost_price)}
-                    onChange={(e) => {
-                      const clean = e.target.value.replace(/\D/g, '');
-                      setProductForm({ ...productForm, cost_price: clean ? Number(clean) : '' });
-                    }}
-                    placeholder="Contoh: 25.000"
-                  />
-                </div>
-              </div>
-
-              <div className="modal-form-row">
-                <div>
-                  <div className="modal-label-header">
-                    <label className="modal-label">
-                      Garansi (Hari) <span style={{ color: 'var(--accent-gold)' }}>*</span>
-                    </label>
-                    <span className="modal-label-hint">Default: 30 Hari</span>
-                  </div>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={productForm.warranty_duration_days}
-                    onChange={(e) => setProductForm({ ...productForm, warranty_duration_days: e.target.value })}
-                    placeholder="30"
-                  />
-                </div>
-                <div>
-                  <div className="modal-label-header">
-                    <label className="modal-label">Slug URL</label>
-                    <span className="modal-label-hint">Opsional, otomatis</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={productForm.slug}
-                    onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
-                    placeholder="contoh: google-ai-pro"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={productForm.slug}
+                  onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
+                  placeholder="contoh: google-ai-pro"
+                />
               </div>
 
               <div className="modal-form-group">
