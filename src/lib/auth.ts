@@ -10,7 +10,13 @@ export interface AuthUser {
   google_id?: string | null;
 }
 
-const DEFAULT_ADMIN_EMAILS = ['ops@b-vault.id', 'admin@b-vault.id'];
+export function getAdminEmails(): string[] {
+  const envAdmins = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return ['ops@b-vault.id', 'admin@b-vault.id', 'barajapu23@gmail.com', 'agilezone9@gmail.com', ...envAdmins];
+}
 
 export function getAppBaseUrl(req?: Request): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
@@ -79,8 +85,10 @@ export async function upsertGoogleUser(profile: {
 
   let user = existingUsers?.[0];
 
+  const adminEmails = getAdminEmails();
+
   if (user) {
-    const role = (DEFAULT_ADMIN_EMAILS.includes(email) || user.role === 'admin') ? 'admin' : user.role || 'customer';
+    const role = (adminEmails.includes(email) || user.role === 'admin') ? 'admin' : user.role || 'customer';
     const { data: updated, error } = await supabase
       .from('users')
       .update({
@@ -95,7 +103,7 @@ export async function upsertGoogleUser(profile: {
 
     if (!error && updated) user = updated;
   } else {
-    const role = DEFAULT_ADMIN_EMAILS.includes(email) ? 'admin' : 'customer';
+    const role = adminEmails.includes(email) ? 'admin' : 'customer';
     const { data: inserted, error } = await supabase
       .from('users')
       .insert({
