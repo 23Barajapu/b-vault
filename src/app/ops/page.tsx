@@ -197,9 +197,9 @@ function OpsConsoleInner() {
   }
 
   // Fetch Orders
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (isSilent = false) => {
     try {
-      setLoadingOrders(true);
+      if (!isSilent) setLoadingOrders(true);
       const res = await fetch(`/api/v1/ops/orders/pending?filter=${filter}`);
       const json = await res.json();
       if (json.success) {
@@ -208,14 +208,14 @@ function OpsConsoleInner() {
     } catch (err) {
       console.error('Fetch ops orders error', err);
     } finally {
-      setLoadingOrders(false);
+      if (!isSilent) setLoadingOrders(false);
     }
   }, [filter]);
 
   // Fetch Analytics
-  const fetchAnalytics = useCallback(async () => {
+  const fetchAnalytics = useCallback(async (isSilent = false) => {
     try {
-      setLoadingAnalytics(true);
+      if (!isSilent) setLoadingAnalytics(true);
       const res = await fetch('/api/v1/ops/analytics/summary');
       const json = await res.json();
       if (json.success) {
@@ -224,7 +224,7 @@ function OpsConsoleInner() {
     } catch (err) {
       console.error('Fetch analytics error', err);
     } finally {
-      setLoadingAnalytics(false);
+      if (!isSilent) setLoadingAnalytics(false);
     }
   }, []);
 
@@ -265,7 +265,7 @@ function OpsConsoleInner() {
     }
   }, []);
 
-  // Poll orders & products
+  // Poll orders & products silently
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchOrders();
@@ -277,8 +277,8 @@ function OpsConsoleInner() {
       fetchAdminProducts();
     }
     const interval = setInterval(() => {
-      fetchOrders();
-      if (activeTab === 'ANALYTICS') fetchAnalytics();
+      fetchOrders(true);
+      if (activeTab === 'ANALYTICS') fetchAnalytics(true);
     }, 6000);
     return () => clearInterval(interval);
   }, [isAuthenticated, fetchOrders, fetchSettings, fetchAnalytics, fetchAdminProducts, activeTab]);
@@ -774,7 +774,7 @@ function OpsConsoleInner() {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={fetchOrders}
+            onClick={() => fetchOrders()}
             style={{ fontSize: '0.8rem', padding: '6px 12px' }}
           >
             Refresh
@@ -854,7 +854,7 @@ function OpsConsoleInner() {
             </span>
           </div>
 
-          {loadingOrders ? (
+          {(loadingOrders && orders.length === 0) ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
               Memuat antrean pemenuhan...
             </div>
@@ -1033,7 +1033,7 @@ function OpsConsoleInner() {
       {/* TAB 2: FINANCIAL ANALYTICS & SLA SUMMARY */}
       {activeTab === 'ANALYTICS' && (
         <div>
-          {loadingAnalytics ? (
+          {(loadingAnalytics && !analytics) ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
               Menghitung ringkasan analitik keuangan & SLA...
             </div>

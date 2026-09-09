@@ -58,7 +58,7 @@ function OrderStatusContent() {
   const [copiedText, setCopiedText] = useState(false);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchStatus = useCallback(async (isSilent = false) => {
     if (!token) {
       setError('Token otorisasi pesanan tidak ditemukan pada tautan.');
       setLoading(false);
@@ -66,6 +66,9 @@ function OrderStatusContent() {
     }
 
     try {
+      if (!isSilent && !order) {
+        setLoading(true);
+      }
       const res = await fetch(`/api/v1/store/orders/${token}`);
       const json = await res.json();
       if (json.success) {
@@ -81,22 +84,22 @@ function OrderStatusContent() {
           setTimeLeftSeconds(diff);
         }
       } else {
-        setError(json.error?.message || 'Pesanan tidak ditemukan.');
+        if (!isSilent) setError(json.error?.message || 'Pesanan tidak ditemukan.');
       }
     } catch {
-      setError('Gagal memuat status pesanan.');
+      if (!isSilent) setError('Gagal memuat status pesanan.');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
-  }, [token]);
+  }, [token, order]);
 
-  // Initial fetch and 3-second polling
+  // Initial fetch and 3-second silent background polling
   useEffect(() => {
     fetchStatus();
     const interval = setInterval(() => {
-      // Poll while in intermediate states
+      // Poll silently while in intermediate states without showing page loading animation
       if (order?.payment_status === 'PENDING_PAYMENT' || order?.payment_status === 'PAID_PROCESSING') {
-        fetchStatus();
+        fetchStatus(true);
       }
     }, 3000);
 
@@ -107,14 +110,14 @@ function OrderStatusContent() {
   useEffect(() => {
     if (timeLeftSeconds === null || timeLeftSeconds < 0) return;
     if (timeLeftSeconds === 0) {
-      fetchStatus();
+      fetchStatus(true);
       return;
     }
     const timer = setInterval(() => {
       setTimeLeftSeconds((prev) => {
         if (prev !== null && prev > 0) {
           if (prev - 1 === 0) {
-            fetchStatus();
+            fetchStatus(true);
           }
           return prev - 1;
         }
@@ -159,7 +162,7 @@ function OrderStatusContent() {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
-  if (loading) {
+  if (loading && !order) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '60px 0' }}>
         <p style={{ color: 'var(--text-muted)' }}>Memuat status pesanan...</p>
