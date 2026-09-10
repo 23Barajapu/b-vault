@@ -240,7 +240,24 @@ function OrderStatusContent() {
   const isRefunded = order.payment_status === 'REFUNDED';
 
   // WhatsApp emergency message
-  const waNumber = support?.admin_whatsapp || '6281234567890';
+  const rawSupportWa = support?.admin_whatsapp || '085861708659';
+  const cleanWa = rawSupportWa.replace(/\D/g, '');
+  const waNumber = cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : (cleanWa || '6285861708659');
+
+  const productLabel = firstItem ? `${firstItem.product_title || 'Lisensi'} (${firstItem.variant_name || 'Akses'})` : 'Lisensi Pro';
+  const waConfirmText = [
+    `Halo CS B-Vault, saya sudah melakukan transfer pembayaran:`,
+    `--------------------------------`,
+    `Invoice: ${order.order_number}`,
+    `Produk: ${productLabel}`,
+    `Total: Rp ${order.total_amount.toLocaleString('id-ID')}`,
+    `Email: ${order.customer_email}`,
+    order.target_account_input ? `Target Akun: ${order.target_account_input}` : '',
+    `--------------------------------`,
+    `Berikut saya lampirkan bukti transfer. Mohon verifikasi & segera diserahkan lisensinya. Terima kasih!`
+  ].filter(Boolean).join('\n');
+  const waConfirmUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waConfirmText)}`;
+
   const waMessage = encodeURIComponent(
     `Halo Admin B-Vault, saya sudah bayar untuk pesanan ${order.order_number} (${firstItem?.product_title || 'Lisensi'}) namun proses sudah melebihi 20 menit. Mohon bantuan pengecekan aktivasi.`
   );
@@ -411,6 +428,48 @@ function OrderStatusContent() {
                   </p>
                 </div>
               )}
+
+              {/* Tombol Konfirmasi Pembayaran Pembeli */}
+              <div style={{
+                marginTop: '18px',
+                padding: '16px 14px',
+                backgroundColor: 'var(--surface-card)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--hairline)',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontSize: '0.88rem', color: 'var(--gold-light)', marginBottom: '12px', fontWeight: 600 }}>
+                  Sudah menyelesaikan transfer pembayaran?
+                </p>
+                <a
+                  href={waConfirmUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px 24px',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    width: '100%',
+                    maxWidth: '380px',
+                    margin: '0 auto',
+                    backgroundColor: '#25D366',
+                    borderColor: '#25D366',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 16px rgba(37, 211, 102, 0.35)',
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>💬</span>
+                  <span>Konfirmasi Pembayaran via WhatsApp</span>
+                </a>
+                <span style={{ display: 'block', fontSize: '0.76rem', color: 'var(--muted)', marginTop: '8px' }}>
+                  Kirimkan bukti transfer untuk verifikasi instan (Estimasi 5 - 20 menit).
+                </span>
+              </div>
 
               {/* Developer / Testing Simulator Button (Hanya Akun Admin) */}
               {isAdmin && (
