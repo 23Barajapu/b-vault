@@ -384,20 +384,18 @@ function OrderStatusContent() {
                       href="/qris-all-pay.jpeg"
                       download="qris-baraja-putra.jpeg"
                       className="btn btn-secondary"
-                      style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '8px 16px', fontSize: '0.82rem' }}
                     >
-                      <span>📥</span>
-                      <span>Unduh Gambar QRIS</span>
+                      Unduh Gambar QRIS
                     </a>
                     <a
                       href="/qris-all-pay.jpeg"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-secondary"
-                      style={{ padding: '8px 16px', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '8px 16px', fontSize: '0.82rem' }}
                     >
-                      <span>🔍</span>
-                      <span>Perbesar QRIS</span>
+                      Perbesar QRIS
                     </a>
                   </div>
 
@@ -450,7 +448,6 @@ function OrderStatusContent() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
                     padding: '12px 14px',
                     fontSize: 'clamp(0.85rem, 3.6vw, 0.95rem)',
                     fontWeight: 700,
@@ -469,8 +466,7 @@ function OrderStatusContent() {
                     wordBreak: 'break-word',
                   }}
                 >
-                  <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>💬</span>
-                  <span>Konfirmasi Pembayaran via WhatsApp</span>
+                  Konfirmasi Pembayaran via WhatsApp
                 </a>
                 <span style={{ display: 'block', fontSize: '0.76rem', color: 'var(--muted)', marginTop: '8px' }}>
                   Kirimkan bukti transfer untuk verifikasi instan (Estimasi 5 - 20 menit).

@@ -160,7 +160,7 @@ export default function UserNav() {
               }}
               className="dropdown-hover"
             >
-              🔑 Vault Lisensi Saya
+              Vault Lisensi Saya
             </Link>
 
             {user.role === 'admin' && (
@@ -177,7 +177,7 @@ export default function UserNav() {
                 }}
                 className="dropdown-hover"
               >
-                ⚙️ Panel Admin / Ops Desk
+                Panel Admin / Ops Desk
               </Link>
             )}
 
@@ -200,7 +200,7 @@ export default function UserNav() {
                 minWidth: 'auto',
               }}
             >
-              🚪 Keluar (Logout)
+              Keluar (Logout)
             </button>
           </div>
         </div>

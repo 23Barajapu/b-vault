@@ -164,7 +164,7 @@ export default function VaultPage() {
             disabled={loading}
             style={{ padding: '0 24px', fontWeight: 700 }}
           >
-            {loading ? 'Memeriksa Vault...' : 'CARI PESANAN ➔'}
+            {loading ? 'Memeriksa Vault...' : 'CARI PESANAN'}
           </button>
         </form>
       </div>
@@ -214,7 +214,7 @@ export default function VaultPage() {
               style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)' }}
               onClick={() => setFilter('FULFILLED')}
             >
-              ✦ Lunas (Lisensi Aktif) ({countFulfilled.toLocaleString('id-ID')})
+              Lunas (Lisensi Aktif) ({countFulfilled.toLocaleString('id-ID')})
             </button>
             <button
               type="button"
@@ -222,7 +222,7 @@ export default function VaultPage() {
               style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)' }}
               onClick={() => setFilter('UNPAID')}
             >
-              ⏳ Belum Dibayar ({countUnpaid.toLocaleString('id-ID')})
+              Belum Dibayar ({countUnpaid.toLocaleString('id-ID')})
             </button>
             {countExpired > 0 && (
               <button
@@ -231,7 +231,7 @@ export default function VaultPage() {
                 style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: 'var(--radius-xs)', color: filter === 'EXPIRED' ? undefined : 'var(--danger)', borderColor: filter === 'EXPIRED' ? undefined : 'rgba(239, 68, 68, 0.3)' }}
                 onClick={() => setFilter('EXPIRED')}
               >
-                ✕ Kadaluarsa ({countExpired.toLocaleString('id-ID')})
+                Kadaluarsa ({countExpired.toLocaleString('id-ID')})
               </button>
             )}
           </div>
@@ -448,7 +448,7 @@ export default function VaultPage() {
                                       style={{ padding: '4px 12px', fontSize: '0.78rem', minHeight: '32px' }}
                                       onClick={() => copyText(itemKey, it.activation_payload || '')}
                                     >
-                                      {copiedIndex === itemKey ? '✓ Tersalin' : 'Salin Kredensial'}
+                                      {copiedIndex === itemKey ? 'Tersalin' : 'Salin Kredensial'}
                                     </button>
                                   </div>
                                   <div style={{

@@ -714,7 +714,7 @@ export default function HomePage() {
                   onClick={() => openCheckout(product, activeVar)}
                   style={{ width: '100%', padding: '14px', fontWeight: 700, letterSpacing: '0.04em' }}
                 >
-                  AMANKAN SEKARANG &rarr;
+                  AMANKAN SEKARANG
                 </button>
               </div>
             );
