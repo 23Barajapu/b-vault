@@ -447,23 +447,29 @@ function OrderStatusContent() {
                   rel="noopener noreferrer"
                   className="btn btn-primary"
                   style={{
-                    display: 'inline-flex',
+                    display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '12px 24px',
-                    fontSize: '0.95rem',
+                    padding: '12px 14px',
+                    fontSize: 'clamp(0.85rem, 3.6vw, 0.95rem)',
                     fontWeight: 700,
                     width: '100%',
                     maxWidth: '380px',
+                    minWidth: 0,
                     margin: '0 auto',
                     backgroundColor: '#25D366',
                     borderColor: '#25D366',
                     color: '#ffffff',
                     boxShadow: '0 4px 16px rgba(37, 211, 102, 0.35)',
+                    whiteSpace: 'normal',
+                    textAlign: 'center',
+                    lineHeight: 1.35,
+                    boxSizing: 'border-box',
+                    wordBreak: 'break-word',
                   }}
                 >
-                  <span style={{ fontSize: '1.2rem' }}>💬</span>
+                  <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>💬</span>
                   <span>Konfirmasi Pembayaran via WhatsApp</span>
                 </a>
                 <span style={{ display: 'block', fontSize: '0.76rem', color: 'var(--muted)', marginTop: '8px' }}>
