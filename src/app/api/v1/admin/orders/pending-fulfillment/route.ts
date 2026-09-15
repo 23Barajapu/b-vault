@@ -41,10 +41,13 @@ export async function GET(request: Request) {
 
     if (filter === 'PENDING') {
       query = query.eq('payment_status', 'PAID_PROCESSING').order('paid_at', { ascending: true });
+    } else if (filter === 'UNPAID' || filter === 'PENDING_PAYMENT') {
+      query = query.eq('payment_status', 'PENDING_PAYMENT').order('id', { ascending: false });
     } else if (filter === 'FULFILLED') {
       query = query.eq('payment_status', 'FULFILLED').order('fulfilled_at', { ascending: false }).limit(50);
     } else {
-      query = query.order('id', { ascending: false }).limit(50);
+      // filter 'ALL': tampilkan semua pesanan terbaru
+      query = query.order('id', { ascending: false }).limit(100);
     }
 
     const { data: rows, error } = await query;

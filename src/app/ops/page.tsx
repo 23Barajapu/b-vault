@@ -63,7 +63,7 @@ function OpsConsoleInner() {
   const [activeTab, setActiveTab] = useState<'FULFILLMENT' | 'PRODUCTS' | 'ANALYTICS' | 'SETTINGS'>('FULFILLMENT');
 
   // Fulfillment State
-  const [filter, setFilter] = useState<'PENDING' | 'FULFILLED'>('PENDING');
+  const [filter, setFilter] = useState<'ALL' | 'UNPAID' | 'PENDING' | 'FULFILLED'>('ALL');
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
@@ -629,6 +629,25 @@ function OpsConsoleInner() {
     }
   }
 
+  // Handle Confirm Payment (Tandai Lunas oleh Admin)
+  async function handleConfirmPayment(orderId: number) {
+    try {
+      const res = await fetch(`/api/v1/ops/orders/${orderId}/confirm-payment`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFulfillMessage({ id: orderId, text: 'Pembayaran berhasil diverifikasi Lunas!', isError: false });
+        fetchOrders(true);
+        fetchAnalytics(true);
+      } else {
+        setFulfillMessage({ id: orderId, text: json.error?.message || 'Gagal verifikasi pembayaran.', isError: true });
+      }
+    } catch {
+      setFulfillMessage({ id: orderId, text: 'Kesalahan jaringan saat memverifikasi pembayaran.', isError: true });
+    }
+  }
+
   // Save Settings
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
@@ -812,7 +831,7 @@ function OpsConsoleInner() {
           style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => setActiveTab('FULFILLMENT')}
         >
-          Quick Fulfillment ({orders.filter(o => o.payment_status === 'PAID_PROCESSING').length.toLocaleString('id-ID')})
+          Pesanan & Pemenuhan ({orders.length.toLocaleString('id-ID')})
         </button>
         <button
           type="button"
@@ -848,11 +867,27 @@ function OpsConsoleInner() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
+                className={filter === 'ALL' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ padding: '6px 12px', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                onClick={() => setFilter('ALL')}
+              >
+                Semua Pesanan
+              </button>
+              <button
+                type="button"
+                className={filter === 'UNPAID' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ padding: '6px 12px', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                onClick={() => setFilter('UNPAID')}
+              >
+                Menunggu Bayar
+              </button>
+              <button
+                type="button"
                 className={filter === 'PENDING' ? 'btn btn-primary' : 'btn btn-secondary'}
                 style={{ padding: '6px 12px', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}
                 onClick={() => setFilter('PENDING')}
               >
-                Perlu Diproses
+                Perlu Lisensi (Lunas)
               </button>
               <button
                 type="button"
@@ -878,24 +913,33 @@ function OpsConsoleInner() {
                 Tidak ada pesanan antrean saat ini.
               </p>
               <p style={{ fontSize: '0.85rem' }}>
-                Pesanan lunas dari pembeli otomatis muncul di antrean ini.
+                Pesanan dari pembeli akan otomatis muncul di antrean ini.
               </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {orders.map((order) => {
                 const isPaidProcessing = order.payment_status === 'PAID_PROCESSING';
+                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT';
+                const isFulfilled = order.payment_status === 'FULFILLED';
+                const isExpired = order.payment_status === 'EXPIRED';
                 const inputState = fulfillInputs[order.id] || { payload: '', notes: '', loading: false };
                 const msg = fulfillMessage?.id === order.id ? fulfillMessage : null;
+
+                const borderLeftColor = isPaidProcessing
+                  ? (order.is_sla_breached ? '5px solid var(--danger)' : '5px solid var(--warning)')
+                  : isPendingPayment
+                  ? '5px solid var(--gold-light)'
+                  : isFulfilled
+                  ? '5px solid var(--success)'
+                  : '5px solid var(--muted)';
 
                 return (
                   <div
                     key={order.id}
                     className="card"
                     style={{
-                      borderLeft: isPaidProcessing
-                        ? (order.is_sla_breached ? '5px solid var(--danger)' : '5px solid var(--warning)')
-                        : '5px solid var(--success)',
+                      borderLeft: borderLeftColor,
                       padding: '16px',
                     }}
                   >
@@ -906,8 +950,24 @@ function OpsConsoleInner() {
                           <strong style={{ fontSize: '1.05rem', fontFamily: 'monospace' }}>
                             {order.order_number}
                           </strong>
-                          <span className={`badge ${isPaidProcessing ? (order.is_sla_breached ? 'badge-danger' : 'badge-warning') : 'badge-online'}`}>
-                            {isPaidProcessing ? (order.is_sla_breached ? 'SLA LEWAT (>20m)' : 'LUNAS - PERLU LINK') : 'SELESAI'}
+                          <span className={`badge ${
+                            isPaidProcessing
+                              ? (order.is_sla_breached ? 'badge-danger' : 'badge-warning')
+                              : isPendingPayment
+                              ? 'badge-warning'
+                              : isFulfilled
+                              ? 'badge-online'
+                              : 'badge-danger'
+                          }`}>
+                            {isPaidProcessing
+                              ? (order.is_sla_breached ? 'SLA LEWAT (>20m)' : 'LUNAS - PERLU LINK')
+                              : isPendingPayment
+                              ? 'MENUNGGU BAYAR'
+                              : isFulfilled
+                              ? 'SELESAI'
+                              : isExpired
+                              ? 'KADALUARSA'
+                              : order.payment_status}
                           </span>
                           {order.supplier_issue && (
                             <span className="badge badge-warning" style={{ backgroundColor: '#fff3cd', color: '#856404' }}>
@@ -916,7 +976,7 @@ function OpsConsoleInner() {
                           )}
                         </div>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          Metode: {order.payment_method} &bull; Total: Rp {Number(order.total_amount).toLocaleString('id-ID')}
+                          Metode: {order.payment_method} &bull; Total: Rp {Number(order.total_amount).toLocaleString('id-ID')} &bull; Dibuat: {new Date(order.created_at).toLocaleString('id-ID')}
                         </span>
                       </div>
 
@@ -973,6 +1033,39 @@ function OpsConsoleInner() {
                         </div>
                       </div>
                     </div>
+
+                    {/* If Pending Payment or Expired: Tombol Verifikasi Pembayaran Lunas */}
+                    {(isPendingPayment || isExpired) && (
+                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                        {msg && (
+                          <div style={{
+                            backgroundColor: msg.isError ? 'var(--danger-bg)' : 'var(--success-bg)',
+                            color: msg.isError ? 'var(--danger)' : 'var(--success)',
+                            padding: '8px 12px',
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '10px',
+                            fontSize: '0.85rem'
+                          }}>
+                            {msg.text}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                          <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                            {isExpired
+                              ? 'Pesanan telah melewati 10 menit. Jika bukti transfer QRIS valid, klik verifikasi untuk aktifkan.'
+                              : 'Pembeli belum diverifikasi lunas di sistem atau transfer via QRIS statis. Klik setelah cek mutasi/WA.'}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            style={{ backgroundColor: '#25D366', borderColor: '#25D366', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}
+                            onClick={() => handleConfirmPayment(order.id)}
+                          >
+                            Tandai Lunas (Verifikasi Pembayaran)
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* PRD v4: Single Text Input & Big "Kirim ke Pembeli" Button */}
                     {isPaidProcessing && (
@@ -1031,7 +1124,7 @@ function OpsConsoleInner() {
                     )}
 
                     {/* If fulfilled, show delivery summary */}
-                    {!isPaidProcessing && (
+                    {isFulfilled && (
                       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         <span>Diserahkan: {order.fulfilled_at ? new Date(order.fulfilled_at).toLocaleString('id-ID') : '-'}</span>
                       </div>
