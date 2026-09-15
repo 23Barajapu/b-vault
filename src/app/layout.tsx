@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import UserNav from '@/components/UserNav';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import SessionTimeoutManager from '@/components/SessionTimeoutManager';
 
 export const metadata: Metadata = {
   title: 'B-Vault: Official Pro License & Digital Vault',
@@ -30,6 +31,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <SessionTimeoutManager />
         {/* Sticky Header with Exact Charcoal #191814 & Gold #dbb163 */}
         <header style={{
           backgroundColor: 'rgba(25, 24, 20, 0.96)',
