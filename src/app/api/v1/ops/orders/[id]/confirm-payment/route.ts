@@ -30,6 +30,36 @@ export async function POST(
       );
     }
 
+    const isTimeExpired = order.expired_at && new Date(order.expired_at).getTime() < Date.now();
+    if (order.payment_status === 'EXPIRED' || isTimeExpired) {
+      if (order.payment_status !== 'EXPIRED') {
+        await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', orderId);
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'ERR_ORDER_EXPIRED',
+            message: 'Pesanan sudah kadaluarsa (expired) dan tidak dapat ditandai lunas.',
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (order.payment_status !== 'PENDING_PAYMENT') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'ERR_INVALID_STATUS',
+            message: `Pesanan dengan status ${order.payment_status} tidak dapat ditandai lunas.`,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const nowIso = new Date().toISOString();
 
     const { error: updateErr } = await supabase

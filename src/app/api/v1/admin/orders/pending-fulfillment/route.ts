@@ -89,6 +89,7 @@ export async function GET(request: Request) {
         paid_at: r.paid_at,
         fulfilled_at: r.fulfilled_at,
         created_at: r.created_at,
+        expired_at: r.expired_at,
         supplier_issue: Boolean(r.supplier_issue),
         elapsed_minutes: elapsedMinutes,
         is_sla_warning: elapsedMinutes >= 15 && r.payment_status === 'PAID_PROCESSING',

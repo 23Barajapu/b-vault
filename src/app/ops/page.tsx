@@ -18,6 +18,7 @@ interface AdminOrder {
   paid_at: string | null;
   fulfilled_at: string | null;
   created_at: string;
+  expired_at?: string | null;
   supplier_issue: boolean;
   elapsed_minutes: number;
   is_sla_warning: boolean;
@@ -920,9 +921,10 @@ function OpsConsoleInner() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {orders.map((order) => {
                 const isPaidProcessing = order.payment_status === 'PAID_PROCESSING';
-                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT';
+                const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
+                const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
                 const isFulfilled = order.payment_status === 'FULFILLED';
-                const isExpired = order.payment_status === 'EXPIRED';
                 const inputState = fulfillInputs[order.id] || { payload: '', notes: '', loading: false };
                 const msg = fulfillMessage?.id === order.id ? fulfillMessage : null;
 
@@ -1034,8 +1036,8 @@ function OpsConsoleInner() {
                       </div>
                     </div>
 
-                    {/* If Pending Payment or Expired: Tombol Verifikasi Pembayaran Lunas */}
-                    {(isPendingPayment || isExpired) && (
+                    {/* If Pending Payment: Tombol Verifikasi Pembayaran Lunas */}
+                    {isPendingPayment && (
                       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                         {msg && (
                           <div style={{
@@ -1051,9 +1053,7 @@ function OpsConsoleInner() {
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                           <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                            {isExpired
-                              ? 'Pesanan telah melewati 10 menit. Jika bukti transfer QRIS valid, klik verifikasi untuk aktifkan.'
-                              : 'Pembeli belum diverifikasi lunas di sistem atau transfer via QRIS statis. Klik setelah cek mutasi/WA.'}
+                            Pembeli belum diverifikasi lunas di sistem atau transfer via QRIS statis. Klik setelah cek mutasi/WA.
                           </span>
                           <button
                             type="button"
@@ -1063,6 +1063,26 @@ function OpsConsoleInner() {
                           >
                             Tandai Lunas (Verifikasi Pembayaran)
                           </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* If Expired: Keterangan Pesanan Kadaluarsa */}
+                    {isExpired && (
+                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                        <div style={{
+                          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          color: 'var(--danger)',
+                          padding: '10px 14px',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <span>⚠️</span>
+                          <span>Pesanan telah kadaluarsa (expired). Pembayaran tidak dapat ditandai lunas.</span>
                         </div>
                       </div>
                     )}
