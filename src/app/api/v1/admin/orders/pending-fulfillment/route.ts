@@ -6,17 +6,33 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'PENDING';
 
-    // Auto-expire check: bersihkan pesanan yang tidak dibayar dalam 10 menit
-    const nowIso = new Date().toISOString();
-    const { data: expiredOrders } = await supabase
+    // Auto-status transition:
+    // 1. > 24 jam: EXPIRED permanen
+    // 2. > 10 menit: AWAITING_VERIFICATION (masa toleransi cek manual admin 24 jam)
+    const now = Date.now();
+    const nowIso = new Date(now).toISOString();
+    const past24hIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: overdue24hOrders } = await supabase
+      .from('orders')
+      .select('id')
+      .in('payment_status', ['PENDING_PAYMENT', 'AWAITING_VERIFICATION'])
+      .lt('created_at', past24hIso);
+
+    if (overdue24hOrders && overdue24hOrders.length > 0) {
+      const ids = overdue24hOrders.map((o: any) => o.id);
+      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', ids);
+    }
+
+    const { data: paymentExpiredOrders } = await supabase
       .from('orders')
       .select('id')
       .eq('payment_status', 'PENDING_PAYMENT')
       .lt('expired_at', nowIso);
 
-    if (expiredOrders && expiredOrders.length > 0) {
-      const ids = expiredOrders.map((o: any) => o.id);
-      await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', ids);
+    if (paymentExpiredOrders && paymentExpiredOrders.length > 0) {
+      const ids = paymentExpiredOrders.map((o: any) => o.id);
+      await supabase.from('orders').update({ payment_status: 'AWAITING_VERIFICATION' }).in('id', ids);
     }
 
     let query = supabase.from('orders').select(`
@@ -42,7 +58,7 @@ export async function GET(request: Request) {
     if (filter === 'PENDING') {
       query = query.eq('payment_status', 'PAID_PROCESSING').order('paid_at', { ascending: true });
     } else if (filter === 'UNPAID' || filter === 'PENDING_PAYMENT') {
-      query = query.eq('payment_status', 'PENDING_PAYMENT').order('id', { ascending: false });
+      query = query.in('payment_status', ['PENDING_PAYMENT', 'AWAITING_VERIFICATION']).order('id', { ascending: false });
     } else if (filter === 'FULFILLED') {
       query = query.eq('payment_status', 'FULFILLED').order('fulfilled_at', { ascending: false }).limit(50);
     } else {

@@ -19,7 +19,7 @@ interface VaultItem {
   order_number: string;
   secure_token: string;
   target_account: string | null;
-  payment_status: 'PENDING_PAYMENT' | 'PAID_PROCESSING' | 'FULFILLED' | 'EXPIRED' | 'REFUNDED';
+  payment_status: 'PENDING_PAYMENT' | 'AWAITING_VERIFICATION' | 'PAID_PROCESSING' | 'FULFILLED' | 'EXPIRED' | 'REFUNDED';
   total_amount: number;
   payment_method: string;
   created_at: string;
@@ -93,15 +93,19 @@ export default function VaultPage() {
   );
   const countUnpaid = useMemo(
     () => vaultItems.filter((o) => {
-      const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
-      return o.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
+      const createdAtMs = new Date(o.created_at).getTime();
+      const is24h = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+      const isPaid = o.payment_status === 'FULFILLED' || o.payment_status === 'PAID_PROCESSING';
+      return !isPaid && o.payment_status !== 'EXPIRED' && o.payment_status !== 'REFUNDED' && !is24h;
     }).length,
     [vaultItems]
   );
   const countExpired = useMemo(
     () => vaultItems.filter((o) => {
-      const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
-      return o.payment_status === 'EXPIRED' || (o.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+      const createdAtMs = new Date(o.created_at).getTime();
+      const is24h = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+      const isPaid = o.payment_status === 'FULFILLED' || o.payment_status === 'PAID_PROCESSING';
+      return o.payment_status === 'EXPIRED' || (is24h && !isPaid && o.payment_status !== 'REFUNDED');
     }).length,
     [vaultItems]
   );
@@ -113,14 +117,18 @@ export default function VaultPage() {
     }
     if (filter === 'UNPAID') {
       return vaultItems.filter((o) => {
-        const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
-        return o.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
+        const createdAtMs = new Date(o.created_at).getTime();
+        const is24h = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+        const isPaid = o.payment_status === 'FULFILLED' || o.payment_status === 'PAID_PROCESSING';
+        return !isPaid && o.payment_status !== 'EXPIRED' && o.payment_status !== 'REFUNDED' && !is24h;
       });
     }
     if (filter === 'EXPIRED') {
       return vaultItems.filter((o) => {
-        const isTimeExpired = o.expired_at ? new Date(o.expired_at).getTime() < Date.now() : false;
-        return o.payment_status === 'EXPIRED' || (o.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
+        const createdAtMs = new Date(o.created_at).getTime();
+        const is24h = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+        const isPaid = o.payment_status === 'FULFILLED' || o.payment_status === 'PAID_PROCESSING';
+        return o.payment_status === 'EXPIRED' || (is24h && !isPaid && o.payment_status !== 'REFUNDED');
       });
     }
     return vaultItems;
@@ -258,12 +266,18 @@ export default function VaultPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {filteredItems.map((order) => {
-                const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
+                const createdAtMs = new Date(order.created_at).getTime();
+                const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+                const isPaymentTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
                 const isFulfilled = order.payment_status === 'FULFILLED';
                 const isPaidProcessing = order.payment_status === 'PAID_PROCESSING';
-                const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
-                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
+                const isPaid = isFulfilled || isPaidProcessing;
                 const isRefunded = order.payment_status === 'REFUNDED';
+                const isExpired = order.payment_status === 'EXPIRED' || (is24HoursExpired && !isPaid && !isRefunded);
+                const isAwaitingVerification = !isExpired && !isPaid && !isRefunded && (
+                  order.payment_status === 'AWAITING_VERIFICATION' || (order.payment_status === 'PENDING_PAYMENT' && isPaymentTimeExpired)
+                );
+                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isPaymentTimeExpired && !isExpired;
 
                 const orderDate = order.fulfilled_at || order.paid_at || order.created_at;
                 const formattedDate = orderDate
@@ -309,6 +323,11 @@ export default function VaultPage() {
                         {isPendingPayment && (
                           <span className="badge badge-warning" style={{ fontSize: '0.76rem', padding: '4px 10px' }}>
                             ⏳ MENUNGGU PEMBAYARAN
+                          </span>
+                        )}
+                        {isAwaitingVerification && (
+                          <span className="badge badge-warning" style={{ fontSize: '0.76rem', padding: '4px 10px' }}>
+                            ⏳ MENUNGGU VERIFIKASI (24J)
                           </span>
                         )}
                         {isExpired && (
@@ -394,12 +413,33 @@ export default function VaultPage() {
                       </div>
                     )}
 
+                    {/* KASUS 2.5: MENUNGGU VERIFIKASI PEMBAYARAN */}
+                    {isAwaitingVerification && (
+                      <div style={{ backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', padding: '14px 16px', border: '1px solid var(--hairline)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <strong style={{ fontSize: '0.9rem', color: 'var(--gold-light)' }}>
+                            Waktu QRIS selesai. Menunggu verifikasi manual admin (maks. 24 jam).
+                          </strong>
+                          <p style={{ fontSize: '0.84rem', color: 'var(--body)', margin: '4px 0 0' }}>
+                            Jika sudah transfer, buka rincian pesanan untuk mengirimkan bukti via WhatsApp.
+                          </p>
+                        </div>
+                        <Link
+                          href={`/orders/${order.order_number}?token=${order.secure_token}`}
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                        >
+                          Cek Pesanan &amp; Kirim Bukti
+                        </Link>
+                      </div>
+                    )}
+
                     {/* KASUS 3: KADALUARSA / EXPIRED */}
                     {isExpired && (
                       <div style={{ backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', padding: '14px 16px', border: '1px solid var(--hairline)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <div>
                           <span style={{ fontSize: '0.86rem', color: 'var(--muted)', display: 'block' }}>
-                            Batas waktu 10 menit telah terlampaui sehingga pesanan ini kadaluarsa.
+                            Batas waktu 24 jam telah terlampaui sehingga pesanan ini kadaluarsa.
                           </span>
                         </div>
                         <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>

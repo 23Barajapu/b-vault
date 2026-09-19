@@ -30,8 +30,10 @@ export async function POST(
       );
     }
 
-    const isTimeExpired = order.expired_at && new Date(order.expired_at).getTime() < Date.now();
-    if (order.payment_status === 'EXPIRED' || isTimeExpired) {
+    const createdAtMs = new Date(order.created_at).getTime();
+    const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+
+    if (order.payment_status === 'EXPIRED' || is24HoursExpired) {
       if (order.payment_status !== 'EXPIRED') {
         await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', orderId);
       }
@@ -40,14 +42,14 @@ export async function POST(
           success: false,
           error: {
             code: 'ERR_ORDER_EXPIRED',
-            message: 'Pesanan sudah kadaluarsa (expired) dan tidak dapat ditandai lunas.',
+            message: 'Pesanan sudah kadaluarsa lebih dari 24 jam dan tidak dapat ditandai lunas.',
           },
         },
         { status: 400 }
       );
     }
 
-    if (order.payment_status !== 'PENDING_PAYMENT') {
+    if (!['PENDING_PAYMENT', 'AWAITING_VERIFICATION'].includes(order.payment_status)) {
       return NextResponse.json(
         {
           success: false,

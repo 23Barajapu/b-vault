@@ -53,23 +53,34 @@ export async function GET(request: Request) {
 
     if (ordersErr) throw ordersErr;
 
-    // Auto-expire check: pesanan PENDING_PAYMENT yang melewati batas 10 menit otomatis kadaluwarsa
+    // Auto-status transition:
+    // 1. > 24 jam: EXPIRED permanen
+    // 2. > 10 menit: AWAITING_VERIFICATION (menunggu verifikasi manual admin 24 jam)
     const expiredIds: number[] = [];
+    const awaitingVerificationIds: number[] = [];
     const normalizedOrders = (orders || []).map((order: any) => {
-      const isTimeExpired = order.expired_at
+      const createdAtMs = new Date(order.created_at).getTime();
+      const isPaymentTimeExpired = order.expired_at
         ? new Date(order.expired_at).getTime() < Date.now()
-        : (Date.now() - new Date(order.created_at).getTime() > 10 * 60 * 1000);
+        : (Date.now() - createdAtMs > 10 * 60 * 1000);
+      const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
 
-      if (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired) {
+      if (is24HoursExpired && ['PENDING_PAYMENT', 'AWAITING_VERIFICATION'].includes(order.payment_status)) {
         expiredIds.push(order.id);
         return { ...order, payment_status: 'EXPIRED' };
+      }
+      if (isPaymentTimeExpired && order.payment_status === 'PENDING_PAYMENT') {
+        awaitingVerificationIds.push(order.id);
+        return { ...order, payment_status: 'AWAITING_VERIFICATION' };
       }
       return order;
     });
 
     if (expiredIds.length > 0) {
-      // Async update ke Supabase database
       await supabase.from('orders').update({ payment_status: 'EXPIRED' }).in('id', expiredIds);
+    }
+    if (awaitingVerificationIds.length > 0) {
+      await supabase.from('orders').update({ payment_status: 'AWAITING_VERIFICATION' }).in('id', awaitingVerificationIds);
     }
 
     const result = normalizedOrders.map((order: any) => {

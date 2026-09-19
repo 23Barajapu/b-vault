@@ -28,14 +28,21 @@ export async function GET(
       );
     }
 
-    // Auto expire check if still pending and past expired_at (10 menit batas pembayaran)
-    const isTimeExpired = order.expired_at
+    // Auto status transition:
+    // 1. > 24 jam: EXPIRED permanen
+    // 2. > 10 menit: AWAITING_VERIFICATION (menunggu verifikasi manual admin 24 jam)
+    const createdAtMs = new Date(order.created_at).getTime();
+    const isPaymentTimeExpired = order.expired_at
       ? new Date(order.expired_at).getTime() < Date.now()
-      : (Date.now() - new Date(order.created_at).getTime() > 10 * 60 * 1000);
+      : (Date.now() - createdAtMs > 10 * 60 * 1000);
+    const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
 
-    if (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired) {
+    if (is24HoursExpired && ['PENDING_PAYMENT', 'AWAITING_VERIFICATION'].includes(order.payment_status)) {
       await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', order.id);
       order.payment_status = 'EXPIRED';
+    } else if (isPaymentTimeExpired && order.payment_status === 'PENDING_PAYMENT') {
+      await supabase.from('orders').update({ payment_status: 'AWAITING_VERIFICATION' }).eq('id', order.id);
+      order.payment_status = 'AWAITING_VERIFICATION';
     }
 
     // Fetch order items with variant and product

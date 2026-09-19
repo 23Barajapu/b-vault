@@ -11,7 +11,7 @@ interface OrderData {
   customer_phone: string;
   target_account_input: string | null;
   total_amount: number;
-  payment_status: 'PENDING_PAYMENT' | 'PAID_PROCESSING' | 'FULFILLED' | 'EXPIRED' | 'REFUNDED';
+  payment_status: 'PENDING_PAYMENT' | 'AWAITING_VERIFICATION' | 'PAID_PROCESSING' | 'FULFILLED' | 'EXPIRED' | 'REFUNDED';
   payment_method: string;
   payment_channel_data: any;
   supplier_issue: boolean;
@@ -232,12 +232,19 @@ function OrderStatusContent() {
 
   const firstItem = items[0];
 
-  // Stepper state calculation
-  const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
+  // Stepper state calculation (Opsi B: 10 menit bayar QRIS & 24 jam toleransi verifikasi admin)
+  const createdAtMs = new Date(order.created_at).getTime();
+  const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+  const isPaymentTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
   const isPaid = ['PAID_PROCESSING', 'FULFILLED'].includes(order.payment_status);
   const isFulfilled = order.payment_status === 'FULFILLED';
-  const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && (timeLeftSeconds === 0 || isTimeExpired));
   const isRefunded = order.payment_status === 'REFUNDED';
+  const isExpired = order.payment_status === 'EXPIRED' || (is24HoursExpired && !isPaid && !isRefunded);
+  const isAwaitingVerification = !isExpired && !isPaid && !isRefunded && (
+    order.payment_status === 'AWAITING_VERIFICATION' ||
+    (order.payment_status === 'PENDING_PAYMENT' && (timeLeftSeconds === 0 || isPaymentTimeExpired))
+  );
+  const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isAwaitingVerification && !isExpired;
 
   // WhatsApp emergency message
   const rawSupportWa = support?.admin_whatsapp || '085861708659';
@@ -301,9 +308,9 @@ function OrderStatusContent() {
       {/* Live Stepper */}
       <div className="card" style={{ marginBottom: '24px' }}>
         <div className="stepper-container">
-          <div className={`step-item ${order.payment_status === 'PENDING_PAYMENT' ? 'active' : isPaid ? 'completed' : ''}`}>
+          <div className={`step-item ${isPendingPayment || isAwaitingVerification ? 'active' : isPaid ? 'completed' : ''}`}>
             <div className="step-circle">{isPaid ? '✓' : '1'}</div>
-            <div className="step-title">Pembayaran</div>
+            <div className="step-title">{isAwaitingVerification ? 'Verifikasi Bayar' : 'Pembayaran'}</div>
           </div>
 
           <div className={`step-item ${order.payment_status === 'PAID_PROCESSING' ? 'active' : isFulfilled ? 'completed' : ''}`}>
@@ -324,8 +331,8 @@ function OrderStatusContent() {
 
         {/* Phase Details Box */}
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '20px' }}>
-          {/* STEP 1: PENDING PAYMENT */}
-          {order.payment_status === 'PENDING_PAYMENT' && (
+          {/* STEP 1: PENDING PAYMENT (0 - 10 MENIT) */}
+          {isPendingPayment && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
@@ -495,6 +502,53 @@ function OrderStatusContent() {
             </div>
           )}
 
+          {/* STEP 1.5: AWAITING_VERIFICATION (10 MENIT - 24 JAM) */}
+          {isAwaitingVerification && (
+            <div style={{ textAlign: 'center', padding: '24px 16px', backgroundColor: 'var(--surface-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--hairline)' }}>
+              <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 'var(--radius-xs)', backgroundColor: 'rgba(219, 177, 99, 0.15)', border: '1px solid var(--hairline-strong)', color: 'var(--gold-light)', fontSize: '0.82rem', fontWeight: 600, marginBottom: '14px' }}>
+                WAKTU TRANSFER 10 MENIT BERAKHIR
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px' }}>
+                Menunggu Verifikasi Pembayaran
+              </h2>
+              <p style={{ fontSize: '0.88rem', color: 'var(--body)', maxWidth: '540px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+                Batas waktu pembayaran QRIS baru telah ditutup. Jika Anda telah melakukan transfer, pesanan Anda saat ini sedang dalam antrean verifikasi manual admin (maksimal 24 jam).
+              </p>
+
+              <div style={{ maxWidth: '420px', margin: '0 auto' }}>
+                <a
+                  href={waConfirmUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '12px 16px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    backgroundColor: '#25D366',
+                    borderColor: '#25D366',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 16px rgba(37, 211, 102, 0.35)',
+                    width: '100%',
+                    textAlign: 'center',
+                    lineHeight: 1.35,
+                    textDecoration: 'none',
+                    borderRadius: 'var(--radius-xs)',
+                    minHeight: '44px'
+                  }}
+                >
+                  Kirim Bukti Transfer via WhatsApp
+                </a>
+                <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted)', marginTop: '8px' }}>
+                  Kirim bukti transfer agar pesanan Anda diverifikasi dan diproses lebih cepat.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* STEP 2 & 3: PAID_PROCESSING */}
           {order.payment_status === 'PAID_PROCESSING' && (
             <div>
@@ -635,16 +689,16 @@ function OrderStatusContent() {
             </div>
           )}
 
-          {/* EXPIRED or REFUNDED */}
+          {/* EXPIRED or REFUNDED (> 24 JAM) */}
           {isExpired && (
             <div style={{ textAlign: 'center', padding: '24px', color: 'var(--danger)' }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px' }}>
-                Waktu Pembayaran Telah Berakhir
+                Pesanan Telah Kadaluarsa
               </h2>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                Invoice ini otomatis dibatalkan karena batas pembayaran 10 menit telah terlampaui.
+                Invoice ini otomatis dibatalkan karena telah melewati batas waktu 24 jam tanpa konfirmasi pembayaran.
               </p>
-              <Link href="/" className="btn btn-primary">Pesan Ulang</Link>
+              <Link href="/" className="btn btn-primary" style={{ minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}>Pesan Ulang</Link>
             </div>
           )}
 

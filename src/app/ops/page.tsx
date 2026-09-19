@@ -920,11 +920,21 @@ function OpsConsoleInner() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {orders.map((order) => {
+                const createdAtMs = new Date(order.created_at).getTime();
+                const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
                 const isPaidProcessing = order.payment_status === 'PAID_PROCESSING';
-                const isTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
-                const isExpired = order.payment_status === 'EXPIRED' || (order.payment_status === 'PENDING_PAYMENT' && isTimeExpired);
-                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isTimeExpired;
                 const isFulfilled = order.payment_status === 'FULFILLED';
+                const isExpired = order.payment_status === 'EXPIRED' || (is24HoursExpired && !isPaidProcessing && !isFulfilled);
+                const isPaymentTimeExpired = order.expired_at ? new Date(order.expired_at).getTime() < Date.now() : false;
+                const isAwaitingVerification = !isExpired && !isPaidProcessing && !isFulfilled && (
+                  order.payment_status === 'AWAITING_VERIFICATION' || (order.payment_status === 'PENDING_PAYMENT' && isPaymentTimeExpired)
+                );
+                const isPendingPayment = order.payment_status === 'PENDING_PAYMENT' && !isPaymentTimeExpired && !isExpired;
+
+                const remainingVerificationMs = Math.max(0, 24 * 60 * 60 * 1000 - (Date.now() - createdAtMs));
+                const remainingHours = Math.floor(remainingVerificationMs / (60 * 60 * 1000));
+                const remainingMins = Math.floor((remainingVerificationMs % (60 * 60 * 1000)) / (60 * 1000));
+
                 const inputState = fulfillInputs[order.id] || { payload: '', notes: '', loading: false };
                 const msg = fulfillMessage?.id === order.id ? fulfillMessage : null;
 
@@ -932,6 +942,8 @@ function OpsConsoleInner() {
                   ? (order.is_sla_breached ? '5px solid var(--danger)' : '5px solid var(--warning)')
                   : isPendingPayment
                   ? '5px solid var(--gold-light)'
+                  : isAwaitingVerification
+                  ? '5px solid var(--warning)'
                   : isFulfilled
                   ? '5px solid var(--success)'
                   : '5px solid var(--muted)';
@@ -957,6 +969,8 @@ function OpsConsoleInner() {
                               ? (order.is_sla_breached ? 'badge-danger' : 'badge-warning')
                               : isPendingPayment
                               ? 'badge-warning'
+                              : isAwaitingVerification
+                              ? 'badge-warning'
                               : isFulfilled
                               ? 'badge-online'
                               : 'badge-danger'
@@ -964,7 +978,9 @@ function OpsConsoleInner() {
                             {isPaidProcessing
                               ? (order.is_sla_breached ? 'SLA LEWAT (>20m)' : 'LUNAS - PERLU LINK')
                               : isPendingPayment
-                              ? 'MENUNGGU BAYAR'
+                              ? 'MENUNGGU BAYAR (0-10m)'
+                              : isAwaitingVerification
+                              ? 'VERIFIKASI MANUAL (24J)'
                               : isFulfilled
                               ? 'SELESAI'
                               : isExpired
@@ -1036,8 +1052,8 @@ function OpsConsoleInner() {
                       </div>
                     </div>
 
-                    {/* If Pending Payment: Tombol Verifikasi Pembayaran Lunas */}
-                    {isPendingPayment && (
+                    {/* If Pending Payment or Awaiting Verification: Tombol Verifikasi Pembayaran Lunas */}
+                    {(isPendingPayment || isAwaitingVerification) && (
                       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                         {msg && (
                           <div style={{
@@ -1053,7 +1069,9 @@ function OpsConsoleInner() {
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                           <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                            Pembeli belum diverifikasi lunas di sistem atau transfer via QRIS statis. Klik setelah cek mutasi/WA.
+                            {isAwaitingVerification
+                              ? `QRIS 10m berakhir. Sisa batas verifikasi: ${remainingHours}j ${remainingMins}m. Klik setelah cek mutasi/WA.`
+                              : 'Pembeli dalam batas pembayaran 10 menit. Klik setelah cek mutasi/WA jika transfer manual.'}
                           </span>
                           <button
                             type="button"
@@ -1082,7 +1100,7 @@ function OpsConsoleInner() {
                           gap: '8px'
                         }}>
                           <span>⚠️</span>
-                          <span>Pesanan telah kadaluarsa (expired). Pembayaran tidak dapat ditandai lunas.</span>
+                          <span>Pesanan telah kadaluarsa lebih dari 24 jam. Pembayaran tidak dapat ditandai lunas.</span>
                         </div>
                       </div>
                     )}
