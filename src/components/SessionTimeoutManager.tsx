@@ -2,11 +2,26 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 menit
+const DEFAULT_IDLE_TIMEOUT_MS = 5 * 60 * 1000; // default 5 menit
 
 export default function SessionTimeoutManager() {
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [idleTimeoutMs, setIdleTimeoutMs] = useState(DEFAULT_IDLE_TIMEOUT_MS);
   const isHandlingLogout = useRef(false);
+
+  // Fetch dynamic timeout setting from system parameters
+  useEffect(() => {
+    async function loadTimeoutSetting() {
+      try {
+        const res = await fetch('/api/v1/store/settings');
+        const json = await res.json();
+        if (json.success && json.data?.session_idle_timeout_minutes) {
+          setIdleTimeoutMs(Math.max(1, Number(json.data.session_idle_timeout_minutes)) * 60 * 1000);
+        }
+      } catch {}
+    }
+    loadTimeoutSetting();
+  }, []);
 
   const performLogout = useCallback(async () => {
     if (isHandlingLogout.current) return;
@@ -37,7 +52,7 @@ export default function SessionTimeoutManager() {
       const lastActive = Number(localStorage.getItem('bv_last_active') || Date.now());
       const idleTime = Date.now() - lastActive;
 
-      if (idleTime >= IDLE_TIMEOUT_MS) {
+      if (idleTime >= idleTimeoutMs) {
         // Cek status sesi ke server sebelum logout
         try {
           const res = await fetch('/api/v1/auth/session');

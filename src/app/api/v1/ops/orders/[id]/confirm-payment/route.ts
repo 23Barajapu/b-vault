@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import supabase from '@/lib/supabase';
 import { dispatchTelegramAdminAlert } from '@/lib/dispatcher';
+import { getSystemParameters } from '@/lib/settings';
 
 export async function POST(
   request: Request,
@@ -30,10 +31,12 @@ export async function POST(
       );
     }
 
+    const sysParams = await getSystemParameters();
+    const verifyWindowHours = sysParams.verification_window_hours || 24;
     const createdAtMs = new Date(order.created_at).getTime();
-    const is24HoursExpired = (Date.now() - createdAtMs) > 24 * 60 * 60 * 1000;
+    const isWindowExpired = (Date.now() - createdAtMs) > verifyWindowHours * 60 * 60 * 1000;
 
-    if (order.payment_status === 'EXPIRED' || is24HoursExpired) {
+    if (order.payment_status === 'EXPIRED' || isWindowExpired) {
       if (order.payment_status !== 'EXPIRED') {
         await supabase.from('orders').update({ payment_status: 'EXPIRED' }).eq('id', orderId);
       }
@@ -42,7 +45,7 @@ export async function POST(
           success: false,
           error: {
             code: 'ERR_ORDER_EXPIRED',
-            message: 'Pesanan sudah kadaluarsa lebih dari 24 jam dan tidak dapat ditandai lunas.',
+            message: `Pesanan sudah kadaluarsa lebih dari ${verifyWindowHours} jam dan tidak dapat ditandai lunas.`,
           },
         },
         { status: 400 }

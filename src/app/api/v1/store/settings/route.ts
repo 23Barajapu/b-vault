@@ -1,25 +1,28 @@
 import { NextResponse } from 'next/server';
-import supabase from '@/lib/supabase';
+import { getSystemParameters, isStoreOperational } from '@/lib/settings';
 
 export async function GET() {
   try {
-    const { data: rows, error } = await supabase.from('store_settings').select('key, value');
-    if (error) throw error;
-
-    const map: Record<string, string> = {};
-    (rows || []).forEach((r) => { map[r.key] = r.value; });
+    const params = await getSystemParameters();
+    const operational = isStoreOperational(params);
 
     return NextResponse.json({
       success: true,
       data: {
-        store_status: map['store_status'] || 'ONLINE',
-        operating_hours_notice: map['operating_hours_notice'] || '',
-        whatsapp_cs_number: map['admin_whatsapp'] || '085861708659',
+        operational,
+        session_idle_timeout_minutes: params.session_idle_timeout_minutes,
+        payment_expiry_minutes: params.payment_expiry_minutes,
+        admin_whatsapp: params.admin_whatsapp,
+        operating_hours_notice: params.operating_hours_notice,
+        baseline_delivered_licenses: params.baseline_delivered_licenses,
       },
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: { code: 'ERR_GET_STORE_SETTINGS', message: error.message } },
+      {
+        success: false,
+        error: { code: 'ERR_GET_PUBLIC_SETTINGS', message: error.message },
+      },
       { status: 500 }
     );
   }

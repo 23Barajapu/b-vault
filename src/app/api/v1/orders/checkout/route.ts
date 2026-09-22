@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import supabase from '@/lib/supabase';
+import { getSystemParameters } from '@/lib/settings';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const WA_REGEX = /^(?:\+62|62|0)8[1-9][0-9]{7,11}$/;
@@ -99,8 +100,10 @@ export async function POST(request: Request) {
     const orderNumber = `INV-${dateStr}-${randomSuffix}`;
     const secureToken = crypto.randomBytes(32).toString('hex');
 
-    // 10 minutes expiration
-    const expiredAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    // Dynamic payment expiration from system parameters
+    const sysParams = await getSystemParameters();
+    const expiryMins = sysParams.payment_expiry_minutes || 10;
+    const expiredAt = new Date(Date.now() + expiryMins * 60 * 1000).toISOString();
 
     // Generate payment payload (QRIS Baraja Putra)
     const paymentChannelData: Record<string, any> = {

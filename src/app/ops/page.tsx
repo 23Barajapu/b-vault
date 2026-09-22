@@ -138,6 +138,25 @@ function OpsConsoleInner() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState('');
 
+  // Parameter Sistem Tambahan
+  // 1. User & Sesi
+  const [sessionIdleMins, setSessionIdleMins] = useState<number | string>(5);
+  const [sessionMaxHours, setSessionMaxHours] = useState<number | string>(8);
+  const [maxLoginAttempts, setMaxLoginAttempts] = useState<number | string>(5);
+
+  // 2. Kalender & Libur
+  const [holidayMode, setHolidayMode] = useState(false);
+  const [holidayDates, setHolidayDates] = useState('');
+  const [holidayNotice, setHolidayNotice] = useState('Toko sedang libur operasional. Seluruh pesanan akan diproses kembali saat toko buka.');
+  const [opHoursStart, setOpHoursStart] = useState('08:00');
+  const [opHoursEnd, setOpHoursEnd] = useState('23:00');
+
+  // 3. Transaksi & SLA
+  const [paymentExpiryMins, setPaymentExpiryMins] = useState<number | string>(10);
+  const [verifyWindowHours, setVerifyWindowHours] = useState<number | string>(24);
+  const [slaTargetMins, setSlaTargetMins] = useState<number | string>(15);
+  const [slaBreachMins, setSlaBreachMins] = useState<number | string>(20);
+
   // Auto-login if session stored in sessionStorage or Google session
   useEffect(() => {
     async function checkExistingAuth() {
@@ -236,13 +255,29 @@ function OpsConsoleInner() {
     try {
       const res = await fetch('/api/v1/ops/settings/store-status');
       const json = await res.json();
-      if (json.success) {
-        setStoreStatus(json.data.store_status || 'ONLINE');
-        setOperatingNotice(json.data.operating_hours_notice || '');
-        setAdminPhone(json.data.admin_whatsapp || '085861708659');
-        setTgToken(json.data.telegram_bot_token || '');
-        setTgChatId(json.data.telegram_chat_id || '');
-        setBaselineLicenses(json.data.baseline_delivered_licenses || 50);
+      if (json.success && json.data) {
+        const d = json.data;
+        setStoreStatus(d.store_status || 'ONLINE');
+        setOperatingNotice(d.operating_hours_notice || '');
+        setAdminPhone(d.admin_whatsapp || '085861708659');
+        setTgToken(d.telegram_bot_token || '');
+        setTgChatId(d.telegram_chat_id || '');
+        setBaselineLicenses(d.baseline_delivered_licenses || 50);
+
+        setSessionIdleMins(d.session_idle_timeout_minutes ?? 5);
+        setSessionMaxHours(d.session_max_lifetime_hours ?? 8);
+        setMaxLoginAttempts(d.max_login_attempts ?? 5);
+
+        setHolidayMode(Boolean(d.holiday_mode));
+        setHolidayDates(d.holiday_dates || '');
+        setHolidayNotice(d.holiday_notice || '');
+        setOpHoursStart(d.operating_hours_start || '08:00');
+        setOpHoursEnd(d.operating_hours_end || '23:00');
+
+        setPaymentExpiryMins(d.payment_expiry_minutes ?? 10);
+        setVerifyWindowHours(d.verification_window_hours ?? 24);
+        setSlaTargetMins(d.sla_target_minutes ?? 15);
+        setSlaBreachMins(d.sla_breach_minutes ?? 20);
       }
     } catch (err) {
       console.error('Fetch settings error', err);
@@ -665,11 +700,29 @@ function OpsConsoleInner() {
           telegram_bot_token: tgToken,
           telegram_chat_id: tgChatId,
           baseline_delivered_licenses: String(baselineLicenses || 50),
+
+          // User & Sesi
+          session_idle_timeout_minutes: Number(sessionIdleMins) || 5,
+          session_max_lifetime_hours: Number(sessionMaxHours) || 8,
+          max_login_attempts: Number(maxLoginAttempts) || 5,
+
+          // Kalender & Libur
+          holiday_mode: holidayMode ? 'true' : 'false',
+          holiday_dates: holidayDates,
+          holiday_notice: holidayNotice,
+          operating_hours_start: opHoursStart,
+          operating_hours_end: opHoursEnd,
+
+          // Transaksi & SLA
+          payment_expiry_minutes: Number(paymentExpiryMins) || 10,
+          verification_window_hours: Number(verifyWindowHours) || 24,
+          sla_target_minutes: Number(slaTargetMins) || 15,
+          sla_breach_minutes: Number(slaBreachMins) || 20,
         }),
       });
       const json = await res.json();
       if (json.success) {
-        setSettingsMessage('Pengaturan toko berhasil diperbarui.');
+        setSettingsMessage('Seluruh parameter sistem berhasil diperbarui.');
       } else {
         setSettingsMessage(json.error?.message || 'Gagal menyimpan pengaturan.');
       }
@@ -856,7 +909,7 @@ function OpsConsoleInner() {
           style={{ fontSize: '0.88rem', padding: '8px 16px', whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => setActiveTab('SETTINGS')}
         >
-          Saklar Toko & Kontak
+          Pemeliharaan Parameter Sistem
         </button>
       </div>
 
@@ -1299,101 +1352,336 @@ function OpsConsoleInner() {
         </div>
       )}
 
-      {/* TAB 3: SAKLAR TOKO & SETTINGS */}
+      {/* TAB 3: PEMELIHARAAN PARAMETER SISTEM */}
       {activeTab === 'SETTINGS' && (
-        <div className="card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '16px' }}>
-            Saklar Operasional & Pengaturan Toko
-          </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Header Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2 className="font-title-lg" style={{ color: 'var(--ink)' }}>Pemeliharaan Parameter Sistem</h2>
+              <p style={{ fontSize: '0.84rem', color: 'var(--muted)' }}>
+                Konfigurasi terpusat untuk keamanan sesi, kalender hari libur, jam operasional toko, batas transaksi, dan integrasi bot.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={fetchSettings}
+              style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+            >
+              Refresh Parameter
+            </button>
+          </div>
 
           {settingsMessage && (
-            <div style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success)', padding: '10px 14px', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '0.88rem' }}>
-              {settingsMessage}
+            <div style={{
+              backgroundColor: 'var(--success-bg)',
+              color: 'var(--success)',
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.88rem',
+              border: '1px solid var(--success-border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>✓</span>
+              <span>{settingsMessage}</span>
             </div>
           )}
 
           <form onSubmit={handleSaveSettings}>
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="ops-status">Status Operasional Toko (Operating Hours Switch)</label>
-              <select
-                id="ops-status"
-                value={storeStatus}
-                onChange={(e) => setStoreStatus(e.target.value)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+              
+              {/* KARTU 1: USER & KEAMANAN SESI */}
+              <div className="card" style={{ padding: '20px', border: '1px solid var(--hairline)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>🛡️</span>
+                  <div>
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--ink)', margin: 0 }}>Parameter Sesi & Keamanan</h3>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Pengendalian sesi aktif dan login timeout</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-idle">Timeout Inaktivitas Sesi (Menit)</label>
+                  <input
+                    id="ops-param-idle"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={sessionIdleMins}
+                    onChange={(e) => setSessionIdleMins(e.target.value)}
+                    placeholder="5"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Otomatis logout jika user/admin tidak bergerak (default: 5 menit).
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-session-max">Masa Berlaku Token Login (Jam)</label>
+                  <input
+                    id="ops-param-session-max"
+                    type="number"
+                    min="1"
+                    max="72"
+                    value={sessionMaxHours}
+                    onChange={(e) => setSessionMaxHours(e.target.value)}
+                    placeholder="8"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Durasi token sesi admin berlaku sebelum wajib re-login (default: 8 jam).
+                  </span>
+                </div>
+
+                <div>
+                  <label htmlFor="ops-param-login-attempts">Batas Percobaan Login Salah</label>
+                  <input
+                    id="ops-param-login-attempts"
+                    type="number"
+                    min="3"
+                    max="10"
+                    value={maxLoginAttempts}
+                    onChange={(e) => setMaxLoginAttempts(e.target.value)}
+                    placeholder="5"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Batas toleransi salah password/PIN sebelum cooldown pengamanan.
+                  </span>
+                </div>
+              </div>
+
+              {/* KARTU 2: KALENDER & HARI LIBUR */}
+              <div className="card" style={{ padding: '20px', border: '1px solid var(--hairline)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>📅</span>
+                  <div>
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--ink)', margin: 0 }}>Kalender & Hari Libur (WIB)</h3>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Jadwal jam kerja harian dan tanggal merah</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-status">Status Operasional Manual</label>
+                  <select
+                    id="ops-param-status"
+                    value={storeStatus}
+                    onChange={(e) => setStoreStatus(e.target.value)}
+                  >
+                    <option value="ONLINE">ONLINE (Layanan aktif, proses 5 - 20 menit)</option>
+                    <option value="RESTING">ISTIRAHAT (Toko tutup sementara / antrean malam)</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '14px', backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={holidayMode}
+                      onChange={(e) => setHolidayMode(e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
+                      Aktifkan Mode Hari Libur Otomatis
+                    </span>
+                  </label>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
+                    Jika aktif, sistem otomatis masuk mode libur pada tanggal yang terdaftar di bawah.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-holidays">Daftar Tanggal Libur Toko (YYYY-MM-DD)</label>
+                  <input
+                    id="ops-param-holidays"
+                    type="text"
+                    value={holidayDates}
+                    onChange={(e) => setHolidayDates(e.target.value)}
+                    placeholder="2026-12-25, 2027-01-01"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Pisahkan dengan koma. Contoh: 2026-08-17, 2026-12-25, 2027-01-01.
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                  <div>
+                    <label htmlFor="ops-param-op-start">Buka (WIB)</label>
+                    <input
+                      id="ops-param-op-start"
+                      type="time"
+                      value={opHoursStart}
+                      onChange={(e) => setOpHoursStart(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="ops-param-op-end">Tutup (WIB)</label>
+                    <input
+                      id="ops-param-op-end"
+                      type="time"
+                      value={opHoursEnd}
+                      onChange={(e) => setOpHoursEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="ops-param-holiday-notice">Pesan Saat Hari Libur</label>
+                  <input
+                    id="ops-param-holiday-notice"
+                    type="text"
+                    value={holidayNotice}
+                    onChange={(e) => setHolidayNotice(e.target.value)}
+                    placeholder="Toko libur operasional. Pesanan diproses esok hari."
+                  />
+                </div>
+              </div>
+
+              {/* KARTU 3: TRANSAKSI & SIKLUS PESANAN */}
+              <div className="card" style={{ padding: '20px', border: '1px solid var(--hairline)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>⚡</span>
+                  <div>
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--ink)', margin: 0 }}>Transaksi & Siklus Pesanan</h3>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Batas waktu bayar, toleransi verifikasi & SLA</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-payment-exp">Batas Waktu Bayar QRIS (Menit)</label>
+                  <input
+                    id="ops-param-payment-exp"
+                    type="number"
+                    min="3"
+                    max="60"
+                    value={paymentExpiryMins}
+                    onChange={(e) => setPaymentExpiryMins(e.target.value)}
+                    placeholder="10"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Durasi countdown QRIS pembeli sebelum masuk antrean verifikasi (default: 10 menit).
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-verify-window">Batas Toleransi Verifikasi Admin (Jam)</label>
+                  <input
+                    id="ops-param-verify-window"
+                    type="number"
+                    min="1"
+                    max="72"
+                    value={verifyWindowHours}
+                    onChange={(e) => setVerifyWindowHours(e.target.value)}
+                    placeholder="24"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Masa toleransi admin dapat menandai lunas sebelum pesanan hangus permanen (default: 24 jam).
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label htmlFor="ops-param-sla-target">Target SLA (Mnt)</label>
+                    <input
+                      id="ops-param-sla-target"
+                      type="number"
+                      min="5"
+                      max="60"
+                      value={slaTargetMins}
+                      onChange={(e) => setSlaTargetMins(e.target.value)}
+                      placeholder="15"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="ops-param-sla-breach">Breach Warning (Mnt)</label>
+                    <input
+                      id="ops-param-sla-breach"
+                      type="number"
+                      min="10"
+                      max="120"
+                      value={slaBreachMins}
+                      onChange={(e) => setSlaBreachMins(e.target.value)}
+                      placeholder="20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* KARTU 4: KONTAK & INTEGRASI NOTIFIKASI */}
+              <div className="card" style={{ padding: '20px', border: '1px solid var(--hairline)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>🔌</span>
+                  <div>
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--ink)', margin: 0 }}>Kontak & Integrasi Bot</h3>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>WhatsApp CS dan Bot Telegram order realtime</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-phone">Nomor WhatsApp CS Toko</label>
+                  <input
+                    id="ops-param-phone"
+                    type="text"
+                    value={adminPhone}
+                    onChange={(e) => setAdminPhone(e.target.value)}
+                    placeholder="085861708659"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Tujuan konfirmasi pembayaran dan bantuan darurat pembeli.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-baseline">Baseline Lisensi Terkirim</label>
+                  <input
+                    id="ops-param-baseline"
+                    type="text"
+                    value={typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses}
+                    onChange={(e) => setBaselineLicenses(e.target.value.replace(/\D/g, ''))}
+                    placeholder="50"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Angka dasar untuk counter lisensi terkirim di beranda.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-tg-token">Telegram Bot Token (Opsional)</label>
+                  <input
+                    id="ops-param-tg-token"
+                    type="password"
+                    value={tgToken}
+                    onChange={(e) => setTgToken(e.target.value)}
+                    placeholder="123456:ABC-DEF1234ghIkl..."
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="ops-param-tg-chat">Telegram Admin Chat ID (Opsional)</label>
+                  <input
+                    id="ops-param-tg-chat"
+                    type="text"
+                    value={tgChatId}
+                    onChange={(e) => setTgChatId(e.target.value)}
+                    placeholder="-100123456789"
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Submit Bar */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center', backgroundColor: 'var(--surface-card)', padding: '16px 20px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--hairline)' }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={savingSettings}
+                style={{ padding: '12px 28px', fontSize: '0.92rem', fontWeight: 700, minHeight: '44px' }}
               >
-                <option value="ONLINE">ONLINE (Layanan aktif, estimasi 5 - 20 menit)</option>
-                <option value="RESTING">ISTIRAHAT (Toko tutup sementara / antrean malam)</option>
-              </select>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Jika mode istirahat aktif, pembeli melihat notifikasi penjadwalan proses saat checkout.
-              </span>
+                {savingSettings ? 'Menyimpan Parameter...' : 'Simpan Semua Parameter Sistem'}
+              </button>
             </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="ops-notice">Pemberitahuan Jam Istirahat</label>
-              <input
-                id="ops-notice"
-                type="text"
-                value={operatingNotice}
-                onChange={(e) => setOperatingNotice(e.target.value)}
-                placeholder="Toko sedang istirahat. Pesanan diproses mulai pukul 08:00 WIB."
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="ops-phone">Nomor Kontak WhatsApp CS Toko</label>
-              <input
-                id="ops-phone"
-                type="text"
-                value={adminPhone}
-                onChange={(e) => setAdminPhone(e.target.value)}
-                placeholder="085861708659"
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="ops-baseline-licenses">Baseline Lisensi Terkirim (Counter Awal Beranda)</label>
-              <input
-                id="ops-baseline-licenses"
-                type="text"
-                value={typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses}
-                onChange={(e) => setBaselineLicenses(e.target.value.replace(/\D/g, ''))}
-                placeholder="50"
-              />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Total di halaman depan: Baseline ({typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses || 50}) + Pesanan Selesai ({Number(analytics?.orders?.fulfilled || 0).toLocaleString('id-ID')}) = {(Number(baselineLicenses || 50) + Number(analytics?.orders?.fulfilled || 0)).toLocaleString('id-ID')}+
-              </span>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="ops-tg-token">Telegram Bot Token (Opsional)</label>
-              <input
-                id="ops-tg-token"
-                type="password"
-                value={tgToken}
-                onChange={(e) => setTgToken(e.target.value)}
-                placeholder="123456:ABC-DEF1234ghIkl..."
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label htmlFor="ops-tg-chat">Telegram Admin Chat ID (Opsional)</label>
-              <input
-                id="ops-tg-chat"
-                type="text"
-                value={tgChatId}
-                onChange={(e) => setTgChatId(e.target.value)}
-                placeholder="-100123456789"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={savingSettings}
-              style={{ padding: '10px 24px' }}
-            >
-              {savingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
-            </button>
           </form>
         </div>
       )}
