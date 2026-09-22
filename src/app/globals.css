@@ -914,8 +914,8 @@ label {
 }
 
 .user-nav-avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid var(--accent-gold);
@@ -923,18 +923,21 @@ label {
 }
 
 .user-nav-avatar-fallback {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background-color: var(--primary);
+  background: radial-gradient(circle at 35% 35%, #800e1e, var(--primary));
   color: #ffffff;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justifyContent: center;
-  font-size: 0.82rem;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  font-size: 0.85rem;
   font-weight: 700;
   border: 1.5px solid var(--accent-gold);
   flex-shrink: 0;
+  user-select: none;
 }
 
 .user-nav-details {

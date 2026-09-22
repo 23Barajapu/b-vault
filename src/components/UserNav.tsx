@@ -102,8 +102,10 @@ export default function UserNav() {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="user-nav-avatar-fallback">
-            {initial}
+          <div className="user-nav-avatar-fallback" aria-hidden="true">
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+              {initial}
+            </span>
           </div>
         )}
 
@@ -127,7 +129,7 @@ export default function UserNav() {
             position: 'absolute',
             top: 'calc(100% + 8px)',
             right: 0,
-            width: '220px',
+            width: '230px',
             backgroundColor: 'var(--surface-card)',
             border: '1px solid var(--accent-gold)',
             borderRadius: 'var(--radius-xs)',
@@ -137,13 +139,29 @@ export default function UserNav() {
           }}
         >
           {/* Header Info */}
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--hairline)', backgroundColor: 'var(--surface-elevated)' }}>
-            <strong style={{ fontSize: '0.88rem', color: 'var(--gold-light)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {user.name}
-            </strong>
-            <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {user.email}
-            </span>
+          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--hairline)', backgroundColor: 'var(--surface-elevated)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {user.avatar_url && !imgError ? (
+              <img
+                src={user.avatar_url}
+                alt={user.name}
+                className="user-nav-avatar"
+                style={{ width: '34px', height: '34px' }}
+              />
+            ) : (
+              <div className="user-nav-avatar-fallback" style={{ width: '34px', height: '34px', fontSize: '0.92rem' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                  {initial}
+                </span>
+              </div>
+            )}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <strong style={{ fontSize: '0.86rem', color: 'var(--gold-light)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {user.name}
+              </strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {user.email}
+              </span>
+            </div>
           </div>
 
           {/* Links */}
