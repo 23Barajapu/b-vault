@@ -156,9 +156,11 @@ function OpsConsoleInner() {
   const [verifyWindowHours, setVerifyWindowHours] = useState<number | string>(24);
   const [slaTargetMins, setSlaTargetMins] = useState<number | string>(15);
   const [slaBreachMins, setSlaBreachMins] = useState<number | string>(20);
+  const [mounted, setMounted] = useState(false);
 
   // Auto-login if session stored in sessionStorage or Google session
   useEffect(() => {
+    setMounted(true);
     async function checkExistingAuth() {
       const cachedToken = sessionStorage.getItem('bv_ops_token');
       if (cachedToken) {
@@ -223,12 +225,16 @@ function OpsConsoleInner() {
     try {
       if (!isSilent) setLoadingOrders(true);
       const res = await fetch(`/api/v1/ops/orders/pending?filter=${filter}`);
+      if (!res.ok) {
+        if (!isSilent) console.warn('Fetch ops orders status:', res.status);
+        return;
+      }
       const json = await res.json();
       if (json.success) {
         setOrders(json.data.orders);
       }
-    } catch (err) {
-      console.error('Fetch ops orders error', err);
+    } catch (err: any) {
+      if (!isSilent) console.warn('Fetch ops orders notice:', err?.message || err);
     } finally {
       if (!isSilent) setLoadingOrders(false);
     }
@@ -239,12 +245,13 @@ function OpsConsoleInner() {
     try {
       if (!isSilent) setLoadingAnalytics(true);
       const res = await fetch('/api/v1/ops/analytics/summary');
+      if (!res.ok) return;
       const json = await res.json();
       if (json.success) {
         setAnalytics(json.data);
       }
-    } catch (err) {
-      console.error('Fetch analytics error', err);
+    } catch (err: any) {
+      if (!isSilent) console.warn('Fetch analytics notice:', err?.message || err);
     } finally {
       if (!isSilent) setLoadingAnalytics(false);
     }
@@ -254,6 +261,7 @@ function OpsConsoleInner() {
   const fetchSettings = useCallback(async () => {
     try {
       const res = await fetch('/api/v1/ops/settings/store-status');
+      if (!res.ok) return;
       const json = await res.json();
       if (json.success && json.data) {
         const d = json.data;
@@ -279,8 +287,8 @@ function OpsConsoleInner() {
         setSlaTargetMins(d.sla_target_minutes ?? 15);
         setSlaBreachMins(d.sla_breach_minutes ?? 20);
       }
-    } catch (err) {
-      console.error('Fetch settings error', err);
+    } catch (err: any) {
+      console.warn('Fetch settings notice:', err?.message || err);
     }
   }, []);
 
@@ -289,6 +297,7 @@ function OpsConsoleInner() {
     try {
       setLoadingProducts(true);
       const res = await fetch('/api/v1/ops/products');
+      if (!res.ok) return;
       const json = await res.json();
       if (json.success) {
         const sorted = (json.data.products || []).sort((a: any, b: any) =>
@@ -297,8 +306,8 @@ function OpsConsoleInner() {
         setAdminProducts(sorted);
         setAdminCategories(json.data.categories || []);
       }
-    } catch (err) {
-      console.error('Fetch admin products error', err);
+    } catch (err: any) {
+      console.warn('Fetch admin products notice:', err?.message || err);
     } finally {
       setLoadingProducts(false);
     }
@@ -316,9 +325,11 @@ function OpsConsoleInner() {
       fetchAdminProducts();
     }
     const interval = setInterval(() => {
-      fetchOrders(true);
-      if (activeTab === 'ANALYTICS') fetchAnalytics(true);
-    }, 6000);
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchOrders(true);
+        if (activeTab === 'ANALYTICS') fetchAnalytics(true);
+      }
+    }, 8000);
     return () => clearInterval(interval);
   }, [isAuthenticated, fetchOrders, fetchSettings, fetchAnalytics, fetchAdminProducts, activeTab]);
 
@@ -740,13 +751,22 @@ function OpsConsoleInner() {
     setTimeout(() => setCopiedTarget(null), 2000);
   }
 
+  // 0. Mounting Gate (prevents SSR hydration mismatch from browser extensions & storage checks)
+  if (!mounted) {
+    return (
+      <div className="container" style={{ maxWidth: '440px', paddingTop: '120px', textAlign: 'center' }} suppressHydrationWarning>
+        <div style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Memverifikasi otentikasi Ops Desk...</div>
+      </div>
+    );
+  }
+
   // 1. Unauthenticated Login Gate
   if (!isAuthenticated) {
     return (
-      <div className="container" style={{ maxWidth: '440px', paddingTop: '80px' }}>
-        <div className="card" style={{ padding: '32px 24px', boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--primary)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.4rem', marginBottom: '12px' }}>
+      <div className="container" style={{ maxWidth: '440px', paddingTop: '80px' }} suppressHydrationWarning>
+        <div className="card" style={{ padding: '32px 24px', boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }} suppressHydrationWarning>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }} suppressHydrationWarning>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--primary)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.4rem', marginBottom: '12px' }} suppressHydrationWarning>
               B
             </div>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>

@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/logo.png" />
@@ -30,7 +30,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <SessionTimeoutManager />
         {/* Sticky Header with Exact Charcoal #191814 & Gold #dbb163 */}
         <header style={{
@@ -106,8 +106,8 @@ export default function RootLayout({
           position: 'relative'
         }}>
           {/* Visual Gold Cross Accent Divider with ✦ symbol */}
-          <div className="gold-cross-divider" style={{ marginTop: '-48px', marginBottom: '32px' }}>
-            <div className="gold-cross-badge">✦</div>
+          <div className="gold-cross-divider" style={{ marginTop: '-48px', marginBottom: '32px' }} suppressHydrationWarning>
+            <div className="gold-cross-badge" suppressHydrationWarning>✦</div>
           </div>
 
           <div className="container" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
