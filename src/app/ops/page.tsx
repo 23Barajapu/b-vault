@@ -1840,218 +1840,226 @@ function OpsConsoleInner() {
                 </div>
               </div>
 
-              {/* KARTU 5: PROMO, KUPON & BANNER DISKON */}
-              <div className="card" style={{ padding: '20px', border: '1px solid var(--accent-gold)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
-                  <span style={{ fontSize: '1.2rem', color: 'var(--gold-light)' }}>🏷️</span>
-                  <div>
-                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--gold-light)', margin: 0 }}>Promo, Kupon & Diskon</h3>
-                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Kode kupon checkout, persentase diskon & banner pengumuman</span>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '14px', backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={promoEnabled}
-                      onChange={(e) => setPromoEnabled(e.target.checked)}
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
-                      Aktifkan Fitur Kupon Promo
-                    </span>
-                  </label>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
-                    Jika dinonaktifkan, kupon promo tidak dapat digunakan di form checkout toko.
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                  <div>
-                    <label htmlFor="ops-param-promo-code">Kode Kupon Utama</label>
-                    <input
-                      id="ops-param-promo-code"
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
-                      placeholder="BVAULTHEMAT"
-                      style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--gold-light)' }}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="ops-param-promo-pct">Diskon (%)</label>
-                    <input
-                      id="ops-param-promo-pct"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={promoDiscountPercent}
-                      onChange={(e) => setPromoDiscountPercent(e.target.value)}
-                      placeholder="10"
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '14px' }}>
-                  <label htmlFor="ops-param-promo-min">Minimal Belanja Kupon (Rp)</label>
-                  <input
-                    id="ops-param-promo-min"
-                    type="text"
-                    inputMode="numeric"
-                    value={formatNumberDisplay(promoMinOrderAmount)}
-                    onChange={(e) => setPromoMinOrderAmount(e.target.value.replace(/\D/g, ''))}
-                    placeholder="0 (Tanpa minimal)"
-                  />
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                    Kupon hanya berlaku jika subtotal pesanan mencapai nilai ini.
-                  </span>
-                </div>
-
-                <div style={{ marginBottom: '14px', backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={promoBannerActive}
-                      onChange={(e) => setPromoBannerActive(e.target.checked)}
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
-                      Tampilkan Banner Promo di Toko
-                    </span>
-                  </label>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
-                    Teks berjalan/banner promo akan muncul di atas katalog produk utama.
-                  </span>
-                </div>
-
-                <div>
-                  <label htmlFor="ops-param-promo-banner-text">Teks Pengumuman Banner Promo</label>
-                  <textarea
-                    id="ops-param-promo-banner-text"
-                    rows={2}
-                    value={promoBannerText}
-                    onChange={(e) => setPromoBannerText(e.target.value)}
-                    placeholder="🔥 Promo Spesial: Gunakan kode BVAULTHEMAT untuk diskon 10%!"
-                  />
-                </div>
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--hairline)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              {/* KARTU 5: PROMO, KUPON & BANNER DISKON (LANDSCAPE FULL WIDTH) */}
+              <div className="card" style={{ padding: '24px', border: '1px solid var(--accent-gold)', gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '14px', borderBottom: '1px solid var(--hairline)', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '1.4rem', color: 'var(--gold-light)' }}>🏷️</span>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--ink)' }}>
-                        Daftar Kode Kupon Aktif &amp; Diskon ({coupons.length})
-                      </h4>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                        Kelola kode promo khusus, persentase diskon, dan batas minimal belanja.
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--gold-light)', margin: 0 }}>Promo, Kupon & Diskon Toko</h3>
+                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>Konfigurasi banner promo, kode kupon utama, dan manajemen daftar kupon aktif</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+                  {/* Kolom Kiri: Pengaturan Kupon Utama & Banner */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ backgroundColor: 'var(--surface-elevated)', padding: '12px 14px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={promoEnabled}
+                          onChange={(e) => setPromoEnabled(e.target.checked)}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ink)' }}>
+                          Aktifkan Fitur Kupon Promo
+                        </span>
+                      </label>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
+                        Jika dinonaktifkan, kupon promo tidak dapat digunakan di form checkout toko.
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={handleOpenCreateCoupon}
-                      style={{ fontSize: '0.78rem', padding: '6px 14px' }}
-                    >
-                      + Tambah Kupon
-                    </button>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label htmlFor="ops-param-promo-code">Kode Kupon Utama</label>
+                        <input
+                          id="ops-param-promo-code"
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                          placeholder="BVAULTHEMAT"
+                          style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--gold-light)' }}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="ops-param-promo-pct">Diskon (%)</label>
+                        <input
+                          id="ops-param-promo-pct"
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={promoDiscountPercent}
+                          onChange={(e) => setPromoDiscountPercent(e.target.value)}
+                          placeholder="10"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="ops-param-promo-min">Minimal Belanja Kupon (Rp)</label>
+                      <input
+                        id="ops-param-promo-min"
+                        type="text"
+                        inputMode="numeric"
+                        value={formatNumberDisplay(promoMinOrderAmount)}
+                        onChange={(e) => setPromoMinOrderAmount(e.target.value.replace(/\D/g, ''))}
+                        placeholder="0 (Tanpa minimal)"
+                      />
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                        Kupon hanya berlaku jika subtotal pesanan mencapai nilai ini.
+                      </span>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--surface-elevated)', padding: '12px 14px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={promoBannerActive}
+                          onChange={(e) => setPromoBannerActive(e.target.checked)}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ink)' }}>
+                          Tampilkan Banner Promo di Toko
+                        </span>
+                      </label>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
+                        Teks berjalan/banner promo akan muncul di atas katalog produk utama.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label htmlFor="ops-param-promo-banner-text">Teks Pengumuman Banner Promo</label>
+                      <textarea
+                        id="ops-param-promo-banner-text"
+                        rows={2}
+                        value={promoBannerText}
+                        onChange={(e) => setPromoBannerText(e.target.value)}
+                        placeholder="🔥 Promo Spesial: Gunakan kode BVAULTHEMAT untuk diskon 10%!"
+                      />
+                    </div>
                   </div>
 
-                  {couponMessage && (
-                    <div style={{
-                      padding: '8px 12px',
-                      borderRadius: 'var(--radius-xs)',
-                      marginBottom: '12px',
-                      fontSize: '0.8rem',
-                      backgroundColor: couponMessage.isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                      color: couponMessage.isError ? '#ef4444' : '#10b981',
-                      border: `1px solid ${couponMessage.isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
-                    }}>
-                      {couponMessage.text}
+                  {/* Kolom Kanan: Tabel Kupon Aktif & CRUD */}
+                  <div style={{ backgroundColor: 'var(--surface-elevated)', padding: '16px 18px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '0.94rem', color: 'var(--ink)' }}>
+                          Daftar Kode Kupon Aktif &amp; Diskon ({coupons.length})
+                        </h4>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          Kelola kode promo khusus, persentase diskon, dan batas minimal belanja.
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={handleOpenCreateCoupon}
+                        style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+                      >
+                        + Tambah Kupon
+                      </button>
                     </div>
-                  )}
 
-                  {coupons.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '24px 16px', backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', border: '1px dashed var(--hairline)', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                      Belum ada kode kupon tambahan. Klik tombol <strong>+ Tambah Kupon</strong> untuk membuat promo baru.
-                    </div>
-                  ) : (
-                    <div style={{ overflowX: 'auto', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-xs)' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
-                        <thead>
-                          <tr style={{ backgroundColor: 'var(--surface-elevated)', borderBottom: '1px solid var(--hairline)' }}>
-                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>KODE</th>
-                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>POTONGAN</th>
-                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>MIN. BELANJA</th>
-                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>STATUS</th>
-                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>AKSI</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {coupons.map((c) => (
-                            <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)', opacity: c.is_active ? 1 : 0.6 }}>
-                              <td style={{ padding: '8px 12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--accent-gold)' }}>
-                                    {c.code}
-                                  </span>
-                                </div>
-                                {c.notes && (
-                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                                    {c.notes}
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--ink)' }}>
-                                {c.discount_type === 'PERCENT' ? (
-                                  <span>
-                                    {c.discount_value}%
-                                    {c.max_discount_amount && c.max_discount_amount > 0 ? (
-                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>
-                                        Maks. Rp {c.max_discount_amount.toLocaleString('id-ID')}
-                                      </span>
-                                    ) : null}
-                                  </span>
-                                ) : (
-                                  <span>Rp {c.discount_value.toLocaleString('id-ID')}</span>
-                                )}
-                              </td>
-                              <td style={{ padding: '8px 12px', color: 'var(--ink)' }}>
-                                {c.min_order_amount > 0 ? `Rp ${c.min_order_amount.toLocaleString('id-ID')}` : 'Tanpa minimal'}
-                              </td>
-                              <td style={{ padding: '8px 12px' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleCoupon(c.id)}
-                                  disabled={couponLoading}
-                                  style={{
-                                    border: 'none',
-                                    padding: '3px 8px',
-                                    borderRadius: '12px',
-                                    fontSize: '0.72rem',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    backgroundColor: c.is_active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.2)',
-                                    color: c.is_active ? '#10b981' : 'var(--text-muted)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                  }}
-                                  title="Klik untuk beralih aktif/nonaktif"
-                                >
-                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: c.is_active ? '#10b981' : '#94a3b8' }}></span>
-                                  {c.is_active ? 'Aktif' : 'Nonaktif'}
-                                </button>
-                              </td>
-                              <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                    {couponMessage && (
+                      <div style={{
+                        padding: '8px 12px',
+                        borderRadius: 'var(--radius-xs)',
+                        marginBottom: '12px',
+                        fontSize: '0.8rem',
+                        backgroundColor: couponMessage.isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                        color: couponMessage.isError ? '#ef4444' : '#10b981',
+                        border: `1px solid ${couponMessage.isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                      }}>
+                        {couponMessage.text}
+                      </div>
+                    )}
+
+                    {coupons.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '36px 16px', backgroundColor: 'var(--surface-card)', borderRadius: 'var(--radius-xs)', border: '1px dashed var(--hairline)', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
+                        Belum ada kode kupon tambahan. Klik tombol <strong>+ Tambah Kupon</strong> untuk membuat promo baru.
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: 'auto', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-xs)', backgroundColor: 'var(--surface-card)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: 'var(--surface-elevated)', borderBottom: '1px solid var(--hairline)' }}>
+                              <th style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>KODE</th>
+                              <th style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>POTONGAN</th>
+                              <th style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>MIN. BELANJA</th>
+                              <th style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>STATUS</th>
+                              <th style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>AKSI</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {coupons.map((c) => (
+                              <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)', opacity: c.is_active ? 1 : 0.6 }}>
+                                <td style={{ padding: '10px 12px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--accent-gold)' }}>
+                                      {c.code}
+                                    </span>
+                                  </div>
+                                  {c.notes && (
+                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                                      {c.notes}
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--ink)' }}>
+                                  {c.discount_type === 'PERCENT' ? (
+                                    <span>
+                                      {c.discount_value}%
+                                      {c.max_discount_amount && c.max_discount_amount > 0 ? (
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>
+                                          Maks. Rp {c.max_discount_amount.toLocaleString('id-ID')}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                  ) : (
+                                    <span>Rp {c.discount_value.toLocaleString('id-ID')}</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '10px 12px', color: 'var(--ink)' }}>
+                                  {c.min_order_amount > 0 ? `Rp ${c.min_order_amount.toLocaleString('id-ID')}` : 'Tanpa minimal'}
+                                </td>
+                                <td style={{ padding: '10px 12px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleCoupon(c.id)}
+                                    disabled={couponLoading}
+                                    style={{
+                                      border: 'none',
+                                      padding: '4px 10px',
+                                      borderRadius: '12px',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      backgroundColor: c.is_active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.2)',
+                                      color: c.is_active ? '#10b981' : 'var(--text-muted)',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                    title="Klik untuk beralih aktif/nonaktif"
+                                  >
+                                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: c.is_active ? '#10b981' : '#94a3b8' }}></span>
+                                    {c.is_active ? 'Aktif' : 'Nonaktif'}
+                                  </button>
+                                </td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                                 <div style={{ display: 'inline-flex', gap: '6px' }}>
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditCoupon(c)}
                                     style={{
-                                      padding: '3px 8px',
-                                      fontSize: '0.72rem',
+                                      padding: '4px 10px',
+                                      fontSize: '0.74rem',
                                       borderRadius: 'var(--radius-xs)',
                                       border: '1px solid var(--hairline)',
-                                      backgroundColor: 'var(--surface-elevated)',
+                                      backgroundColor: 'var(--surface-card)',
                                       color: 'var(--ink)',
                                       cursor: 'pointer',
                                     }}
@@ -2063,8 +2071,8 @@ function OpsConsoleInner() {
                                     onClick={() => handleDeleteCoupon(c.id, c.code)}
                                     disabled={couponLoading}
                                     style={{
-                                      padding: '3px 8px',
-                                      fontSize: '0.72rem',
+                                      padding: '4px 10px',
+                                      fontSize: '0.74rem',
                                       borderRadius: 'var(--radius-xs)',
                                       border: '1px solid rgba(239, 68, 68, 0.3)',
                                       backgroundColor: 'rgba(239, 68, 68, 0.08)',
@@ -2084,6 +2092,7 @@ function OpsConsoleInner() {
                   )}
                 </div>
               </div>
+            </div>
 
             </div>
 
