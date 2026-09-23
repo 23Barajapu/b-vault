@@ -1961,11 +1961,11 @@ function OpsConsoleInner() {
                       borderRadius: 'var(--radius-xs)',
                       marginBottom: '12px',
                       fontSize: '0.8rem',
-                      backgroundColor: couponMessage.includes('Gagal') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                      color: couponMessage.includes('Gagal') ? '#ef4444' : '#10b981',
-                      border: `1px solid ${couponMessage.includes('Gagal') ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                      backgroundColor: couponMessage.isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: couponMessage.isError ? '#ef4444' : '#10b981',
+                      border: `1px solid ${couponMessage.isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
                     }}>
-                      {couponMessage}
+                      {couponMessage.text}
                     </div>
                   )}
 
@@ -2902,6 +2902,8 @@ function OpsConsoleInner() {
             </div>
           </div>
         </div>
+      )}
+
       {/* Modal CRUD Kupon Promo */}
       {couponModalOpen && (
         <div
