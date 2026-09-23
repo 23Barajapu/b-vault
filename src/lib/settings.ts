@@ -34,6 +34,19 @@ export interface SystemParameters {
   promo_min_order_amount: number;
   promo_banner_active: boolean;
   promo_banner_text: string;
+  promo_coupons: PromoCoupon[];
+}
+
+export interface PromoCoupon {
+  id: string;
+  code: string;
+  discount_type: 'PERCENT' | 'FIXED';
+  discount_value: number;
+  min_order_amount: number;
+  max_discount_amount?: number | null;
+  is_active: boolean;
+  notes?: string;
+  created_at: string;
 }
 
 export const DEFAULT_PARAMETERS: SystemParameters = {
@@ -70,6 +83,38 @@ export const DEFAULT_PARAMETERS: SystemParameters = {
   promo_min_order_amount: 0,
   promo_banner_active: true,
   promo_banner_text: '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!',
+  promo_coupons: [
+    {
+      id: 'cp_bv_default_1',
+      code: 'BVAULTHEMAT',
+      discount_type: 'PERCENT',
+      discount_value: 10,
+      min_order_amount: 0,
+      is_active: true,
+      notes: 'Kupon promo resmi B-Vault 10%',
+      created_at: '2026-09-01T00:00:00.000Z',
+    },
+    {
+      id: 'cp_bv_default_2',
+      code: 'BARAJAPU',
+      discount_type: 'PERCENT',
+      discount_value: 10,
+      min_order_amount: 50000,
+      is_active: true,
+      notes: 'Kupon loyalty Baraja Putra',
+      created_at: '2026-09-01T00:00:00.000Z',
+    },
+    {
+      id: 'cp_bv_default_3',
+      code: 'VAULTPRO20',
+      discount_type: 'PERCENT',
+      discount_value: 20,
+      min_order_amount: 100000,
+      is_active: true,
+      notes: 'Promo khusus pembelian di atas 100rb',
+      created_at: '2026-09-01T00:00:00.000Z',
+    },
+  ],
 };
 
 /**
@@ -155,10 +200,88 @@ export async function getSystemParameters(): Promise<SystemParameters> {
         ? dict.promo_banner_active === 'true' || dict.promo_banner_active === '1'
         : DEFAULT_PARAMETERS.promo_banner_active,
       promo_banner_text: dict.promo_banner_text || DEFAULT_PARAMETERS.promo_banner_text,
+      promo_coupons: (() => {
+        if (!dict.promo_coupons_list) return DEFAULT_PARAMETERS.promo_coupons;
+        try {
+          const parsed = JSON.parse(dict.promo_coupons_list);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((c: any, idx: number) => ({
+              id: c.id || `cp_${Date.now()}_${idx}`,
+              code: (c.code || '').trim().toUpperCase(),
+              discount_type: c.discount_type === 'FIXED' ? 'FIXED' : 'PERCENT',
+              discount_value: Math.max(1, Number(c.discount_value) || 10),
+              min_order_amount: Math.max(0, Number(c.min_order_amount) || 0),
+              max_discount_amount: c.max_discount_amount ? Number(c.max_discount_amount) : null,
+              is_active: c.is_active !== undefined ? Boolean(c.is_active) : true,
+              notes: c.notes || '',
+              created_at: c.created_at || new Date().toISOString(),
+            }));
+          }
+        } catch {}
+        return DEFAULT_PARAMETERS.promo_coupons;
+      })(),
     };
   } catch {
     return { ...DEFAULT_PARAMETERS };
   }
+}
+
+/**
+ * Mencari kupon yang cocok dari daftar kupon aktif dan menghitung nilai potongan.
+ */
+export function findMatchingCoupon(
+  coupons: PromoCoupon[],
+  code: string,
+  orderAmount: number
+): {
+  valid: boolean;
+  coupon?: PromoCoupon;
+  discountAmount: number;
+  message: string;
+} {
+  const cleanCode = (code || '').trim().toUpperCase();
+  if (!cleanCode) {
+    return { valid: false, discountAmount: 0, message: 'Kode kupon wajib diisi.' };
+  }
+
+  const coupon = coupons.find((c) => c.code.toUpperCase() === cleanCode);
+  if (!coupon) {
+    return { valid: false, discountAmount: 0, message: 'Kode kupon tidak valid atau tidak terdaftar.' };
+  }
+
+  if (!coupon.is_active) {
+    return { valid: false, discountAmount: 0, message: 'Kupon ini sedang non-aktif.' };
+  }
+
+  if (coupon.min_order_amount > 0 && orderAmount < coupon.min_order_amount) {
+    return {
+      valid: false,
+      discountAmount: 0,
+      message: `Minimal belanja untuk kupon ini adalah Rp ${coupon.min_order_amount.toLocaleString('id-ID')}.`,
+    };
+  }
+
+  let discount = 0;
+  if (coupon.discount_type === 'PERCENT') {
+    discount = Math.round(orderAmount * (coupon.discount_value / 100));
+    if (coupon.max_discount_amount && coupon.max_discount_amount > 0) {
+      discount = Math.min(discount, coupon.max_discount_amount);
+    }
+  } else {
+    discount = Math.round(coupon.discount_value);
+  }
+
+  // Jaga agar total tidak minus (sisakan minimal Rp 1.000 untuk QRIS)
+  discount = Math.min(discount, Math.max(0, orderAmount - 1000));
+
+  return {
+    valid: true,
+    coupon,
+    discountAmount: discount,
+    message: `Kupon ${coupon.code} aktif! Diskon ${
+      coupon.discount_type === 'PERCENT' ? `${coupon.discount_value}%` : ''
+    } (Rp ${discount.toLocaleString('id-ID')}) berhasil diterapkan.`,
+  };
 }
 
 /**

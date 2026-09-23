@@ -72,13 +72,30 @@ export default function HomePage() {
   const [couponMessage, setCouponMessage] = useState('');
 
   // Promo Config from System Parameters
-  const [promo, setPromo] = useState({
+  const [promo, setPromo] = useState<{
+    enabled: boolean;
+    code: string;
+    discount_percent: number;
+    min_order_amount: number;
+    banner_active: boolean;
+    banner_text: string;
+    coupons?: Array<{
+      id: string;
+      code: string;
+      discount_type: 'PERCENT' | 'FIXED';
+      discount_value: number;
+      min_order_amount: number;
+      max_discount_amount?: number | null;
+      is_active: boolean;
+    }>;
+  }>({
     enabled: true,
     code: 'BVAULTHEMAT',
     discount_percent: 10,
     min_order_amount: 0,
     banner_active: true,
     banner_text: '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!',
+    coupons: [],
   });
 
   // Floating Live Activity from Real Orders
@@ -293,16 +310,57 @@ export default function HomePage() {
       return;
     }
 
+    if (!code) {
+      setCouponApplied(false);
+      setDiscountAmount(0);
+      setCouponMessage('Masukkan kode kupon terlebih dahulu.');
+      return;
+    }
+
+    const price = activeVariant.retail_price;
+
+    // 1. Cek dari daftar kupon aktif dari backend jika ada
+    if (promo.coupons && promo.coupons.length > 0) {
+      const match = promo.coupons.find(
+        (c) => c.is_active && c.code.trim().toUpperCase() === code
+      );
+      if (match) {
+        if (match.min_order_amount > 0 && price < match.min_order_amount) {
+          setCouponApplied(false);
+          setDiscountAmount(0);
+          setCouponMessage(`Minimal pembelian untuk kupon ini adalah Rp ${match.min_order_amount.toLocaleString('id-ID')}.`);
+          return;
+        }
+
+        let discount = 0;
+        if (match.discount_type === 'PERCENT') {
+          discount = Math.round(price * (match.discount_value / 100));
+          if (match.max_discount_amount && match.max_discount_amount > 0) {
+            discount = Math.min(discount, match.max_discount_amount);
+          }
+        } else {
+          discount = Math.min(match.discount_value, price);
+        }
+
+        setDiscountAmount(discount);
+        setCouponApplied(true);
+        const label = match.discount_type === 'PERCENT' ? `${match.discount_value}%` : `Rp ${match.discount_value.toLocaleString('id-ID')}`;
+        setCouponMessage(`Kupon ${code} berhasil dipasang! Hemat ${label} (Rp ${discount.toLocaleString('id-ID')}).`);
+        return;
+      }
+    }
+
+    // 2. Fallback ke parameter promo standar jika kupon cocok
     const validCodes = [promo.code, 'BVAULTHEMAT', 'BARAJAPU'].filter(Boolean);
     if (validCodes.includes(code)) {
-      if (promo.min_order_amount > 0 && activeVariant.retail_price < promo.min_order_amount) {
+      if (promo.min_order_amount > 0 && price < promo.min_order_amount) {
         setCouponApplied(false);
         setDiscountAmount(0);
         setCouponMessage(`Minimal pembelian untuk kupon ini adalah Rp ${promo.min_order_amount.toLocaleString('id-ID')}.`);
         return;
       }
       const pct = promo.discount_percent || 10;
-      const discount = Math.round(activeVariant.retail_price * (pct / 100));
+      const discount = Math.round(price * (pct / 100));
       setDiscountAmount(discount);
       setCouponApplied(true);
       setCouponMessage(`Kupon ${code} aktif! Diskon ${pct}% (Rp ${discount.toLocaleString('id-ID')}) berhasil diterapkan.`);

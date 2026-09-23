@@ -74,6 +74,23 @@ export async function GET() {
     const promoBannerActive = settings.find((s) => s.key === 'promo_banner_active')?.value === 'true' || settings.find((s) => s.key === 'promo_banner_active')?.value === '1';
     const promoBannerText = settings.find((s) => s.key === 'promo_banner_text')?.value || '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10%!';
 
+    // Active coupons list
+    let activeCoupons: any[] = [];
+    const rawCoupons = settings.find((s) => s.key === 'promo_coupons_list')?.value;
+    if (rawCoupons) {
+      try {
+        const parsed = JSON.parse(rawCoupons);
+        if (Array.isArray(parsed)) {
+          activeCoupons = parsed.filter((c: any) => c.is_active);
+        }
+      } catch {}
+    }
+    if (activeCoupons.length === 0) {
+      activeCoupons = [
+        { id: 'default_1', code: promoCode, discount_type: 'PERCENT', discount_value: promoDiscountPercent, min_order_amount: promoMinOrderAmount, is_active: true }
+      ];
+    }
+
     // Real activities from paid orders
     const activities = (recentOrdersData || []).map((o: any) => {
       const rawName = (o.customer_name || o.customer_email || 'Pelanggan').trim();
@@ -108,6 +125,7 @@ export async function GET() {
           min_order_amount: promoMinOrderAmount,
           banner_active: promoBannerActive,
           banner_text: promoBannerText,
+          coupons: activeCoupons,
         },
         delivered_licenses: deliveredLicenses,
         categories,

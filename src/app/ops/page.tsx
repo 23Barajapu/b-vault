@@ -165,6 +165,22 @@ function OpsConsoleInner() {
   const [promoBannerActive, setPromoBannerActive] = useState(true);
   const [promoBannerText, setPromoBannerText] = useState('🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!');
 
+  // 5. Coupon CRUD State
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponModalOpen, setCouponModalOpen] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    discount_type: 'PERCENT',
+    discount_value: 10 as number | string,
+    min_order_amount: 0 as number | string,
+    max_discount_amount: '' as number | string,
+    is_active: true,
+    notes: '',
+  });
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<{ text: string; isError: boolean } | null>(null);
+
   const [mounted, setMounted] = useState(false);
 
   // Auto-login if session stored in sessionStorage or Google session
@@ -302,6 +318,10 @@ function OpsConsoleInner() {
         setPromoMinOrderAmount(d.promo_min_order_amount ?? 0);
         setPromoBannerActive(d.promo_banner_active !== undefined ? Boolean(d.promo_banner_active) : true);
         setPromoBannerText(d.promo_banner_text || '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!');
+
+        if (Array.isArray(d.promo_coupons)) {
+          setCoupons(d.promo_coupons);
+        }
       }
     } catch (err: any) {
       console.warn('Fetch settings notice:', err?.message || err);
@@ -765,6 +785,112 @@ function OpsConsoleInner() {
       setSettingsMessage('Kesalahan koneksi saat menyimpan pengaturan.');
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  // Coupon CRUD Handlers
+  function handleOpenCreateCoupon() {
+    setEditingCouponId(null);
+    setCouponForm({
+      code: '',
+      discount_type: 'PERCENT',
+      discount_value: 10,
+      min_order_amount: 0,
+      max_discount_amount: '',
+      is_active: true,
+      notes: '',
+    });
+    setCouponMessage(null);
+    setCouponModalOpen(true);
+  }
+
+  function handleOpenEditCoupon(item: any) {
+    setEditingCouponId(item.id);
+    setCouponForm({
+      code: item.code,
+      discount_type: item.discount_type || 'PERCENT',
+      discount_value: item.discount_value,
+      min_order_amount: item.min_order_amount || 0,
+      max_discount_amount: item.max_discount_amount || '',
+      is_active: item.is_active !== undefined ? item.is_active : true,
+      notes: item.notes || '',
+    });
+    setCouponMessage(null);
+    setCouponModalOpen(true);
+  }
+
+  async function handleSaveCoupon(e: React.FormEvent) {
+    e.preventDefault();
+    const cleanCode = couponForm.code.trim().toUpperCase().replace(/\s+/g, '');
+    if (!cleanCode) {
+      setCouponMessage({ text: 'Kode kupon wajib diisi.', isError: true });
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      setCouponMessage(null);
+      const res = await fetch('/api/v1/ops/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'UPSERT',
+          coupon: {
+            id: editingCouponId || undefined,
+            code: cleanCode,
+            discount_type: couponForm.discount_type,
+            discount_value: Number(couponForm.discount_value) || 10,
+            min_order_amount: Number(couponForm.min_order_amount) || 0,
+            max_discount_amount: couponForm.max_discount_amount ? Number(couponForm.max_discount_amount) : null,
+            is_active: Boolean(couponForm.is_active),
+            notes: couponForm.notes,
+          },
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.coupons) {
+        setCoupons(json.data.coupons);
+        setCouponModalOpen(false);
+      } else {
+        setCouponMessage({ text: json.error?.message || 'Gagal menyimpan kupon.', isError: true });
+      }
+    } catch {
+      setCouponMessage({ text: 'Kesalahan jaringan saat menyimpan kupon.', isError: true });
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  async function handleDeleteCoupon(id: string, code: string) {
+    if (!confirm(`Hapus kupon promo ${code} secara permanen?`)) return;
+    try {
+      const res = await fetch('/api/v1/ops/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'DELETE', id }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.coupons) {
+        setCoupons(json.data.coupons);
+      }
+    } catch (err) {
+      console.warn('Gagal menghapus kupon', err);
+    }
+  }
+
+  async function handleToggleCoupon(id: string) {
+    try {
+      const res = await fetch('/api/v1/ops/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'TOGGLE', id }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.coupons) {
+        setCoupons(json.data.coupons);
+      }
+    } catch (err) {
+      console.warn('Gagal mengubah status kupon', err);
     }
   }
 
@@ -1809,6 +1935,154 @@ function OpsConsoleInner() {
                     placeholder="🔥 Promo Spesial: Gunakan kode BVAULTHEMAT untuk diskon 10%!"
                   />
                 </div>
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--hairline)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--ink)' }}>
+                        Daftar Kode Kupon Aktif &amp; Diskon ({coupons.length})
+                      </h4>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                        Kelola kode promo khusus, persentase diskon, dan batas minimal belanja.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={handleOpenCreateCoupon}
+                      style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+                    >
+                      + Tambah Kupon
+                    </button>
+                  </div>
+
+                  {couponMessage && (
+                    <div style={{
+                      padding: '8px 12px',
+                      borderRadius: 'var(--radius-xs)',
+                      marginBottom: '12px',
+                      fontSize: '0.8rem',
+                      backgroundColor: couponMessage.includes('Gagal') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: couponMessage.includes('Gagal') ? '#ef4444' : '#10b981',
+                      border: `1px solid ${couponMessage.includes('Gagal') ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                    }}>
+                      {couponMessage}
+                    </div>
+                  )}
+
+                  {coupons.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '24px 16px', backgroundColor: 'var(--surface-elevated)', borderRadius: 'var(--radius-xs)', border: '1px dashed var(--hairline)', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                      Belum ada kode kupon tambahan. Klik tombol <strong>+ Tambah Kupon</strong> untuk membuat promo baru.
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-xs)' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: 'var(--surface-elevated)', borderBottom: '1px solid var(--hairline)' }}>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>KODE</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>POTONGAN</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>MIN. BELANJA</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)' }}>STATUS</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>AKSI</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {coupons.map((c) => (
+                            <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)', opacity: c.is_active ? 1 : 0.6 }}>
+                              <td style={{ padding: '8px 12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--accent-gold)' }}>
+                                    {c.code}
+                                  </span>
+                                </div>
+                                {c.notes && (
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                                    {c.notes}
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--ink)' }}>
+                                {c.discount_type === 'PERCENT' ? (
+                                  <span>
+                                    {c.discount_value}%
+                                    {c.max_discount_amount && c.max_discount_amount > 0 ? (
+                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>
+                                        Maks. Rp {c.max_discount_amount.toLocaleString('id-ID')}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                ) : (
+                                  <span>Rp {c.discount_value.toLocaleString('id-ID')}</span>
+                                )}
+                              </td>
+                              <td style={{ padding: '8px 12px', color: 'var(--ink)' }}>
+                                {c.min_order_amount > 0 ? `Rp ${c.min_order_amount.toLocaleString('id-ID')}` : 'Tanpa minimal'}
+                              </td>
+                              <td style={{ padding: '8px 12px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleCoupon(c.id)}
+                                  disabled={couponLoading}
+                                  style={{
+                                    border: 'none',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    backgroundColor: c.is_active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.2)',
+                                    color: c.is_active ? '#10b981' : 'var(--text-muted)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                  }}
+                                  title="Klik untuk beralih aktif/nonaktif"
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: c.is_active ? '#10b981' : '#94a3b8' }}></span>
+                                  {c.is_active ? 'Aktif' : 'Nonaktif'}
+                                </button>
+                              </td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditCoupon(c)}
+                                    style={{
+                                      padding: '3px 8px',
+                                      fontSize: '0.72rem',
+                                      borderRadius: 'var(--radius-xs)',
+                                      border: '1px solid var(--hairline)',
+                                      backgroundColor: 'var(--surface-elevated)',
+                                      color: 'var(--ink)',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteCoupon(c.id, c.code)}
+                                    disabled={couponLoading}
+                                    style={{
+                                      padding: '3px 8px',
+                                      fontSize: '0.72rem',
+                                      borderRadius: 'var(--radius-xs)',
+                                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                                      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                      color: '#ef4444',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>
@@ -2626,6 +2900,204 @@ function OpsConsoleInner() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      {/* Modal CRUD Kupon Promo */}
+      {couponModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+          onClick={() => !couponLoading && setCouponModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--surface-card)',
+              border: '1px solid var(--hairline)',
+              borderRadius: 'var(--radius-sm)',
+              width: '100%',
+              maxWidth: '480px',
+              padding: '24px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>
+                {editingCouponId ? 'Edit Kode Kupon Promo' : 'Tambah Kupon Promo Baru'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCouponModalOpen(false)}
+                disabled={couponLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.2rem',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCoupon}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label htmlFor="coupon-code-input" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                    Kode Kupon Promo <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="coupon-code-input"
+                    type="text"
+                    required
+                    value={couponForm.code}
+                    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase().replace(/\s+/g, '') })}
+                    placeholder="Contoh: DISKON50, PROMOJUMAT"
+                    style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.05em' }}
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '3px' }}>
+                    Otomatis diubah menjadi huruf kapital tanpa spasi.
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label htmlFor="coupon-discount-type" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                      Tipe Potongan
+                    </label>
+                    <select
+                      id="coupon-discount-type"
+                      value={couponForm.discount_type}
+                      onChange={(e) => setCouponForm({ ...couponForm, discount_type: e.target.value as 'PERCENT' | 'FIXED' })}
+                    >
+                      <option value="PERCENT">Persentase (%)</option>
+                      <option value="FIXED">Nominal Tetap (Rp)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="coupon-discount-val" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                      Besar Potongan <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    {couponForm.discount_type === 'PERCENT' ? (
+                      <input
+                        id="coupon-discount-val"
+                        type="number"
+                        min="1"
+                        max="100"
+                        required
+                        value={couponForm.discount_value}
+                        onChange={(e) => setCouponForm({ ...couponForm, discount_value: e.target.value })}
+                        placeholder="10"
+                      />
+                    ) : (
+                      <input
+                        id="coupon-discount-val"
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={formatNumberDisplay(couponForm.discount_value)}
+                        onChange={(e) => setCouponForm({ ...couponForm, discount_value: e.target.value.replace(/\D/g, '') })}
+                        placeholder="15.000"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: couponForm.discount_type === 'PERCENT' ? '1fr 1fr' : '1fr', gap: '12px' }}>
+                  <div>
+                    <label htmlFor="coupon-min-order" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                      Minimal Belanja (Rp)
+                    </label>
+                    <input
+                      id="coupon-min-order"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatNumberDisplay(couponForm.min_order_amount)}
+                      onChange={(e) => setCouponForm({ ...couponForm, min_order_amount: e.target.value.replace(/\D/g, '') })}
+                      placeholder="0 (Tanpa minimal)"
+                    />
+                  </div>
+
+                  {couponForm.discount_type === 'PERCENT' && (
+                    <div>
+                      <label htmlFor="coupon-max-discount" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                        Maks. Potongan (Rp)
+                      </label>
+                      <input
+                        id="coupon-max-discount"
+                        type="text"
+                        inputMode="numeric"
+                        value={formatNumberDisplay(couponForm.max_discount_amount)}
+                        onChange={(e) => setCouponForm({ ...couponForm, max_discount_amount: e.target.value.replace(/\D/g, '') })}
+                        placeholder="0 (Tanpa batas)"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="coupon-notes" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
+                    Catatan Kupon (Opsional)
+                  </label>
+                  <input
+                    id="coupon-notes"
+                    type="text"
+                    value={couponForm.notes}
+                    onChange={(e) => setCouponForm({ ...couponForm, notes: e.target.value })}
+                    placeholder="Contoh: Kupon promo komunitas Discord"
+                  />
+                </div>
+
+                <div style={{ backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={couponForm.is_active}
+                      onChange={(e) => setCouponForm({ ...couponForm, is_active: e.target.checked })}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
+                      Aktifkan Kupon Sekarang
+                    </span>
+                  </label>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    Jika dinonaktifkan, pembeli tidak dapat menggunakan kode ini saat checkout.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setCouponModalOpen(false)}
+                  disabled={couponLoading}
+                  style={{ fontSize: '0.82rem' }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={couponLoading}
+                  style={{ fontSize: '0.82rem' }}
+                >
+                  {couponLoading ? 'Menyimpan...' : editingCouponId ? 'Perbarui Kupon' : 'Buat Kupon'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

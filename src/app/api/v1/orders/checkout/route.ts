@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import supabase from '@/lib/supabase';
-import { getSystemParameters } from '@/lib/settings';
+import { getSystemParameters, findMatchingCoupon } from '@/lib/settings';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const WA_REGEX = /^(?:\+62|62|0)8[1-9][0-9]{7,11}$/;
@@ -105,16 +105,13 @@ export async function POST(request: Request) {
     const expiryMins = sysParams.payment_expiry_minutes || 10;
     const expiredAt = new Date(Date.now() + expiryMins * 60 * 1000).toISOString();
 
-    // 7. Kalkulasi Diskon Promo Dinamis
+    // 7. Kalkulasi Diskon Promo Dinamis dari Daftar Kupon Aktif
     let finalAmount = Number(variant.retail_price);
     const cleanCoupon = typeof coupon_code === 'string' ? coupon_code.trim().toUpperCase() : '';
     if (cleanCoupon && sysParams.promo_enabled) {
-      const validCodes = [sysParams.promo_code, 'BVAULTHEMAT', 'BARAJAPU'].filter(Boolean);
-      if (validCodes.includes(cleanCoupon)) {
-        if (!sysParams.promo_min_order_amount || finalAmount >= sysParams.promo_min_order_amount) {
-          const discount = Math.round(finalAmount * (sysParams.promo_discount_percent / 100));
-          finalAmount = Math.max(1000, finalAmount - discount);
-        }
+      const match = findMatchingCoupon(sysParams.promo_coupons || [], cleanCoupon, finalAmount);
+      if (match.valid && match.discountAmount > 0) {
+        finalAmount = Math.max(1000, finalAmount - match.discountAmount);
       }
     }
 
