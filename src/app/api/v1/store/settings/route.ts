@@ -15,6 +15,12 @@ export async function GET() {
         admin_whatsapp: params.admin_whatsapp,
         operating_hours_notice: params.operating_hours_notice,
         baseline_delivered_licenses: params.baseline_delivered_licenses,
+        promo_enabled: params.promo_enabled,
+        promo_code: params.promo_code,
+        promo_discount_percent: params.promo_discount_percent,
+        promo_min_order_amount: params.promo_min_order_amount,
+        promo_banner_active: params.promo_banner_active,
+        promo_banner_text: params.promo_banner_text,
       },
     });
   } catch (error: any) {

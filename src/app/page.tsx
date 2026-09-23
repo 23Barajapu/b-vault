@@ -71,6 +71,16 @@ export default function HomePage() {
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponMessage, setCouponMessage] = useState('');
 
+  // Promo Config from System Parameters
+  const [promo, setPromo] = useState({
+    enabled: true,
+    code: 'BVAULTHEMAT',
+    discount_percent: 10,
+    min_order_amount: 0,
+    banner_active: true,
+    banner_text: '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!',
+  });
+
   // Floating Live Activity from Real Orders
   const [activities, setActivities] = useState<string[]>([]);
   const [activityIndex, setActivityIndex] = useState(0);
@@ -193,6 +203,9 @@ export default function HomePage() {
         if (typeof data.data.delivered_licenses === 'number') {
           setDeliveredLicenses(data.data.delivered_licenses);
         }
+        if (data.data.promo) {
+          setPromo(data.data.promo);
+        }
       }
     } catch (err) {
       console.error('Failed to load products', err);
@@ -273,11 +286,26 @@ export default function HomePage() {
     const code = couponCode.trim().toUpperCase();
     if (!activeVariant) return;
 
-    if (code === 'BVAULTHEMAT' || code === 'BARAJAPU') {
-      const discount = Math.round(activeVariant.retail_price * 0.1);
+    if (!promo.enabled) {
+      setCouponApplied(false);
+      setDiscountAmount(0);
+      setCouponMessage('Fitur kupon promo saat ini sedang dinonaktifkan.');
+      return;
+    }
+
+    const validCodes = [promo.code, 'BVAULTHEMAT', 'BARAJAPU'].filter(Boolean);
+    if (validCodes.includes(code)) {
+      if (promo.min_order_amount > 0 && activeVariant.retail_price < promo.min_order_amount) {
+        setCouponApplied(false);
+        setDiscountAmount(0);
+        setCouponMessage(`Minimal pembelian untuk kupon ini adalah Rp ${promo.min_order_amount.toLocaleString('id-ID')}.`);
+        return;
+      }
+      const pct = promo.discount_percent || 10;
+      const discount = Math.round(activeVariant.retail_price * (pct / 100));
       setDiscountAmount(discount);
       setCouponApplied(true);
-      setCouponMessage(`Kupon ${code} aktif! Diskon Rp ${discount.toLocaleString('id-ID')} berhasil diterapkan.`);
+      setCouponMessage(`Kupon ${code} aktif! Diskon ${pct}% (Rp ${discount.toLocaleString('id-ID')}) berhasil diterapkan.`);
     } else {
       setCouponApplied(false);
       setDiscountAmount(0);
@@ -314,6 +342,7 @@ export default function HomePage() {
           customer_whatsapp: whatsapp,
           target_account_input: email,
           payment_method: paymentMethod,
+          coupon_code: couponApplied ? couponCode.trim().toUpperCase() : undefined,
         }),
       });
 
@@ -334,6 +363,28 @@ export default function HomePage() {
 
   return (
     <div className="container" style={{ position: 'relative' }}>
+
+      {/* Luxury Promo Announcement Banner */}
+      {promo.banner_active && promo.banner_text && (
+        <div style={{
+          backgroundColor: 'rgba(219, 177, 99, 0.08)',
+          border: '1px solid var(--accent-gold)',
+          borderRadius: 'var(--radius-xs)',
+          padding: '10px 16px',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          fontSize: '0.86rem',
+          color: 'var(--ink)',
+          textAlign: 'center'
+        }}>
+          <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+          <span style={{ fontWeight: 600 }}>{promo.banner_text}</span>
+          <span style={{ color: 'var(--accent-gold)' }}>✦</span>
+        </div>
+      )}
 
       {/* Store status banner */}
       {store.status === 'RESTING' ? (
@@ -825,7 +876,7 @@ export default function HomePage() {
             {/* Interactive Coupon Tester */}
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="coupon-input" style={{ fontSize: '0.82rem', fontWeight: 600 }}>
-                Punya Kupon Promo? (Coba: BVAULTHEMAT)
+                Punya Kupon Promo? {promo.enabled && promo.code ? `(Coba: ${promo.code})` : ''}
               </label>
               <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                 <input

@@ -66,6 +66,14 @@ export async function GET() {
     const storeStatus = settings.find((s) => s.key === 'store_status')?.value || 'ONLINE';
     const storeNotice = settings.find((s) => s.key === 'operating_hours_notice')?.value || '';
 
+    // Promo settings
+    const promoEnabled = settings.find((s) => s.key === 'promo_enabled')?.value !== 'false';
+    const promoCode = (settings.find((s) => s.key === 'promo_code')?.value || 'BVAULTHEMAT').trim().toUpperCase();
+    const promoDiscountPercent = parseInt(settings.find((s) => s.key === 'promo_discount_percent')?.value || '10', 10) || 10;
+    const promoMinOrderAmount = parseInt(settings.find((s) => s.key === 'promo_min_order_amount')?.value || '0', 10) || 0;
+    const promoBannerActive = settings.find((s) => s.key === 'promo_banner_active')?.value === 'true' || settings.find((s) => s.key === 'promo_banner_active')?.value === '1';
+    const promoBannerText = settings.find((s) => s.key === 'promo_banner_text')?.value || '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10%!';
+
     // Real activities from paid orders
     const activities = (recentOrdersData || []).map((o: any) => {
       const rawName = (o.customer_name || o.customer_email || 'Pelanggan').trim();
@@ -92,6 +100,14 @@ export async function GET() {
         store: {
           status: storeStatus,
           notice: storeNotice,
+        },
+        promo: {
+          enabled: promoEnabled,
+          code: promoCode,
+          discount_percent: promoDiscountPercent,
+          min_order_amount: promoMinOrderAmount,
+          banner_active: promoBannerActive,
+          banner_text: promoBannerText,
         },
         delivered_licenses: deliveredLicenses,
         categories,

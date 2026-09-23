@@ -156,6 +156,15 @@ function OpsConsoleInner() {
   const [verifyWindowHours, setVerifyWindowHours] = useState<number | string>(24);
   const [slaTargetMins, setSlaTargetMins] = useState<number | string>(15);
   const [slaBreachMins, setSlaBreachMins] = useState<number | string>(20);
+
+  // 4. Promo, Kupon & Banner Diskon
+  const [promoEnabled, setPromoEnabled] = useState(true);
+  const [promoCode, setPromoCode] = useState('BVAULTHEMAT');
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState<number | string>(10);
+  const [promoMinOrderAmount, setPromoMinOrderAmount] = useState<number | string>(0);
+  const [promoBannerActive, setPromoBannerActive] = useState(true);
+  const [promoBannerText, setPromoBannerText] = useState('🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!');
+
   const [mounted, setMounted] = useState(false);
 
   // Auto-login if session stored in sessionStorage or Google session
@@ -286,6 +295,13 @@ function OpsConsoleInner() {
         setVerifyWindowHours(d.verification_window_hours ?? 24);
         setSlaTargetMins(d.sla_target_minutes ?? 15);
         setSlaBreachMins(d.sla_breach_minutes ?? 20);
+
+        setPromoEnabled(d.promo_enabled !== undefined ? Boolean(d.promo_enabled) : true);
+        setPromoCode(d.promo_code || 'BVAULTHEMAT');
+        setPromoDiscountPercent(d.promo_discount_percent ?? 10);
+        setPromoMinOrderAmount(d.promo_min_order_amount ?? 0);
+        setPromoBannerActive(d.promo_banner_active !== undefined ? Boolean(d.promo_banner_active) : true);
+        setPromoBannerText(d.promo_banner_text || '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!');
       }
     } catch (err: any) {
       console.warn('Fetch settings notice:', err?.message || err);
@@ -729,6 +745,14 @@ function OpsConsoleInner() {
           verification_window_hours: Number(verifyWindowHours) || 24,
           sla_target_minutes: Number(slaTargetMins) || 15,
           sla_breach_minutes: Number(slaBreachMins) || 20,
+
+          // Promo, Kupon & Banner Diskon
+          promo_enabled: promoEnabled ? 'true' : 'false',
+          promo_code: promoCode.trim().toUpperCase() || 'BVAULTHEMAT',
+          promo_discount_percent: Number(promoDiscountPercent) || 10,
+          promo_min_order_amount: Number(promoMinOrderAmount) || 0,
+          promo_banner_active: promoBannerActive ? 'true' : 'false',
+          promo_banner_text: promoBannerText.trim(),
         }),
       });
       const json = await res.json();
@@ -1685,6 +1709,103 @@ function OpsConsoleInner() {
                     value={tgChatId}
                     onChange={(e) => setTgChatId(e.target.value)}
                     placeholder="-100123456789"
+                  />
+                </div>
+              </div>
+
+              {/* KARTU 5: PROMO, KUPON & BANNER DISKON */}
+              <div className="card" style={{ padding: '20px', border: '1px solid var(--accent-gold)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--hairline)' }}>
+                  <span style={{ fontSize: '1.2rem', color: 'var(--gold-light)' }}>🏷️</span>
+                  <div>
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--gold-light)', margin: 0 }}>Promo, Kupon & Diskon</h3>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Kode kupon checkout, persentase diskon & banner pengumuman</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px', backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={promoEnabled}
+                      onChange={(e) => setPromoEnabled(e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
+                      Aktifkan Fitur Kupon Promo
+                    </span>
+                  </label>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
+                    Jika dinonaktifkan, kupon promo tidak dapat digunakan di form checkout toko.
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                  <div>
+                    <label htmlFor="ops-param-promo-code">Kode Kupon Utama</label>
+                    <input
+                      id="ops-param-promo-code"
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                      placeholder="BVAULTHEMAT"
+                      style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--gold-light)' }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="ops-param-promo-pct">Diskon (%)</label>
+                    <input
+                      id="ops-param-promo-pct"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={promoDiscountPercent}
+                      onChange={(e) => setPromoDiscountPercent(e.target.value)}
+                      placeholder="10"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label htmlFor="ops-param-promo-min">Minimal Belanja Kupon (Rp)</label>
+                  <input
+                    id="ops-param-promo-min"
+                    type="text"
+                    inputMode="numeric"
+                    value={typeof promoMinOrderAmount === 'number' ? promoMinOrderAmount.toLocaleString('id-ID') : promoMinOrderAmount}
+                    onChange={(e) => setPromoMinOrderAmount(e.target.value.replace(/\D/g, ''))}
+                    placeholder="0 (Tanpa minimal)"
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Kupon hanya berlaku jika subtotal pesanan mencapai nilai ini.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '14px', backgroundColor: 'var(--surface-elevated)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--hairline)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={promoBannerActive}
+                      onChange={(e) => setPromoBannerActive(e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--ink)' }}>
+                      Tampilkan Banner Promo di Toko
+                    </span>
+                  </label>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
+                    Teks berjalan/banner promo akan muncul di atas katalog produk utama.
+                  </span>
+                </div>
+
+                <div>
+                  <label htmlFor="ops-param-promo-banner-text">Teks Pengumuman Banner Promo</label>
+                  <textarea
+                    id="ops-param-promo-banner-text"
+                    rows={2}
+                    value={promoBannerText}
+                    onChange={(e) => setPromoBannerText(e.target.value)}
+                    placeholder="🔥 Promo Spesial: Gunakan kode BVAULTHEMAT untuk diskon 10%!"
                   />
                 </div>
               </div>

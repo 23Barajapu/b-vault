@@ -10,7 +10,7 @@ const DISPOSABLE_DOMAINS = ['tempmail.com', '10minutemail.com', 'guerrillamail.c
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { variant_id, customer_name, customer_email, customer_whatsapp, target_account_input, payment_method } = body;
+    const { variant_id, customer_name, customer_email, customer_whatsapp, target_account_input, payment_method, coupon_code } = body;
 
     // 1. Validasi varian
     if (!variant_id) {
@@ -105,12 +105,25 @@ export async function POST(request: Request) {
     const expiryMins = sysParams.payment_expiry_minutes || 10;
     const expiredAt = new Date(Date.now() + expiryMins * 60 * 1000).toISOString();
 
+    // 7. Kalkulasi Diskon Promo Dinamis
+    let finalAmount = Number(variant.retail_price);
+    const cleanCoupon = typeof coupon_code === 'string' ? coupon_code.trim().toUpperCase() : '';
+    if (cleanCoupon && sysParams.promo_enabled) {
+      const validCodes = [sysParams.promo_code, 'BVAULTHEMAT', 'BARAJAPU'].filter(Boolean);
+      if (validCodes.includes(cleanCoupon)) {
+        if (!sysParams.promo_min_order_amount || finalAmount >= sysParams.promo_min_order_amount) {
+          const discount = Math.round(finalAmount * (sysParams.promo_discount_percent / 100));
+          finalAmount = Math.max(1000, finalAmount - discount);
+        }
+      }
+    }
+
     // Generate payment payload (QRIS Baraja Putra)
     const paymentChannelData: Record<string, any> = {
       method: effectivePaymentMethod,
-      amount: variant.retail_price,
+      amount: finalAmount,
       currency: 'IDR',
-      qr_content: `00020101021226670016ID.CO.B-VAULT.WWW01189360091100000000005204581253033605405${variant.retail_price}5802ID5910B-VAULT6007JAKARTA61051234062070703A016304${orderNumber.slice(-4)}`,
+      qr_content: `00020101021226670016ID.CO.B-VAULT.WWW01189360091100000000005204581253033605405${finalAmount}5802ID5910B-VAULT6007JAKARTA61051234062070703A016304${orderNumber.slice(-4)}`,
       qr_image_url: '/qris-all-pay.jpeg',
       merchant_name: 'BARAJA PUTRA, DIGITAL & KREATIF',
       nmid: 'ID1026505289292',
@@ -127,7 +140,7 @@ export async function POST(request: Request) {
         customer_email: cleanEmail,
         customer_phone: cleanPhone,
         target_account_input: effectiveTargetAccount,
-        total_amount: variant.retail_price,
+        total_amount: finalAmount,
         payment_status: 'PENDING_PAYMENT',
         payment_method: effectivePaymentMethod,
         payment_reference: `REF-${orderNumber}`,
@@ -145,7 +158,7 @@ export async function POST(request: Request) {
     await supabase.from('order_items').insert({
       order_id: order.id,
       variant_id: variant.id,
-      unit_price: variant.retail_price,
+      unit_price: finalAmount,
       cost_price: variant.cost_price || 0,
       retail_price: variant.retail_price,
     });
@@ -155,7 +168,7 @@ export async function POST(request: Request) {
       data: {
         order_number: orderNumber,
         secure_token: secureToken,
-        total_amount: variant.retail_price,
+        total_amount: finalAmount,
         payment_method,
         payment_channel_data: paymentChannelData,
         expired_at: expiredAt,

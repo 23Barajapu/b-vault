@@ -26,6 +26,14 @@ export interface SystemParameters {
   telegram_bot_token: string;
   telegram_chat_id: string;
   baseline_delivered_licenses: number;
+
+  // 5. Promo, Kupon & Diskon
+  promo_enabled: boolean;
+  promo_code: string;
+  promo_discount_percent: number;
+  promo_min_order_amount: number;
+  promo_banner_active: boolean;
+  promo_banner_text: string;
 }
 
 export const DEFAULT_PARAMETERS: SystemParameters = {
@@ -54,6 +62,14 @@ export const DEFAULT_PARAMETERS: SystemParameters = {
   telegram_bot_token: '',
   telegram_chat_id: '',
   baseline_delivered_licenses: 50,
+
+  // Promo & Diskon
+  promo_enabled: true,
+  promo_code: 'BVAULTHEMAT',
+  promo_discount_percent: 10,
+  promo_min_order_amount: 0,
+  promo_banner_active: true,
+  promo_banner_text: '🔥 Promo Spesial: Gunakan kode kupon BVAULTHEMAT untuk diskon 10% semua lisensi pro resmi!',
 };
 
 /**
@@ -123,6 +139,22 @@ export async function getSystemParameters(): Promise<SystemParameters> {
       baseline_delivered_licenses: dict.baseline_delivered_licenses
         ? Number(dict.baseline_delivered_licenses) || DEFAULT_PARAMETERS.baseline_delivered_licenses
         : DEFAULT_PARAMETERS.baseline_delivered_licenses,
+
+      // Promo & Diskon
+      promo_enabled: dict.promo_enabled !== undefined
+        ? dict.promo_enabled === 'true' || dict.promo_enabled === '1'
+        : DEFAULT_PARAMETERS.promo_enabled,
+      promo_code: (dict.promo_code || DEFAULT_PARAMETERS.promo_code).trim().toUpperCase(),
+      promo_discount_percent: dict.promo_discount_percent
+        ? Math.max(1, Math.min(100, Number(dict.promo_discount_percent) || DEFAULT_PARAMETERS.promo_discount_percent))
+        : DEFAULT_PARAMETERS.promo_discount_percent,
+      promo_min_order_amount: dict.promo_min_order_amount
+        ? Math.max(0, Number(dict.promo_min_order_amount) || 0)
+        : DEFAULT_PARAMETERS.promo_min_order_amount,
+      promo_banner_active: dict.promo_banner_active !== undefined
+        ? dict.promo_banner_active === 'true' || dict.promo_banner_active === '1'
+        : DEFAULT_PARAMETERS.promo_banner_active,
+      promo_banner_text: dict.promo_banner_text || DEFAULT_PARAMETERS.promo_banner_text,
     };
   } catch {
     return { ...DEFAULT_PARAMETERS };
