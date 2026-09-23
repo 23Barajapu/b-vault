@@ -1681,7 +1681,8 @@ function OpsConsoleInner() {
                   <input
                     id="ops-param-baseline"
                     type="text"
-                    value={typeof baselineLicenses === 'number' ? baselineLicenses.toLocaleString('id-ID') : baselineLicenses}
+                    inputMode="numeric"
+                    value={formatNumberDisplay(baselineLicenses)}
                     onChange={(e) => setBaselineLicenses(e.target.value.replace(/\D/g, ''))}
                     placeholder="50"
                   />
@@ -1772,7 +1773,7 @@ function OpsConsoleInner() {
                     id="ops-param-promo-min"
                     type="text"
                     inputMode="numeric"
-                    value={typeof promoMinOrderAmount === 'number' ? promoMinOrderAmount.toLocaleString('id-ID') : promoMinOrderAmount}
+                    value={formatNumberDisplay(promoMinOrderAmount)}
                     onChange={(e) => setPromoMinOrderAmount(e.target.value.replace(/\D/g, ''))}
                     placeholder="0 (Tanpa minimal)"
                   />
